@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import Home from "./App";
 import "./styles/globals.css";
-import { ThirdwebProvider } from "@thirdweb-dev/react";
+import { ThirdwebProvider,metamaskWallet,embeddedWallet } from "@thirdweb-dev/react";
 import { isInStandaloneMode } from "./utils";
 
 // This is the chain your dApp will work on.
 // Change this to the chain your app is built for.
 // You can also import additional chains from `@thirdweb-dev/chains` and pass them directly.
-const activeChain = "ethereum";
+const activeChain = "goerli";
 
 export default function App() {
   const [installPromptEvent, setInstallPromptEvent] = useState<
@@ -57,15 +57,7 @@ export default function App() {
         >
           <h1 className="title">
             Welcome to{" "}
-            <span className="gradient-text-0">
-              <a
-                href="https://thirdweb.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                thirdweb.
-              </a>
-            </span>
+            <span className="gradient-text-0">dWill.</span>
           </h1>
           {installPromptEvent ? (
             <button
@@ -80,9 +72,7 @@ export default function App() {
             // and not supported by all browsers. You can ask
             // the user to manually install the app instead.
             <div style={{ maxWidth: 600, textAlign: "center" }}>
-              Install this app by pressing the installation button on your
-              browser's search bar or if on mobile, by adding the app to your
-              home screen
+              Open installed app to continue.
             </div>
           )}
         </div>
@@ -92,6 +82,17 @@ export default function App() {
     <ThirdwebProvider
       clientId={import.meta.env.VITE_TEMPLATE_CLIENT_ID}
       activeChain={activeChain}
+      supportedWallets={[
+        metamaskWallet(),
+        embeddedWallet({
+          auth: {
+            options: [
+              "email",
+              "google"
+            ]
+          }
+        })
+      ]}
     >
       <Home />
     </ThirdwebProvider>
