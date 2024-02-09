@@ -166,6 +166,13 @@
   transition: background-color 0.3s;
 }
 
+.button:disabled,
+.button[disabled]{
+  border: 1px solid #999999;
+  background-color: #cccccc;
+  color: #666666;
+}
+
 .installButton:hover {
   background-color: #f0f0f0;
 }

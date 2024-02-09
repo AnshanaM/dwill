@@ -1,24 +1,31 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import Home from "./App";
+import App from "./App";
 import "./styles/globals.css";
-import { ThirdwebProvider,metamaskWallet,embeddedWallet } from "@thirdweb-dev/react";
 import { isInStandaloneMode } from "./utils";
 
-// This is the chain your dApp will work on.
-// Change this to the chain your app is built for.
-// You can also import additional chains from `@thirdweb-dev/chains` and pass them directly.
-const activeChain = "goerli";
 
-export default function App() {
-  const [installPromptEvent, setInstallPromptEvent] = useState<
-    any | undefined
-  >();
+const container = document.getElementById("root");
+const root = createRoot(container!);
+
+export default function Main() {
+  const [installPromptEvent, setInstallPromptEvent] = useState<any | undefined>();
+  const [isAppInstalled, setIsAppInstalled] = useState(() => {
+    // initialize from localStorage if available, otherwise default to false
+    return localStorage.getItem('isAppInstalled') === 'true';
+  });
 
   useEffect(() => {
     if (isInStandaloneMode()) {
+      setIsAppInstalled(true);
       return;
     }
+
+    window.addEventListener("appinstalled", () => {
+      console.log("PWA was installed");
+      localStorage.setItem('isAppInstalled', 'true'); // persist the state to localStorage
+      setIsAppInstalled(true); // update the state variable
+    });
 
     const beforeInstallPromptListener = (event: any) => {
       event.preventDefault();
@@ -35,81 +42,24 @@ export default function App() {
     };
   }, []);
 
-  // Button click handler
+  // install button click handler
   const handleInstallClick = () => {
+    console.log(isAppInstalled);
+    if (isAppInstalled==true){
+      console.log("app already installed");
+      return;
+    }
     if (installPromptEvent && installPromptEvent.prompt) {
       installPromptEvent.prompt();
+      console.log("prompting user to install app");
     }
   };
 
-  // Checks if the app is openened in standalone mode or on browser
-  return !isInStandaloneMode() ? (
-    <main className="main">
-      <div className="container">
-        <div
-          className="header"
-          style={{
-            justifyContent: "center",
-            alignItems: "center",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <h1 className="title">
-            Welcome to{" "}
-            <span className="gradient-text-0">dWill.</span>
-          </h1>
-          {installPromptEvent ? (
-            <button
-              id="install-button"
-              className="installButton"
-              onClick={handleInstallClick}
-            >
-              Install App
-            </button>
-          ) : (
-            // The install prompt event is still experimental
-            // and not supported by all browsers. You can ask
-            // the user to manually install the app instead.
-            <div style={{ maxWidth: 600, textAlign: "center" }}>
-              Open installed app to continue.
-            </div>
-          )}
-        </div>
-      </div>
-    </main>
-  ) : (
-    <ThirdwebProvider
-      clientId={import.meta.env.VITE_TEMPLATE_CLIENT_ID}
-      activeChain={activeChain}
-      supportedWallets={[
-        metamaskWallet(),
-        embeddedWallet({
-          auth: {
-            options: [
-              "email",
-              "google"
-            ]
-          }
-        })
-      ]}
-    >
-      <Home />
-    </ThirdwebProvider>
+  return (
+    <React.StrictMode>
+      <App isAppInstalled={isAppInstalled} handleInstallClick={handleInstallClick} />
+    </React.StrictMode>
   );
 }
 
-window.addEventListener("appinstalled", () => {
-  console.log("PWA was installed");
-  // Reloading the page after installation to
-  // dismiss the install button
-  window.location.reload();
-});
-
-const container = document.getElementById("root");
-const root = createRoot(container!);
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+root.render(<Main />);
