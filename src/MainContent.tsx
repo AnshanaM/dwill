@@ -1,7 +1,8 @@
 import React from "react";
-import { ConnectWallet } from "@thirdweb-dev/react";
+import { ConnectWallet, ThirdwebProvider, embeddedWallet, localWallet, metamaskWallet } from "@thirdweb-dev/react";
 import "./styles/Home.css";
 import { isInStandaloneMode } from "./utils";
+import { useNavigate } from "react-router-dom";
 
 interface MainContentProps {
   handleInstallClick: () => void;
@@ -10,6 +11,12 @@ interface MainContentProps {
 const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
   const RegisterUser = () => {
     // registration logic here
+  };
+
+  const navigate = useNavigate();
+
+  const redirectToUploadPage = () => {
+    navigate("/upload");
   };
 
   return (
@@ -44,13 +51,13 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
             <p>Subscribe to our service and become a benefactor!</p>
           </div>
         </a>
-        <a className="card" target="_blank" rel="noopener noreferrer">
+        <div className="card" onClick={redirectToUploadPage}>
           <img className="icon" src="/images/upload-files.png" alt="upload file image"/>
           <div className="card-text">
             <h2 className="gradient-text-2">Upload your files</h2>
             <p>Encrypt and upload your files to the IPFS network.</p>
           </div>
-        </a>
+        </div>
         <a className="card" target="_blank" rel="noopener noreferrer">
           <img className="icon" src="/images/add-beneficiary.png" alt="add beneficiary image"/>
           <div className="card-text">

@@ -9,6 +9,7 @@ const container = document.getElementById("root");
 const root = createRoot(container!);
 
 export default function Main() {
+
   const [installPromptEvent, setInstallPromptEvent] = useState<any | undefined>();
   const [isAppInstalled, setIsAppInstalled] = useState(() => {
     // initialize from localStorage if available, otherwise default to false
