@@ -1,5 +1,7 @@
+// code written by the group
+
 import React from "react";
-import { ConnectWallet, ThirdwebProvider, embeddedWallet, localWallet, metamaskWallet } from "@thirdweb-dev/react";
+import { ConnectWallet, ThirdwebProvider, embeddedWallet, localWallet, metamaskWallet, useAddress } from "@thirdweb-dev/react";
 import "./styles/Home.css";
 import { isInStandaloneMode } from "./utils";
 import { useNavigate } from "react-router-dom";
@@ -14,10 +16,25 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
   };
 
   const navigate = useNavigate();
+  console.log("client id: ",import.meta.env.VITE_TEMPLATE_CLIENT_ID);
+  const address = useAddress();
 
   const redirectToUploadPage = () => {
-    navigate("/upload");
+    //CHECK FOR SUBSCRIPTION STATUS AND REGISTRATION HERE
+    if (address != null) {
+      navigate("/upload");
+    } else {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+      setTimeout(() => {
+        window.alert("Please connect your wallet to continue.");
+      }, 50);
+    }
   };
+  
+  
 
   return (
     <>
@@ -62,7 +79,7 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
           <img className="icon" src="/images/add-beneficiary.png" alt="add beneficiary image"/>
           <div className="card-text">
             <h2 className="gradient-text-3">Assign your beneficiaries</h2>
-            <p>Assign your trustees to the files dedicated just for them.</p>
+            <p>Distribute your secret keys and assign your beneficiaries files dedicated just for them.</p>
           </div>
         </a>
         <a className="card" target="_blank" rel="noopener noreferrer">

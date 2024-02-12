@@ -7,16 +7,13 @@ body {
   padding: 0;
   margin: 0;
   font-family: "Inter", sans-serif;
-}
-
-a {
-  color: #84309c;
-  text-decoration: none;
+  scroll-behavior: smooth;
 }
 
 * {
   box-sizing: border-box;
 }
+
 
 body {
   color: #e7e8e8;

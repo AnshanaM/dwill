@@ -1,8 +1,10 @@
+// code written by the group
+
 import React from "react";
 import MainContent from "./MainContent";
 import { ThirdwebProvider, metamaskWallet, embeddedWallet, localWallet } from "@thirdweb-dev/react";
 import { BrowserRouter as Router, Route, Routes, BrowserRouter } from "react-router-dom";
-import UploadPage from "./UploadPage";
+import Upload from "./UploadPage";
 
 interface AppProps {
   isAppInstalled: boolean;
@@ -14,7 +16,8 @@ const App: React.FC<AppProps> = ({ isAppInstalled, handleInstallClick }) => {
     <>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<ThirdwebProvider
+          <Route path="/" element={
+          <ThirdwebProvider
             clientId={import.meta.env.VITE_TEMPLATE_CLIENT_ID}
             activeChain="mumbai"
             supportedWallets={[
@@ -29,7 +32,7 @@ const App: React.FC<AppProps> = ({ isAppInstalled, handleInstallClick }) => {
           >
             <MainContent handleInstallClick={handleInstallClick} />
           </ThirdwebProvider>} />
-          <Route path="upload" element={<UploadPage />} />
+          <Route path="upload" element={<ThirdwebProvider clientId={import.meta.env.VITE_TEMPLATE_CLIENT_ID}><Upload /></ThirdwebProvider>} />
         </Routes>
     </BrowserRouter>
     </>
