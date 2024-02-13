@@ -13,6 +13,7 @@ interface MainContentProps {
 const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
   const RegisterUser = () => {
     // registration logic here
+    // after registration, redirect to home page and maybe prompt to connect wallet?
   };
 
   const navigate = useNavigate();
@@ -46,13 +47,14 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
           </div>
           <p className="subtitle">Your will, at your fingertips.</p>
           {(!isInStandaloneMode()) && (
-            <div className="connect">
+            <div>
               <button className="installButton" onClick={handleInstallClick}>Install App</button>
             </div>
           )}
-          <div className="connect">
+          <div>
             <ConnectWallet />
           </div>
+          <p>verify if benefactor or beneficiary and display login button</p>
           <p className="subtitle">Not a User? <u onClick={RegisterUser}>Register Now</u></p>
         </div>
         <img className="main-animation" src="/images/dribbble-animation.gif" alt="dribble animation"/>
@@ -68,7 +70,7 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
             <p>Subscribe to our service and become a benefactor!</p>
           </div>
         </a>
-        <div className="card" onClick={redirectToUploadPage}>
+        <div className="card">
           <img className="icon" src="/images/upload-files.png" alt="upload file image"/>
           <div className="card-text">
             <h2 className="gradient-text-2">Upload your files</h2>
@@ -89,6 +91,17 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
               <p>Enable your very own dead mans switch.</p>
             </div>
         </a>
+      </div>
+
+      <div className="build-container">
+        <video autoPlay muted loop>
+          <source src="../public/images/bg3.mp4" type="video/mp4" />
+        </video>
+        <div className="build-header">
+          <h1 className="sub-header" style={{marginTop: 0}}>Start building your dead man's switch now!</h1>
+          <p style={{fontSize :"20px"}}>Take control of your digital legacy with our decentralized solution.</p>
+        </div>
+        <button className="installButton" onClick={redirectToUploadPage}>Build</button>
       </div>
 
       <div className="footer-container">

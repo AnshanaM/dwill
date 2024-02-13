@@ -5,19 +5,30 @@ import { useNavigate } from 'react-router-dom';
 import "./styles/UploadPage.css";
 import { ConnectWallet, MediaRenderer, useAddress, useStorageUpload } from '@thirdweb-dev/react';
 import {useState} from 'react';
+import { redirect } from 'next/dist/server/api-utils';
 
 
 const UploadPage: React.FC = () => {
 
   const address = useAddress();
   const navigate = useNavigate();
+
   const redirectToHomePage = () => {
     navigate("/");
   };
 
+  const redirectToDashboard = () => {
+    navigate("/dashboard");
+  }
+
+  const redirectToAssignPage = () => {
+    navigate("/assign");
+  }
+
   if (address == null) {
     redirectToHomePage();
   }
+
 
   const [file,setFile] = useState<any>();
   const { mutateAsync: upload } = useStorageUpload();
@@ -39,7 +50,7 @@ const UploadPage: React.FC = () => {
 
   return (
     <main>
-      <div>
+      <div style={{margin: '1rem'}}>
         <h1>Upload Page</h1>
         <div>
           {address && (
@@ -48,6 +59,9 @@ const UploadPage: React.FC = () => {
         </div>
         <div>
           <img className="icon" src="/images/home.gif" alt="home icon" onClick={redirectToHomePage}/>
+        </div>
+        <div>
+          <img className="icon" src="/images/dashboard.gif" alt="dashboard icon" onClick={redirectToDashboard}/>
         </div>
 
         <div>
@@ -58,6 +72,10 @@ const UploadPage: React.FC = () => {
           }}/>
           <button onClick = {uploadToIPFS} >Upload</button>
           
+        </div>
+
+        <div>
+          <button style={{margin: '1rem'}} onClick={redirectToAssignPage}>Assign Beneficiaries</button>
         </div>
 
       </div>
