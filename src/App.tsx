@@ -20,7 +20,7 @@ const App: React.FC<AppProps> = ({ isAppInstalled, handleInstallClick }) => {
         <Routes>
           <Route path="/" element={
           <ThirdwebProvider
-            clientId={import.meta.env.VITE_TEMPLATE_CLIENT_ID}
+            clientId={import.meta.env.DWILL_CLIENT_ID}
             activeChain="mumbai"
             supportedWallets={[
               metamaskWallet(),
@@ -34,9 +34,9 @@ const App: React.FC<AppProps> = ({ isAppInstalled, handleInstallClick }) => {
           >
             <MainContent handleInstallClick={handleInstallClick} />
           </ThirdwebProvider>} />
-          <Route path="upload" element={<ThirdwebProvider clientId={import.meta.env.VITE_TEMPLATE_CLIENT_ID}><Upload /></ThirdwebProvider>} />
-          <Route path="dashboard" element={<ThirdwebProvider clientId={import.meta.env.VITE_TEMPLATE_CLIENT_ID}><Dashboard /></ThirdwebProvider>}/>
-          <Route path="assign" element={<ThirdwebProvider clientId={import.meta.env.VITE_TEMPLATE_CLIENT_ID}><AssignPage /></ThirdwebProvider>}/>
+          <Route path="upload" element={<ThirdwebProvider clientId={import.meta.env.DWILL_CLIENT_ID}><Upload /></ThirdwebProvider>} />
+          <Route path="dashboard" element={<ThirdwebProvider clientId={import.meta.env.DWILL_CLIENT_ID}><Dashboard /></ThirdwebProvider>}/>
+          <Route path="assign" element={<ThirdwebProvider clientId={import.meta.env.DWILL_CLIENT_ID}><AssignPage /></ThirdwebProvider>}/>
         </Routes>
     </BrowserRouter>
     </>

@@ -17,7 +17,7 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
   };
 
   const navigate = useNavigate();
-  console.log("client id: ",import.meta.env.VITE_TEMPLATE_CLIENT_ID);
+  console.log("client id: ",import.meta.env.DWILL_CLIENT_ID);
   const address = useAddress();
 
   const redirectToUploadPage = () => {
