@@ -7,6 +7,8 @@ import { BrowserRouter as Router, Route, Routes, BrowserRouter } from "react-rou
 import Upload from "./UploadPage";
 import Dashboard from "./Dashboard";
 import AssignPage from "./AssignPage";
+import Register from "./Register";
+import * as constants from "./constants";
 
 interface AppProps {
   isAppInstalled: boolean;
@@ -16,30 +18,32 @@ interface AppProps {
 const App: React.FC<AppProps> = ({ isAppInstalled, handleInstallClick }) => {
   return (
     <>
+    <ThirdwebProvider
+      clientId={constants.DWILL_CLIENT_ID}
+      activeChain="mumbai"
+      supportedWallets={[
+        metamaskWallet(),
+        embeddedWallet({
+          auth: {
+            options: ["email", "google"]
+          }
+        }),
+        localWallet()
+      ]}
+    >
+      
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={
-          <ThirdwebProvider
-            clientId={import.meta.env.DWILL_CLIENT_ID}
-            activeChain="mumbai"
-            supportedWallets={[
-              metamaskWallet(),
-              embeddedWallet({
-                auth: {
-                  options: ["email", "google"]
-                }
-              }),
-              localWallet()
-            ]}
-          >
-            <MainContent handleInstallClick={handleInstallClick} />
-          </ThirdwebProvider>} />
-          <Route path="upload" element={<ThirdwebProvider clientId={import.meta.env.DWILL_CLIENT_ID}><Upload /></ThirdwebProvider>} />
-          <Route path="dashboard" element={<ThirdwebProvider clientId={import.meta.env.DWILL_CLIENT_ID}><Dashboard /></ThirdwebProvider>}/>
-          <Route path="assign" element={<ThirdwebProvider clientId={import.meta.env.DWILL_CLIENT_ID}><AssignPage /></ThirdwebProvider>}/>
+          <Route path="/" element={<MainContent handleInstallClick={handleInstallClick} />}/>
+          <Route path="upload" element={<Upload />} />
+          <Route path="dashboard" element={<Dashboard />}/>
+          <Route path="assign" element={<AssignPage />}/>
+          <Route path="register" element={<Register />}/>
         </Routes>
     </BrowserRouter>
+    </ThirdwebProvider>
     </>
+    
   );
 };
 

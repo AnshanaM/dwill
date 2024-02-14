@@ -1,23 +1,22 @@
 // code written by the group
 
 import React from "react";
-import { ConnectWallet, ThirdwebProvider, embeddedWallet, localWallet, metamaskWallet, useAddress } from "@thirdweb-dev/react";
+import { ConnectWallet, ThirdwebProvider, embeddedWallet, localWallet, metamaskWallet, useAddress, useContract } from "@thirdweb-dev/react";
 import "./styles/Home.css";
 import { isInStandaloneMode } from "./utils";
 import { useNavigate } from "react-router-dom";
+import * as constants from "./constants";
+
 
 interface MainContentProps {
   handleInstallClick: () => void;
 }
 
 const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
-  const RegisterUser = () => {
-    // registration logic here
-    // after registration, redirect to home page and maybe prompt to connect wallet?
-  };
 
   const navigate = useNavigate();
-  console.log("client id: ",import.meta.env.DWILL_CLIENT_ID);
+  console.log("client id: ",constants.DWILL_CLIENT_ID);
+  console.log("HELO ",constants.DWILL_CLIENT_ID);
   const address = useAddress();
 
   const redirectToUploadPage = () => {
@@ -32,6 +31,12 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
       setTimeout(() => {
         window.alert("Please connect your wallet to continue.");
       }, 50);
+    }
+  };
+
+  const redirectToRegisterPage = () => {
+    if (address != null) {
+      navigate("/register");
     }
   };
   
@@ -55,7 +60,7 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
             <ConnectWallet />
           </div>
           <p>verify if benefactor or beneficiary and display login button</p>
-          <p className="subtitle">Not a User? <u onClick={RegisterUser}>Register Now</u></p>
+          <p className="subtitle">Not a User? <u onClick={redirectToRegisterPage}>Register Now</u></p>
         </div>
         <img className="main-animation" src="/images/dribbble-animation.gif" alt="dribble animation"/>
       </div>
@@ -95,7 +100,7 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
 
       <div className="build-container">
         <video autoPlay muted loop>
-          <source src="../public/images/bg3.mp4" type="video/mp4" />
+          <source src="/images/bg3.mp4" type="video/mp4" />
         </video>
         <div className="build-header">
           <h1 className="sub-header" style={{marginTop: 0}}>Start building your dead man's switch now!</h1>
