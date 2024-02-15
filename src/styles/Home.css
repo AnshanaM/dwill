@@ -3,7 +3,8 @@
 .container {
   display: flex;
   gap: 0.01%;
-  margin: 0rem 0rem 1rem 1rem;
+  /* margin: 0rem 0rem 1rem 1rem; */
+  /* background-color: #21212C; */
 }
 
 .header {
@@ -12,8 +13,10 @@
   justify-content: center;
   flex-grow: 1;
   gap: 1rem;
-  margin: 1rem;
+  margin: 4rem 8rem;
   align-items: center;
+  background-color: #272c34;
+  padding: 2rem;
 }
 
 .main-animation {
