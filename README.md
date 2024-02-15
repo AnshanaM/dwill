@@ -12,6 +12,13 @@ Run the project using:
 yarn dev
 ```
 
+Run the following in the smart-contracts directory to deploy a smart contract:
+
+```bash
+npx thirdweb deploy
+```
+!REMEMBER TO UPDATE THE constants.ts FILE WITH THE CONTRACT ADDRESS!
+
 ## Environment Variables
 
 To run this project, you will need to add environment variables. Check the `.env` file for all the environment variables required and add it to `.env.local` or `.env` file or set them up on your hosting provider.
