@@ -1,26 +1,86 @@
 .sidebar {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    /* justify-content: center; */
-    background-color: rgb(65, 0, 88);
-    max-width: 20vh;
-    margin: 0rem;
-    height: 100vh;
-
-  }
-  
-.sidebar-item {
-    color: white;
-    text-decoration: none;
-    padding: 1rem;
-    width: 100%;
-    background-color: rgb(80, 0, 109);
-    border-radius: "8px";
+  height: 100%;
+  width: 200px;
+  background-color: #21212c;
+  position: fixed;
+  transition: width 0.3s ease;
 }
 
-.sidebar-item:hover {
-    background-color: rgb(65, 0, 88);
+.sidebar.closed {
+  width: 4rem;
+}
+
+img.logo.open {
+  display: flex;
+  height: 2.75rem;
+  width: auto;
+  align-items: center;
+}
+
+
+img.logo.closed{
+  display: flex;
+  height: 2.70rem;
+  width: auto;
+  align-items: center;
+}
+
+
+.icon {
+  color: 'white';
+  position: 'absolute';
+  left: '90%';
+  top: '6px';
+  font-size: '20px';
+  height: '40px';
+  width: '40px';
+  text-align: 'center';
+}
+
+.sidebar ul {
+  padding: 0 0 0 0;
+  margin: 0;
+}
+
+.sidebar ul li {
+  position: relative;
+  height: 50px;
+  width: 100%;
+  padding: 0.5rem;
+  list-style: none;
+  cursor: pointer;
+}
+
+
+.sidebar ul li a, .sidebar ul li div {
+  color:#d9d9d9;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border-radius: 12px;
+  padding: 0.5rem;
+}
+
+.sidebar ul li a:hover, .sidebar ul li .sidebar-toggle:hover{
+  background-color: #645c82;
+}
+
+
+.sidebar ul li a .icon {
+  height: 30px;
+  min-width: 30px;
+  border-radius: 12px;
+  line-height: 50px;
+  text-align: center;
+}
+  
+.sidebar ul li .sidebar-toggle .icon {
+  height: 30px;
+  min-width: 30px;
+  border-radius: 12px;
+  line-height: 50px;
+  text-align: center;
 }
 
 .screen {
@@ -40,17 +100,7 @@
 }
 
 .wallet {
-    padding: 1rem;
+  margin-top: 6rem;
+  padding: 0.6rem;
 }
-  
-  /* media query for smaller screens */
-  @media screen and (max-width: 768px) {
-    .sidebar {
-      width: 100px;
-    }
-  
-    .sidebar-item {
-      padding: 10px;
-    }
-  }
-  
+

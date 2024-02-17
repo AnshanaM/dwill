@@ -16,6 +16,21 @@ body {
 
 
 body {
-  color: #e7e8e8;
-  background: #070707;
+  color: #e1e1e1;
+  background: black;
+}
+
+::-webkit-scrollbar{
+  width: 15px;
+}
+
+::-webkit-scrollbar-track{
+  background-color: #21212C;
+
+}
+
+::-webkit-scrollbar-thumb{
+  /* background-color: #706DDB; */
+  background-color: #968BC2;
+  border-radius: 10px;
 }

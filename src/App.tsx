@@ -2,12 +2,11 @@
 
 import React from "react";
 import MainContent from "./MainContent";
-import { ThirdwebProvider, metamaskWallet, embeddedWallet, localWallet } from "@thirdweb-dev/react";
+import { ThirdwebProvider, metamaskWallet, embeddedWallet, localWallet, ConnectWallet, darkTheme } from "@thirdweb-dev/react";
 import { BrowserRouter as Router, Route, Routes, BrowserRouter } from "react-router-dom";
-import Upload from "./UploadPage";
+import Upload from "./Upload";
 import Dashboard from "./Dashboard";
 import AssignPage from "./AssignPage";
-import Register from "./Register";
 import * as constants from "./constants";
 
 interface AppProps {
@@ -32,15 +31,15 @@ const App: React.FC<AppProps> = ({ isAppInstalled, handleInstallClick }) => {
       ]}
     >
       
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<MainContent handleInstallClick={handleInstallClick} />}/>
-          <Route path="upload" element={<Upload />} />
-          <Route path="dashboard" element={<Dashboard />}/>
-          <Route path="assign" element={<AssignPage />}/>
-          <Route path="register" element={<Register />}/>
-        </Routes>
-    </BrowserRouter>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<MainContent handleInstallClick={handleInstallClick} />}/>
+            <Route path="upload" element={<Upload />} />
+            <Route path="dashboard" element={<Dashboard />}/>
+            <Route path="assign" element={<AssignPage />}/>
+
+          </Routes>
+      </BrowserRouter>
     </ThirdwebProvider>
     </>
     
