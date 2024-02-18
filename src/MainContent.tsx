@@ -1,16 +1,16 @@
 // code written by the group
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { ConnectWallet, ThirdwebProvider, Web3Button, darkTheme, embeddedWallet, localWallet, metamaskWallet, useAddress, useContract, useContractRead } from "@thirdweb-dev/react";
 import "./styles/Home.css";
 import { isInStandaloneMode } from "./utils";
 import { useNavigate } from "react-router-dom";
 import * as constants from "./constants";
-import { FEATURE_NFT_SHARED_METADATA } from "@thirdweb-dev/sdk/dist/declarations/src/evm/constants/erc721-features";
+import { Link, scroller } from "react-scroll";
 
 
 interface MainContentProps {
-  handleInstallClick: () => void;
+  handleInstallClick: () => boolean;
 }
 
 const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
@@ -19,26 +19,7 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
   console.log("client id: ",constants.DWILL_CLIENT_ID);
 
   const address = useAddress();
-
   const {contract} = useContract(constants.OWNER_REGISTRATION);
-
-  // const [newValue, setNewValue] = useState((address!=null) ? address : "" );
-
-
-  const redirectToUploadPage = () => {
-    //CHECK FOR SUBSCRIPTION STATUS AND REGISTRATION HERE
-    if (address != null) {
-      navigate("/upload");
-    } else {
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
-      setTimeout(() => {
-        window.alert("Please connect your wallet to continue.");
-      }, 50);
-    }
-  };
 
   const redirectToDashboard = () => {
     if (address!=null){
@@ -49,14 +30,15 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
     }
   }
 
-  const redirectToRegister = () => {
-    if (address!=null){
-      navigate("/upload");
-    }
-    else{
-      navigate("/");
-    }
-  }
+  // const buildContainerRef = useRef<HTMLDivElement>(null);
+  // const handleStartNowClick = () => {
+  //   if (buildContainerRef.current) {
+  //     scroller.scrollTo("split-section", {
+  //       duration: 800,
+  //       smooth: true,
+  //     });
+  //   }
+  // };
 
   const {
     data: isRegistered,
@@ -67,13 +49,21 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
     from: address,
     }
   );
+
+  const subscribe  =() => {
+
+  }
+
+  const register  =() => {
+
+  }
   
 
   return (
     <>
       <div className="container">
         <video autoPlay muted loop>
-          <source src="/images/bg2-with-overlay.mp4" type="video/mp4" />
+          <source src="/images/blocks-bg.mp4" type="video/mp4" />
         </video>
 
         <div className="nav-bar">
@@ -81,22 +71,22 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
           <p className="nav-bar-item">Home</p>
           <p className="nav-bar-item">About</p>
           {(!isInStandaloneMode()) && (
-            <p className="nav-bar-item" onClick={handleInstallClick}>Install</p>
+            handleInstallClick() ? 
+            <p className="nav-bar-item" onClick={handleInstallClick}>Install</p> : <></>
           )}
           <div className="nav-bar-item">
               {isRegistered
                 ? 
-                <button className="installButton" onClick={redirectToRegister}>Login</button> 
+                <p className="nav-bar-item" onClick={redirectToDashboard}>Dashboard</p>
                 :
                 address && 
                   <Web3Button
                     contractAddress = {constants.OWNER_REGISTRATION}
                     action={(contract)=> contract.call("registerBenefactor")}
                     onError={() => alert("Insufficient funds.")}
-                    onSuccess={() => {redirectToRegister}}
+                    onSuccess={() => {navigate("/")}}
                     >Sign up
                   </Web3Button>
-                
               }
           </div>
           <p className="nav-bar-item" >
@@ -125,10 +115,21 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
 
         </div>
         <div className="header">
-          <h1 className="title">Your will, at your fingertips.</h1>
-          <p className="title-p"><b>Seize control of your legacy: dWill makes will creation and management simple and secure</b></p>
+          <div className="benefactor">
+              <h2>Distribute your assets.</h2>
+              <h3>Secure your will.</h3>
+              <p>As a benefactor, you hold the power to secure your assets. Subscribe to our service to begin building your dead mans switch today.</p>
+              <button onClick={subscribe}>Subscribe</button>
+              <p>Already a subscriber? <u>Renew here.</u></p>
+          </div>
+          <div className="beneficiary">
+              <h2>Claim my assets.</h2>
+              <h3>Ensure your inheritance.</h3>
+              <p>As a beneficiary, you can easily gain access to your designated assets. Register to secure your rightful inheritance with ease.</p>
+              <button onClick={register}>Register</button>
+              <p>Already registered? <u>Login here.</u></p>
+          </div>
         </div>
-        {/* <img className="main-animation" src="/images/dribbble-animation.gif" alt="dribble animation"/> */}
       </div>
 
 
@@ -165,21 +166,13 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
         </a>
       </div>
 
-      <div className="build-container">
-        {/* <video autoPlay muted loop>
-          <source src="/images/bg3.mp4" type="video/mp4" />
-        </video> */}
-        <div className="build-header">
-          <h1 className="sub-header" style={{marginTop: 0}}>Start building your dead man's switch now!</h1>
-          <p style={{fontSize :"20px"}}>Take control of your digital legacy with our decentralized solution.</p>
-        </div>
-        <button className="installButton" onClick={redirectToUploadPage}>Build</button>
-      </div>
+      {/* <div className="split-section" ref={buildContainerRef}>
+      </div> */}
 
       <div className="footer-container">
-        {/* <a href="https://lordicon.com/" className="attribution">Icons by Lordicon.com</a> */}
         <p>&copy;Nott-a-Copyright</p>
       </div>
+
     </>
   );
 };

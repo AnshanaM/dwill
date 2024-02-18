@@ -1,47 +1,39 @@
 // code written by the group
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import "./styles/UploadPage.css";
-import { ConnectWallet, MediaRenderer, useAddress, useStorageUpload } from '@thirdweb-dev/react';
-
+import "./styles/AssignPage.css";
+import { ConnectWallet, MediaRenderer, Web3Button, useAddress, useContract, useContractRead, useStorageUpload } from '@thirdweb-dev/react';
+import * as constants from "./constants";
+import PageTemplate from './components/PageTemplate';
 
 const AssignPage: React.FC = () => {
 
-  const address = useAddress();
+  const walletAddress = useAddress();
   const navigate = useNavigate();
-  const redirectToHomePage = () => {
+
+  function redirectToHomePage(): void {
     navigate("/");
-  };
+  }  
 
-  const redirectToDashboard = () => {
-    navigate("/dashboard");
-  }
-
-  if (address == null) {
+  if (walletAddress==null){
     redirectToHomePage();
   }
-
+  
   return (
     <main>
-      <div style={{margin: '1rem'}}>
-        <h1>Assign Beneficiaries</h1>
-        <div>
-          {address && (
-            <ConnectWallet/>
-          )}
-        </div>
-        <div>
-          <img className="icon" src="/images/home.gif" alt="home icon" onClick={redirectToHomePage}/>
-        </div>
-        <div>
-          <img className="icon" src="/images/dashboard.gif" alt="dashboard icon" onClick={redirectToDashboard}/>
-        </div>
-        <div>!Display countdown here!</div>
-        <div style={{margin: "1rem"}}>
-          <button>Create Switch</button>
-        </div>
-
+      <div>
+        {walletAddress && 
+          <PageTemplate pageTitle={<h1>Assign Beneficiaries</h1>} pageContent={
+            <div>
+              <div>!Display countdown here!</div>
+              <div style={{margin: "1rem"}}>
+                <button>Create Switch</button>
+              </div>
+            </div>
+          }
+          address={walletAddress} />
+        }
       </div>
     </main>
   );

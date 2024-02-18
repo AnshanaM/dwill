@@ -1,5 +1,4 @@
 /* code written by the group */
-
 .container {
   display: flex;
   flex-direction: column;
@@ -8,8 +7,8 @@
   position: relative;
   width: 100%;
   height: 100vh;
-  gap: 20rem;
   padding: 0.5rem;
+  gap: 1rem;
 }
 
 .container video {
@@ -18,15 +17,15 @@
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit:contain;
   z-index: -1;
 }
 
 .header {
   display: flex;
-  flex-direction: column;
-  justify-content: left;
-  align-items: left;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
   margin: 0;
   gap: 1rem;
 }
@@ -36,25 +35,24 @@
   font-size: 25px;
 }
 
+.header .installButton {
+  width: 200px;
+}
+
 .nav-bar {
   display: flex;
   flex-direction: row;
   justify-content: center;
   gap: 2rem;
-  flex-grow: 1;
   align-items: center;
   padding: 1rem;
   max-height: 5rem;
   margin-top: 0;
-  /* height: min-content; */
 }
 
 .nav-bar-item {
   margin: 1rem;
-  /* height: min-content; */
   cursor: pointer;
-  /* justify-content: center;
-  align-items: center; */
 }
 
 .button-container {
@@ -69,14 +67,6 @@
 .button-container button {
   width: 7rem;
 }
-
-
-/* .main-animation {
-  width: auto;
-  height: 100vh;
-  flex-grow: 1;
-  object-fit: cover;
-} */
 
 .card-text-color {
   color:#bab4d2;
@@ -139,7 +129,7 @@
   flex-wrap: wrap;
   gap: 1rem;
   max-width: 100vw;
-  padding: 1rem;
+  padding: 1rem 3rem;
   margin: 2rem;
 }
 
@@ -187,11 +177,10 @@
   line-height: 1.75;
 }
 
-
-
 @media (max-width: 768px) {
   .header {
     margin-left: 0;
+    margin-right: 0;
     width: 100%;
   }
   .grid {
@@ -218,25 +207,6 @@
   font-size: large;
 }
 
-.build-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  width: 100%;
-  height: 100vh;
-  margin: 3rem 0rem 0rem 0rem;
-  gap: "20px";
-}
-
-.build-header {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 0;
-}
 
 .button:disabled,
 .button[disabled]{
@@ -253,20 +223,44 @@
   background-color: #d9d9d9;
 }
 
-.attribution {
-  color: white;
-
-}
-/* .main-animation {
-  display: "flex";
-  width: auto;
-  height: 100vh;
-  min-width: 600px;
-  max-width: 0.25vh;
-  margin-left: 2rem;
-} */
-
 .footer-container {
   padding: 1rem;
   margin: 2rem;
 }
+
+.benefactor, .beneficiary {
+  width: 50%;
+  max-width: 50vw;
+  height: 100vh;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  color: #BAB4D2;
+  padding: 2rem 8rem 0rem 8rem;
+  margin: 0;
+}
+
+.benefactor u:hover, .beneficiary u:hover {
+  cursor: pointer;
+}
+
+.benefactor p, .beneficiary p {
+  text-wrap:wrap;
+  text-align: center;
+}
+
+.benefactor button, .beneficiary button {
+  background-color: #706ddb;
+  color: #d9d9d9;
+  border-radius: 8px;
+  border: none;
+  padding: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-size: large;
+} 
+
+.benefactor button:hover, .beneficiary button:hover {
+  background-color: #21212c;
+}
+

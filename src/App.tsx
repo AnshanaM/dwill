@@ -7,11 +7,14 @@ import { BrowserRouter as Router, Route, Routes, BrowserRouter } from "react-rou
 import Upload from "./Upload";
 import Dashboard from "./Dashboard";
 import AssignPage from "./AssignPage";
+import Download from "./Download";
+import Encrypt from "./Encrypt";
+import MySwitch from "./MySwitch";
 import * as constants from "./constants";
 
 interface AppProps {
   isAppInstalled: boolean;
-  handleInstallClick: () => void;
+  handleInstallClick: () => boolean;
 }
 
 const App: React.FC<AppProps> = ({ isAppInstalled, handleInstallClick }) => {
@@ -34,7 +37,10 @@ const App: React.FC<AppProps> = ({ isAppInstalled, handleInstallClick }) => {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<MainContent handleInstallClick={handleInstallClick} />}/>
+            <Route path="encrypt" element={<Encrypt />} />
             <Route path="upload" element={<Upload />} />
+            <Route path="download" element={<Download />} />
+            <Route path="my-switch" element={<MySwitch />} />
             <Route path="dashboard" element={<Dashboard />}/>
             <Route path="assign" element={<AssignPage />}/>
 

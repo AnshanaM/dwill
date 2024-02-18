@@ -48,12 +48,13 @@ export default function Main() {
     console.log(isAppInstalled);
     if (isAppInstalled==true){
       console.log("app already installed");
-      return;
+      return true;
     }
     if (installPromptEvent && installPromptEvent.prompt) {
       installPromptEvent.prompt();
       console.log("prompting user to install app");
     }
+    return false;
   };
 
   return (

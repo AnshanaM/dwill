@@ -61,7 +61,7 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageTitle, pageContent, add
                         </Link>
                     </li>
                     <li>
-                        <Link to="/">
+                        <Link to="/encrypt">
                             <SiLetsencrypt className='icon' />
                             {
                                 isSidebarOpen ? <span>Encrypt</span> : <></>
@@ -77,7 +77,7 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageTitle, pageContent, add
                         </Link>
                     </li>
                     <li>
-                        <Link to="/">
+                        <Link to="/download">
                             <TiDownload className='icon' />
                             {
                                 isSidebarOpen ? <span>Download</span> : <></>
@@ -85,7 +85,7 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageTitle, pageContent, add
                         </Link>
                     </li>
                     <li>
-                        <Link to="/">
+                        <Link to="/my-switch">
                             <TiStopwatch className='icon' />
                             {
                                 isSidebarOpen ? <span>My Switch</span> : <></>

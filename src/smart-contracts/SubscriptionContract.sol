@@ -6,10 +6,10 @@ pragma solidity ^0.8.0;
  * @title Subscription
  * @dev A smart contract for handling subscription-based payments.
  */
-contract Subscription {
+contract SubscriptionContract {
     address public owner; // address of whoever deploys this contract
-    uint256 public subscriptionAmount = 1 ether; // amount required for regular subscription
-    uint256 public firstPaymentAmount = 2 ether; // amount required for the first subscription payment
+    uint256 public subscriptionAmount = 0.05 ether; // amount required for regular subscription
+    uint256 public firstPaymentAmount = 0.1 ether; // amount required for the first subscription payment
     uint256 public subscriptionDuration = 182 days; // duration of a subscription (6 months)
     uint256 public gracePeriod = 7 days; // grace period for subscription renewal (1 week)
     uint32 constant public VALID = 1; // subscription status: valid, no need for renewal
