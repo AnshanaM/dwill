@@ -4,6 +4,7 @@ import "../styles/Page-template.css";
 import { ConnectWallet, darkTheme } from '@thirdweb-dev/react';
 import { TiUpload, TiThMenu, TiHome, TiStopwatch, TiThLarge, TiDownload } from "react-icons/ti";
 import { SiLetsencrypt } from "react-icons/Si";
+import { FaWallet } from "react-icons/fa";
 
 
 
@@ -33,33 +34,6 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageTitle, pageContent, add
                         <img className={`logo ${isSidebarOpen ? 'open' : 'closed'}`} src={isSidebarOpen ? "/images/logo.png" : "/images/icon-192x192.png"} alt="dWill logo" />
                     </Link>
                 </div>
-                {/* <div className="wallet">
-                    {isSidebarOpen ? 
-                    <ConnectWallet
-                        theme={darkTheme({
-                            colors: {
-                            primaryText: "#d9d9d9",
-                            accentText: "##707ddb",
-                            accentButtonBg: "#706ddb",
-                            modalBg: "#21212c",
-                            danger: "#db6d6d",
-                            secondaryText: "#bab4d2",
-                            accentButtonText: "#d9d9d9",
-                            primaryButtonBg: "#bab4d2",
-                            primaryButtonText: "#21212c",
-                            secondaryButtonBg: "#191a1f",
-                            secondaryButtonHoverBg: "#21212c",
-                            connectedButtonBg: "#2b2c35",
-                            connectedButtonBgHover: "#645c82",
-                            },
-                        })}
-                        modalTitleIconUrl={""}
-                        />
-                    :
-                        <></>
-                }
-                </div> */}
-
                 <ul>
                     <li>
                         <div className="sidebar-toggle" onClick={toggleSidebar}>
@@ -124,25 +98,29 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageTitle, pageContent, add
                     <ConnectWallet
                         theme={darkTheme({
                             colors: {
-                            primaryText: "#d9d9d9",
-                            accentText: "##707ddb",
-                            accentButtonBg: "#706ddb",
-                            modalBg: "#21212c",
-                            danger: "#db6d6d",
-                            secondaryText: "#bab4d2",
-                            accentButtonText: "#d9d9d9",
-                            primaryButtonBg: "#bab4d2",
-                            primaryButtonText: "#21212c",
-                            secondaryButtonBg: "#191a1f",
-                            secondaryButtonHoverBg: "#21212c",
-                            connectedButtonBg: "#2b2c35",
-                            connectedButtonBgHover: "#645c82",
+                                primaryText: "#d9d9d9",
+                                accentText: "#707ddb",
+                                accentButtonBg: "#bab4d2",
+                                modalBg: "#21212c",
+                                danger: "#db6d6d",
+                                secondaryText: "#bab4d2",
+                                accentButtonText: "#d9d9d9",
+                                primaryButtonBg: "#bab4d2",
+                                primaryButtonText: "#21212c",
+                                secondaryButtonBg: "#191a1f",
+                                secondaryButtonHoverBg: "#21212c",
+                                connectedButtonBg: "#191a1f",
+                                connectedButtonBgHover: "#645c82",
+                                secondaryButtonText: "#bab4d2",
                             },
                         })}
                         modalTitleIconUrl={""}
+                        hideDisconnect={true}
                         />
                     :
-                        <></>
+                    <div>
+                        <FaWallet className='icon' onClick={toggleSidebar} />
+                    </div>
                 }
                 </div>
             </div>

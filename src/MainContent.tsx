@@ -104,8 +104,8 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
             theme={darkTheme({
                 colors: {
                 primaryText: "#d9d9d9",
-                accentText: "##707ddb",
-                accentButtonBg: "#706ddb",
+                accentText: "#707ddb",
+                accentButtonBg: "#bab4d2",
                 modalBg: "#21212c",
                 danger: "#db6d6d",
                 secondaryText: "#bab4d2",
@@ -116,6 +116,7 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
                 secondaryButtonHoverBg: "#21212c",
                 connectedButtonBg: "#191a1f",
                 connectedButtonBgHover: "#21212c",
+                secondaryButtonText: "#bab4d2",
                 },
             })}
             modalTitleIconUrl={""}

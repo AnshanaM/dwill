@@ -62,7 +62,7 @@ img.logo.closed{
   padding: 0.5rem;
 }
 
-.sidebar ul li a:hover, .sidebar ul li .sidebar-toggle:hover{
+.sidebar ul li a:hover, .sidebar ul li .sidebar-toggle:hover, .sidebar .wallet .icon:hover{
   background-color: #645c82;
 }
 
@@ -74,6 +74,24 @@ img.logo.closed{
   line-height: 50px;
   text-align: center;
 }
+
+div .wallet .icon {
+  height: 30px;
+  min-width: 30px;
+  border-radius: 12px;
+  line-height: 50px;
+  text-align: center;
+  padding: 0rem;
+  margin: 0;
+}
+
+div .wallet div .icon {
+  padding: 0.6rem;
+  height: 50px;
+  min-width: 100%;
+  cursor: pointer;
+}
+  
   
 .sidebar ul li .sidebar-toggle .icon {
   height: 30px;
@@ -100,7 +118,9 @@ img.logo.closed{
 }
 
 .wallet {
-  margin-top: 6rem;
+  margin-bottom: 1rem;
   padding: 0.6rem;
+  justify-content: center;
+  align-items: center;
 }
 
