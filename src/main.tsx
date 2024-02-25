@@ -4,12 +4,10 @@ import App from "./App";
 import "./styles/globals.css";
 import { isInStandaloneMode } from "./utils";
 
-
 const container = document.getElementById("root");
 const root = createRoot(container!);
 
 export default function Main() {
-
   const [installPromptEvent, setInstallPromptEvent] = useState<any | undefined>();
   const [isAppInstalled, setIsAppInstalled] = useState(() => {
     // initialize from localStorage if available, otherwise default to false
@@ -48,13 +46,12 @@ export default function Main() {
     console.log(isAppInstalled);
     if (isAppInstalled==true){
       console.log("app already installed");
-      return true;
+      return;
     }
     if (installPromptEvent && installPromptEvent.prompt) {
       installPromptEvent.prompt();
       console.log("prompting user to install app");
     }
-    return false;
   };
 
   return (

@@ -2,7 +2,7 @@
 
 import React from "react";
 import MainContent from "./MainContent";
-import { ThirdwebProvider, metamaskWallet, embeddedWallet, localWallet, ConnectWallet, darkTheme } from "@thirdweb-dev/react";
+import { ThirdwebProvider, metamaskWallet, embeddedWallet, localWallet, ConnectWallet, darkTheme, ThirdwebSDKProvider } from "@thirdweb-dev/react";
 import { BrowserRouter as Router, Route, Routes, BrowserRouter } from "react-router-dom";
 import Upload from "./Upload";
 import Dashboard from "./Dashboard";
@@ -11,13 +11,15 @@ import Download from "./Download";
 import Encrypt from "./Encrypt";
 import MySwitch from "./MySwitch";
 import * as constants from "./constants";
+import {ethers} from "ethers";
 
 interface AppProps {
   isAppInstalled: boolean;
-  handleInstallClick: () => boolean;
+  handleInstallClick: () => void;
 }
 
 const App: React.FC<AppProps> = ({ isAppInstalled, handleInstallClick }) => {
+
   return (
     <>
     <ThirdwebProvider
