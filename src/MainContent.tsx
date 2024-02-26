@@ -158,9 +158,9 @@ const renew = async (contract, signer) => {
   const handleRegister = async () => {
 
   };
-  if (!success) {
-    handleLogIn();
-  }
+  // if (!success) {
+  //   handleLogIn();
+  // }
   return (
     <>
     <main>
@@ -172,7 +172,6 @@ const renew = async (contract, signer) => {
           handleInstallClick ? 
           <p className="nav-bar-item" onClick={handleInstallClick}>Install</p> : <></>
         )}
-        {(address && success)? <button onClick={redirectToDashboard}>Dashboard</button> : <></> }
         <p className="nav-bar-item" >
         <ConnectWallet
           theme={darkTheme({
