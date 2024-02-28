@@ -102,20 +102,23 @@ div .wallet div .icon {
 }
 
 .screen {
-    display: flex;
-    flex-direction: row;
-    justify-content: left;
-    width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: left;
+  margin: 0;
+  width: 100vw;
 }
 
+
 .page-container {
-    flex: 1;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+  flex-grow: 1; /* Added */
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
+
 
 .wallet {
   margin-bottom: 1rem;

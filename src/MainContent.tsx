@@ -62,9 +62,15 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
           //subscription status is EXPIRED or NEW, proceed with subscription
           subscribe(contract, signer);
         } else if (status === "within grace period, requires renewal") {
-          alert("Your subscription is within the grace period. Please renew your subscription.");
+          if (confirm("Your subscription is within the grace period. Click confirm to renew your subscription.")){
+            handleRenewal();
+          }
+          else{
+            redirectToDashboard();
+          }
         } else if (status === "no need to renew, subscription is valid") {
-          alert("Your subscription is valid. Go to dashboard.");
+          alert("Your subscription is valid. Redirecting to dashboard.");
+          redirectToDashboard();
         }
       });
   
@@ -73,7 +79,7 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
   
     } catch (error) {
       console.error('Error subscribing:', error);
-      (address == null) ? alert('Connect your wallet to subscribe.') : alert('Error.');
+      (address == null) ? alert('Connect your wallet to continue.') : alert('Error.');
     }
   };
   
@@ -108,7 +114,8 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
           alert("Your subscription is within the grace period. Renewing your subscription...");
           renew(contract, signer);
         } else if (status === "no need to renew, subscription is valid") {
-          alert("Your subscription is valid. Go to dashboard.");
+          alert("Your subscription is valid. Redirecting to dashboard.");
+          redirectToDashboard();
         }
       });
       //call the checkSubscriptionStatus function
@@ -172,6 +179,7 @@ const renew = async (contract, signer) => {
           handleInstallClick ? 
           <p className="nav-bar-item" onClick={handleInstallClick}>Install</p> : <></>
         )}
+        <p className="nav-bar-item" onClick={redirectToDashboard}>Dashboard</p>
         <p className="nav-bar-item" >
         <ConnectWallet
           theme={darkTheme({
@@ -218,7 +226,7 @@ const renew = async (contract, signer) => {
               <button onClick={redirectToDashboard}>Dashboard</button>:
               <button onClick={handleSubscribe}>Subscribe</button>
               }
-              <p>Already a subscriber? <u onClick={handleRenewal}>Renew here.</u></p>
+              <p>Already subscribed? <u onClick={handleSubscribe}>Login here.</u></p>
           </div>
           <div className="beneficiary">
               <h2>I am a beneficiary.</h2>
@@ -266,11 +274,12 @@ const renew = async (contract, signer) => {
             </a>
           </div>
         </div>
-      </main>
 
-      <div className="footer-container">
-        <p>&copy;Nott-a-Copyright</p>
-      </div>
+        <div className="footer-container">
+          <p>&copy;Nott-a-Copyright</p>
+        </div>
+        
+      </main>
 
     </>
   );
