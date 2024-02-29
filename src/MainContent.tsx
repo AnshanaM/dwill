@@ -9,8 +9,10 @@ import * as constants from "./constants";
 import { Link, scroller } from "react-scroll";
 import signer from './App';
 import subscriptionABI from './smart-contracts/SubscriptionABI.json';
+import registrationABI from './smart-contracts/RegistrationABI.json';
 import Web3 from 'web3';
 import { ethers } from "ethers";
+import { sign } from "web3/lib/commonjs/eth.exports";
 
 
 
@@ -92,6 +94,8 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
       await transaction.wait();
       console.log('Subscription successful');
       alert('Subscription successful');
+      const registerContract = new ethers.Contract(constants.OWNER_REGISTRATION,registrationABI,signer);
+      await registerContract.registerBenefactor();
       setSuccess(true);
     } catch (error) {
       console.error('Error subscribing:', error);
@@ -142,32 +146,10 @@ const renew = async (contract, signer) => {
     }
   };
 
-  const handleLogIn = async () => {
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const signer = provider.getSigner();
-    try {
-      const contract = new ethers.Contract(constants.SUBSCRIPTION_CONTRACT, subscriptionABI, signer);
-      contract.on("Status", (subscriber, status) => {
-        console.log("Subscription status:", status);
-        if (status === "within grace period, requires renewal") {
-          alert("Your subscription is within the grace period. Please renew your subscription.");
-          setSuccess(true);
-        } else if (status === "no need to renew, subscription is valid") {
-          setSuccess(true);
-        }
-      });
-      await contract.checkSubscriptionStatus(signer.getAddress());
-    } catch (error) {
-      console.error('Error when checking status of subscription:', error);
-    }
-  };
-
   const handleRegister = async () => {
 
   };
-  // if (!success) {
-  //   handleLogIn();
-  // }
+
   return (
     <>
     <main>

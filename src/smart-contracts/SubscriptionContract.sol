@@ -10,8 +10,8 @@ contract SubscriptionContract {
     address public owner; // address of whoever deploys this contract
     uint256 public subscriptionAmount = 0.0005 ether; // amount required for regular subscription
     uint256 public firstPaymentAmount = 0.001 ether; // amount required for the first subscription payment
-    uint256 public subscriptionDuration = 1 days; // duration of a subscription 182 days (6 months)
-    uint256 public gracePeriod = 1 days; // grace period for subscription renewal (1 week)
+    uint256 public subscriptionDuration = 182 days; // duration of a subscription 182 days (6 months)
+    uint256 public gracePeriod = 7 days; // grace period for subscription renewal (1 week)
     uint32 constant public VALID = 1; // subscription status: valid, no need for renewal
     uint32 constant public REQUIRES_RENEWAL = 2; // subscription status: in grace period, must renew
     uint32 constant public EXPIRED = 0; // subscription status: expired
