@@ -1,18 +1,15 @@
 // code written by the group
 
 import React, { useRef, useState } from "react";
-import { ConnectWallet, ThirdwebProvider, Web3Button, darkTheme, embeddedWallet, localWallet, metamaskWallet, useAddress, useContract, useContractRead,useSDK } from "@thirdweb-dev/react";
+import { ConnectWallet, darkTheme, useAddress } from "@thirdweb-dev/react";
 import "./styles/Home.css";
 import { isInStandaloneMode } from "./utils";
 import { useNavigate } from "react-router-dom";
 import * as constants from "./constants";
-import { Link, scroller } from "react-scroll";
-import signer from './App';
+import {scroller } from "react-scroll";
 import subscriptionABI from './smart-contracts/SubscriptionABI.json';
 import registrationABI from './smart-contracts/RegistrationABI.json';
-import Web3 from 'web3';
 import { ethers } from "ethers";
-import { sign } from "web3/lib/commonjs/eth.exports";
 
 
 
@@ -25,17 +22,18 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
   const SUBSCRIPTION_PAYMENT = '0.001';
   const RENEWAL_PAYMENT = '0.0005';
 
-  const [success, setSuccess] = useState(false); 
+  const [successBenefactor, setSuccessBenefactor] = useState(false); 
   const [showPopup, setShowPopup] = useState(false);
+  const [inputValue, setInputValue] = useState('');
 
   const navigate = useNavigate();
   console.log("client id: ",constants.DWILL_CLIENT_ID);
 
   const address = useAddress();
 
-  const redirectToDashboard = () => {
+  const redirectToDashboard = (userType: string) => {
     if (address!=null){
-      navigate("/dashboard");
+      navigate(`/dashboard?userType=${userType}`);
     }
     else{
       navigate("/");
@@ -69,20 +67,19 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
             handleRenewal();
           }
           else{
-            redirectToDashboard();
+            redirectToDashboard("benefactor");
           }
         } else if (status === "no need to renew, subscription is valid") {
           alert("Your subscription is valid. Redirecting to dashboard.");
-          redirectToDashboard();
+          redirectToDashboard("benefactor");
         }
       });
-  
       //call the checkSubscriptionStatus function
       await contract.checkSubscriptionStatus(signer.getAddress());
   
     } catch (error) {
       console.error('Error subscribing:', error);
-      (address == null) ? alert('Connect your wallet to continue.') : alert('Error.');
+      (address === null) ? alert('Connect your wallet to continue.') : alert('Error.');
     }
   };
   
@@ -97,7 +94,7 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
       alert('Subscription successful');
       const registerContract = new ethers.Contract(constants.OWNER_REGISTRATION,registrationABI,signer);
       await registerContract.registerBenefactor();
-      setSuccess(true);
+      setSuccessBenefactor(true);
     } catch (error) {
       console.error('Error subscribing:', error);
       alert('Error subscribing');
@@ -120,7 +117,7 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
           renew(contract, signer);
         } else if (status === "no need to renew, subscription is valid") {
           alert("Your subscription is valid. Redirecting to dashboard.");
-          redirectToDashboard();
+          redirectToDashboard("benefactor");
         }
       });
       //call the checkSubscriptionStatus function
@@ -128,7 +125,7 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
   
     } catch (error) {
       console.error('Error renewing:', error);
-      (address == null) ? alert('Connect your wallet to renew.') : alert('Error.');
+      (address === null) ? alert('Connect your wallet to renew.') : alert('Error.');
     }
   }
 
@@ -140,7 +137,7 @@ const renew = async (contract, signer) => {
       await transaction.wait();
       console.log('Renewal successful');
       alert('Renewal successful');
-      setSuccess(true);
+      setSuccessBenefactor(true);
     } catch (error) {
       console.error('Error renewing:', error);
       alert('Error renewing');
@@ -148,7 +145,28 @@ const renew = async (contract, signer) => {
   };
 
   const handleRegister = async () => {
-    
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      try {
+        const contract = new ethers.Contract(constants.SUBSCRIPTION_CONTRACT, subscriptionABI, signer);
+        //subscribe to the Status event
+        contract.on("Status", async (subscriber, status) => {
+          console.log("Subscription status:", status);
+          if (status === "expired" || status === "not subscribed") {
+            alert("The address you have provided does not belong to any subscribed benefactor.");
+          } else {
+            const registerContract = new ethers.Contract(constants.OWNER_REGISTRATION, registrationABI, signer);
+            const isBeneficiary = await registerContract.isBeneficiary(inputValue);
+            isBeneficiary ? redirectToDashboard("beneficiary") : alert("You are not a beneficiary of the specified benefactor.");
+          }
+        });
+        //call the checkSubscriptionStatus function
+        await contract.checkSubscriptionStatus(signer.getAddress());
+      } catch (error) {
+        console.error('Error:', error);
+        (address === null) ? alert('Connect your wallet to continue.') : alert('Error.');
+      }
+      handleClosePopUp();
   };
 
   const handleOpenPopUp = async () => {
@@ -170,7 +188,6 @@ const renew = async (contract, signer) => {
           handleInstallClick ? 
           <p className="nav-bar-item" onClick={handleInstallClick}>Install</p> : <></>
         )}
-        <p className="nav-bar-item" onClick={redirectToDashboard}>Dashboard</p>
         <p className="nav-bar-item" >
         <ConnectWallet
           theme={darkTheme({
@@ -213,30 +230,33 @@ const renew = async (contract, signer) => {
               <h2>I am a benefactor.</h2>
               <img src="../images/benefactor-1.png"/>
               <h3>I am here to allot my assets.</h3>
-              {success?
-              <button onClick={redirectToDashboard}>Dashboard</button>:
+              {successBenefactor ? 
+              <button onClick={redirectToDashboard("benefactor")}>Dashboard</button>:
               <button onClick={handleSubscribe}>Subscribe</button>
               }
+              {/* <button onClick={handleSubscribe}>Subscribe</button> */}
               <p>Already subscribed? <u onClick={handleSubscribe}>Login here.</u></p>
           </div>
           <div className="beneficiary">
               <h2>I am a beneficiary.</h2>
               <img src="../images/beneficiary-1.png"/>
               <h3>I am here to claim my assets.</h3>
-
-              {/* get benefactor address first and then check if benefactor exists */}
-              {/* if so, then pass into isBeneficiary in benefactor registration contract */}
               <button onClick={handleOpenPopUp}>Register</button>
-              <p>Already registered? <u>Login here.</u></p>
+              <p>Already registered? <u onClick={handleOpenPopUp}>Login here.</u></p>
           </div>
-          {showPopup && 
-            <div className="popup">
+            {showPopup && 
+              <div className="popup">
                 <button className="close-btn" onClick={handleClosePopUp}><b>&times;</b></button>
                 <h3>Enter your benefactor's address:</h3>
-                <input className="input-popup" type="text"></input>
+                <input
+                  className="input-popup"
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                />
                 <button onClick={handleRegister} className="landing-button">Register</button>
-            </div>
-          }
+              </div>
+            }
         </div>
       </div>
 
@@ -272,6 +292,16 @@ const renew = async (contract, signer) => {
                 </div>
             </a>
           </div>
+        </div>
+
+        <div className="video-container">
+          <h1 className="sub-header">What is dWill?</h1>
+          <iframe width="100%" height="100%" 
+                  src="https://www.youtube.com/embed/olUxebermWw?si=dHH4n5-sucnibDCI" 
+                  title="YouTube video player" 
+                  frameborder="0" 
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                  allowfullscreen></iframe>
         </div>
 
         <div className="footer-container">

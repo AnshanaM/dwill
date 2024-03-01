@@ -11,6 +11,7 @@ import { FaWallet } from "react-icons/fa";
 interface PageTemplateProps {
     pageTitle: ReactNode;
     pageContent: ReactNode;
+    user:string;
     address: string;
 }
 
@@ -61,14 +62,6 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageTitle, pageContent, add
                         </Link>
                     </li>
                     <li>
-                        <Link to="/encrypt">
-                            <SiLetsencrypt className='icon' />
-                            {
-                                isSidebarOpen ? <span>Encrypt</span> : <></>
-                            }
-                        </Link>
-                    </li>
-                    <li>
                         <Link to="/upload">
                             <TiUpload className='icon' />
                             {
@@ -76,22 +69,38 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageTitle, pageContent, add
                             }
                         </Link>
                     </li>
-                    <li>
+                    {/* <li>
+                        <Link to="/encrypt">
+                            <SiLetsencrypt className='icon' />
+                            {
+                                isSidebarOpen ? <span>Encrypt</span> : <></>
+                            }
+                        </Link>
+                    </li> */}
+                    {/* <li>
+                        <Link to="/assignBeneficiaries">
+                            <SiLetsencrypt className='icon' />
+                            {
+                                isSidebarOpen ? <span>assignBeneficiaries</span> : <></>
+                            }
+                        </Link>
+                    </li> */}
+                    {/* <li>
                         <Link to="/download">
                             <TiDownload className='icon' />
                             {
                                 isSidebarOpen ? <span>Download</span> : <></>
                             }
                         </Link>
-                    </li>
-                    <li>
+                    </li> */}
+                    {/* <li>
                         <Link to="/my-switch">
                             <TiStopwatch className='icon' />
                             {
                                 isSidebarOpen ? <span>My Switch</span> : <></>
                             }
                         </Link>
-                    </li>
+                    </li> */}
                 </ul>
                 <div className="wallet">
                     {isSidebarOpen ? 
@@ -115,7 +124,6 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageTitle, pageContent, add
                             },
                         })}
                         modalTitleIconUrl={""}
-                        hideDisconnect={true}
                         />
                     :
                     <div>

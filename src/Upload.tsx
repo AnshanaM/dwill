@@ -11,13 +11,6 @@ const Upload: React.FC = () => {
 
   const walletAddress = useAddress();
 
-  // registration logic here
-  // after registration, redirect to home page and maybe prompt to connect wallet?
-  // const {
-  //   data: contract,
-  //   isLoading: isRegisterContractLoading
-  // } = useContract(constants.OWNER_REGISTRATION);
-
 
   if (walletAddress==null){
     const navigate = useNavigate();
@@ -28,7 +21,13 @@ const Upload: React.FC = () => {
     <main>
       <div>
         {walletAddress && 
-          <PageTemplate pageTitle={<h1>Upload</h1>} pageContent={<div>hello world</div>} address={walletAddress} />
+          <PageTemplate pageTitle={<h1>Upload</h1>} pageContent={
+            
+            <div>
+              hello world
+            </div>
+
+          } address={walletAddress} user='benefactor'/>
         }
       </div>
     </main>
