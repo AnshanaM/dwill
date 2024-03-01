@@ -38,6 +38,15 @@ contract BenefactorRegistration {
     }
 
     /**
+     * @dev Benefactor who calls the function will be unregistered
+     * Reverts if the caller is not a benefactor.
+     */
+    function removeBenefactor() external {
+        require(benefactors[msg.sender].exists, "Benefactor not registered");
+        benefactors[msg.sender].exists = false;
+    }
+
+    /**
      * @dev Checks if the caller is a registered benefactor.
      * @return true if the caller is a registered benefactor, false otherwise.
      */
@@ -97,7 +106,7 @@ contract BenefactorRegistration {
      * @return true if the caller is a beneficiary of the specified benefactor, false otherwise.
      */
     function isBeneficiary(address _benefactor) external view returns (bool) {
-        for (uint256 i = 0; i < benefactors[msg.sender].beneficiaries.length; i++) {
+        for (uint256 i = 0; i < benefactors[_benefactor].beneficiaries.length; i++) {
             if (benefactors[_benefactor].beneficiaries[i] == msg.sender){
                 return true;
             }

@@ -26,6 +26,7 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
   const RENEWAL_PAYMENT = '0.0005';
 
   const [success, setSuccess] = useState(false); 
+  const [showPopup, setShowPopup] = useState(false);
 
   const navigate = useNavigate();
   console.log("client id: ",constants.DWILL_CLIENT_ID);
@@ -147,7 +148,15 @@ const renew = async (contract, signer) => {
   };
 
   const handleRegister = async () => {
+    
+  };
 
+  const handleOpenPopUp = async () => {
+    setShowPopup(true);
+  };
+
+  const handleClosePopUp = async () => {
+    setShowPopup(false);
   };
 
   return (
@@ -217,9 +226,17 @@ const renew = async (contract, signer) => {
 
               {/* get benefactor address first and then check if benefactor exists */}
               {/* if so, then pass into isBeneficiary in benefactor registration contract */}
-              <button onClick={handleRegister}>Register</button>
+              <button onClick={handleOpenPopUp}>Register</button>
               <p>Already registered? <u>Login here.</u></p>
           </div>
+          {showPopup && 
+            <div className="popup">
+                <button className="close-btn" onClick={handleClosePopUp}><b>&times;</b></button>
+                <h3>Enter your benefactor's address:</h3>
+                <input className="input-popup" type="text"></input>
+                <button onClick={handleRegister} className="landing-button">Register</button>
+            </div>
+          }
         </div>
       </div>
 
