@@ -1,3 +1,6 @@
+// sources: https://www.youtube.com/watch?v=M-KRLlHG_zs&t=3456s
+// 0xFFFc3bF91C50afA2674F8cebF91597747c5cAE61
+
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.7.0 <0.9.0;
 
@@ -41,8 +44,12 @@ contract Upload {
         }
     }
 
-    function display(address _user) external view returns(string[] memory) {
+    event DebugInfo(address indexed user, address indexed sender, bool conditionMet);
+
+    function display(address _user) external returns(string[] memory) {
         require(_user == msg.sender || ownership[_user][msg.sender], "You don't have access");
+
+        emit DebugInfo(_user, msg.sender, true);
         return value[_user];
     }
 
@@ -50,7 +57,3 @@ contract Upload {
         return accessList[msg.sender];
     }
 }
-
-
-// sources: https://www.youtube.com/watch?v=M-KRLlHG_zs&t=3456s
-// 0xd9145CCE52D386f254917e481eB44e9943F39138

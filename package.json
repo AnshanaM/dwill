@@ -13,6 +13,7 @@
     "@thirdweb-dev/sdk": "^4",
     "@thirdweb-dev/storage": "^1.0.6",
     "@types/dropzone": "^5.7.8",
+    "axios": "^1.6.7",
     "dropzone": "^6.0.0-beta.2",
     "ethers": "^5",
     "react": "^18.2",
@@ -24,6 +25,7 @@
     "web3": "^4.5.0"
   },
   "devDependencies": {
+    "@types/axios": "^0.14.0",
     "@types/react": "^18.0.9",
     "@types/react-dom": "^18.0.5",
     "@types/react-dropzone": "^5.1.0",
