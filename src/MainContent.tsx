@@ -62,6 +62,7 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
         if (status === "expired" || status === "not subscribed") {
           //subscription status is EXPIRED or NEW, proceed with subscription
           subscribe(contract, signer);
+          redirectToDashboard("benefactor");
         } else if (status === "within grace period, requires renewal") {
           if (confirm("Your subscription is within the grace period. Click confirm to renew your subscription.")){
             handleRenewal();
