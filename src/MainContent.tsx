@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import * as constants from "./constants";
 import {scroller } from "react-scroll";
 import subscriptionABI from './smart-contracts/SubscriptionABI.json';
-import registrationABI from './smart-contracts/RegistrationABI.json';
+import dmsABI from './smart-contracts/DeadMansSwitchABI.json';
 import { ethers } from "ethers";
 
 
@@ -93,8 +93,8 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
       await transaction.wait();
       console.log('Subscription successful');
       alert('Subscription successful');
-      const registerContract = new ethers.Contract(constants.OWNER_REGISTRATION,registrationABI,signer);
-      await registerContract.registerBenefactor();
+      const dmsContract = new ethers.Contract(constants.DEAD_MANS_SWITCH_CONTRACT, dmsABI, signer);
+      await dmsContract.setBenefactor();
       setSuccessBenefactor(true);
     } catch (error) {
       console.error('Error subscribing:', error);
@@ -154,11 +154,12 @@ const renew = async (contract, signer) => {
         contract.on("Status", async (subscriber, status) => {
           console.log("Subscription status:", status);
           if (status === "expired" || status === "not subscribed") {
-            alert("The address you have provided does not belong to any subscribed benefactor.");
+            alert("The address you have provided does not belong to a subscribed benefactor.");
           } else {
-            const registerContract = new ethers.Contract(constants.OWNER_REGISTRATION, registrationABI, signer);
-            const isBeneficiary = await registerContract.isBeneficiary(inputValue);
-            isBeneficiary ? redirectToDashboard("beneficiary") : alert("You are not a beneficiary of the specified benefactor.");
+            const dmsContract = new ethers.Contract(constants.DEAD_MANS_SWITCH_CONTRACT, dmsABI, signer);
+            const isBeneficiary = await dmsContract.isBeneficiary(inputValue,signer.getAddress());
+            const benefactorIsAlive = await dmsContract.checkAliveStatus(inputValue);
+            isBeneficiary && benefactorIsAlive ? redirectToDashboard("beneficiary") : alert("You are not a beneficiary of the specified benefactor or the benefactor does not exist.");
           }
         });
         //call the checkSubscriptionStatus function
@@ -236,13 +237,13 @@ const renew = async (contract, signer) => {
               <button onClick={handleSubscribe}>Subscribe</button>
               }
               {/* <button onClick={handleSubscribe}>Subscribe</button> */}
-              <p>Already subscribed? <u onClick={handleSubscribe}>Login here.</u></p>
+              <p>Already subscribed? <u onClick={handleRenewal}>Renew here.</u></p>
           </div>
           <div className="beneficiary">
               <h2>I am a beneficiary.</h2>
               <img src="../images/beneficiary-1.png"/>
               <h3>I am here to claim my assets.</h3>
-              <button onClick={handleOpenPopUp}>Register</button>
+              <button onClick={handleOpenPopUp}>Dashboard</button>
               <p>Already registered? <u onClick={handleOpenPopUp}>Login here.</u></p>
           </div>
             {showPopup && 
@@ -255,7 +256,7 @@ const renew = async (contract, signer) => {
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                 />
-                <button onClick={handleRegister} className="landing-button">Register</button>
+                <button onClick={handleRegister} className="landing-button">Log in</button>
               </div>
             }
         </div>
@@ -300,9 +301,9 @@ const renew = async (contract, signer) => {
           <iframe width="100%" height="100%" 
                   src="https://www.youtube.com/embed/olUxebermWw?si=dHH4n5-sucnibDCI" 
                   title="YouTube video player" 
-                  frameborder="0" 
+                  frameBorder="0" 
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                  allowfullscreen></iframe>
+                  allowFullScreen></iframe>
         </div>
 
         <div className="footer-container">

@@ -6,7 +6,7 @@ import "./styles/Dashboard.css";
 import { ConnectWallet, MediaRenderer, Web3Button, useAddress, useContract, useContractRead, useStorageUpload } from '@thirdweb-dev/react';
 import * as constants from "./constants";
 import PageTemplate from './components/PageTemplate';
-import registrationABI from './smart-contracts/RegistrationABI.json';
+import dmsABI from './smart-contracts/DeadMansSwitchABI.json';
 import { ethers } from 'ethers';
 
 const Dashboard: React.FC = () => {
@@ -21,6 +21,7 @@ const Dashboard: React.FC = () => {
   const walletAddress = useAddress();
   const provider = new ethers.providers.Web3Provider(window.ethereum);
   const signer = provider.getSigner();
+  const dmsContract = new ethers.Contract(constants.DEAD_MANS_SWITCH_CONTRACT, dmsABI, signer);
 
 
   const navigate = useNavigate();
@@ -65,20 +66,52 @@ const Dashboard: React.FC = () => {
     //convert the set to arrray
     const uniqueBeneficiaries = Array.from(uniqueAddresses).map(address => ({ beneficiaryAddress: address }));
     console.log(uniqueBeneficiaries);
-    const registrationContract = new ethers.Contract(constants.OWNER_REGISTRATION, registrationABI, signer);
     uniqueBeneficiaries.forEach(async beneficiary => {
       try {
-          await registrationContract.addBeneficiary(beneficiary.beneficiaryAddress);
+          await dmsContract.addBeneficiary(beneficiary.beneficiaryAddress);
           console.log(`Added beneficiary: ${beneficiary.beneficiaryAddress}`);
       } catch (error) {
+        alert("Beneficiary already exists or some other error");
           console.error(`Error adding beneficiary ${beneficiary.beneficiaryAddress}:`, error);
       }
     });
 
     //0xb3a97A66169B3D37218e1C65b738cabCFA0bbfca
     //0x3f8724A29fc72Dc694DfdfeE43668f36Df807726
-
   };
+
+  const handleDisableSwitch = () => {
+    try{
+      dmsContract.respondToSwitch({from: signer.getAddress()}); 
+      alert("Succesfully responded to your switch.");
+    }
+    catch(error){
+      alert("An error occured when responding to your switch.");
+    }
+      
+  }
+
+  const [benefactorAddress, setBenefactor] = useState('');
+  const handleAddressChange = (event) => {
+    setBenefactor(event.target.value);
+  };
+
+  const handleEnableSwitch = async (_benefactor: string) => {
+    try{
+      console.log(_benefactor);
+      if (dmsContract.checkAliveStatus(_benefactor)){
+        await dmsContract.enableSwitch(_benefactor,{from: signer.getAddress()}); 
+        alert("Successfully enabled your benefactor's dead mans switch.");
+      }
+      else{
+        alert("Benefactor does not exist.");
+      }
+    }
+    catch (error){
+      alert("An error occured when enabling your benefactor's switch.");
+    }
+    
+  }
   
   return (
     <main>
@@ -103,9 +136,12 @@ const Dashboard: React.FC = () => {
                     <button>Encrypt</button>
                   </div>
 
-                  <div>
-                  <button>Disable switch</button>
-                  </div>
+                  
+                    <div>
+                      <button onClick={() => handleDisableSwitch()}>Disable switch</button>
+                    </div>
+                  
+                  
 
                   <br/>
                   <div>
@@ -129,7 +165,8 @@ const Dashboard: React.FC = () => {
                   </div>
               
                   <div>
-                  <button>Enable switch</button>
+                  <input type="text" value={benefactorAddress} onChange={(e)=>handleAddressChange(e)} placeholder="Enter benefactor address" />
+                  <button onClick={() => handleEnableSwitch(benefactorAddress.toString())}>Enable switch</button>
                   </div>
                 </>
               }

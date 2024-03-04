@@ -57,14 +57,21 @@ contract BenefactorsDeadManSwitch {
         benefactors[msg.sender].countdownDuration = 120 seconds;
         benefactors[msg.sender].isSwitchedOff = true;
         benefactors[msg.sender].isAlive = true;
-        benefactors[msg.sender].lastBenefactorResponseTime = null;
+        benefactors[msg.sender].lastBenefactorResponseTime = 0;
     }
 
     /**
      * @dev Removes a benefactor. Only callable by benefactor.
      */
     function removeBenefactor(address _benefactor) public {
+        require(benefactors[msg.sender].exists, "Benefactor not registered");
+        benefactors[msg.sender].exists = false;
         delete benefactors[_benefactor];
+    }
+
+    function getSwitchStatus(address _benefactor) public view returns (bool) {
+        require(benefactors[_benefactor].exists,"Benefactor does not exist");
+        return !benefactors[_benefactor].isSwitchedOff;
     }
 
     /**
@@ -173,12 +180,17 @@ contract BenefactorsDeadManSwitch {
      * @return A boolean indicating whether the benefactor is alive.
      */
     function checkAliveStatus(address _benefactor) public returns (bool) {
-         if (benefactors[_benefactor].lastBenefactorResponseTime != null) {
-            uint256 remainingCountdown = getRemainingCountdownTime(_benefactor);
-            if (remainingCountdown == 0) {
-                benefactors[_benefactor].isAlive = false;
-            }
+        if (getSwitchStatus(_benefactor)){
+            if (benefactors[_benefactor].lastBenefactorResponseTime != 0) {
+                uint256 remainingCountdown = getRemainingCountdownTime(_benefactor);
+                if (remainingCountdown <= 0) {
+                    benefactors[_benefactor].isAlive = false;
+                }
+             }   
         }
+        // else{
+        //     benefactors[_benefactor].isAlive = false;
+        // }
         return benefactors[_benefactor].isAlive;
     }
 
