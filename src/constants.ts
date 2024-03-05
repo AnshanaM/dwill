@@ -1,8 +1,8 @@
 export const DWILL_SECRET_KEY = "zzGchezixG5ijRp_pDKLVifSWzP8E63WZWFT2Y8dynaCAMREMrTtWTVkhZOzmoJedk-7D5B4gdQaDzbWZiABeQ";
 export const DWILL_CLIENT_ID = '411bc9e2b0bc64abdebdda4cf1c246ab';
 
-export const PINATA_API_KEY= "d6688b0ecb14ecb4c515";
-export const PINATA_SECRET_KEY= "71707783c08ff4feb4d115683fd0083a0d2df3999f505c781beb0f6354a644fd";
+export const PINATA_API_KEY= "f4f42f78bea9e32579e9";
+export const PINATA_SECRET_KEY= "6d58336b3a57e793e3d4f87eceec1a44f2cbd22d428d3cfcce40965b5c4d548b";
 
 
 export const SUBSCRIPTION_CONTRACT = "0x8840dbCab029B71E87fEE13f3D4F2cC1FBA4b3b7";

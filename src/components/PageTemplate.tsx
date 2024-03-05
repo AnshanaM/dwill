@@ -15,9 +15,10 @@ interface PageTemplateProps {
     address: string;
 }
 
-const PageTemplate: React.FC<PageTemplateProps> = ({ pageTitle, pageContent, address }) => {
+const PageTemplate: React.FC<PageTemplateProps> = ({ pageTitle, pageContent,user, address }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true); // State to control sidebar visibility
     const navigate = useNavigate();
+    const userType = user;
 
     if (address == null) {
         navigate("/");
@@ -26,6 +27,15 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageTitle, pageContent, add
     const toggleSidebar = () => {
         setIsSidebarOpen(!isSidebarOpen);
     };
+
+    const redirectToDashboard = (userType: string) => {
+        if (address!=null){
+          navigate(`/dashboard?userType=${userType}`);
+        }
+        else{
+          navigate("/");
+        }
+      }
 
     return (
         <div className="screen">
@@ -55,7 +65,7 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageTitle, pageContent, add
 
                     <li>
                         <Link to="/dashboard">
-                            <TiThLarge className='icon' />
+                            <TiThLarge className='icon'/>
                             {
                                 isSidebarOpen ? <span>Dashboard</span> : <></>
                             }
@@ -69,38 +79,7 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageTitle, pageContent, add
                             }
                         </Link>
                     </li>
-                    {/* <li>
-                        <Link to="/encrypt">
-                            <SiLetsencrypt className='icon' />
-                            {
-                                isSidebarOpen ? <span>Encrypt</span> : <></>
-                            }
-                        </Link>
-                    </li> */}
-                    {/* <li>
-                        <Link to="/assignBeneficiaries">
-                            <SiLetsencrypt className='icon' />
-                            {
-                                isSidebarOpen ? <span>assignBeneficiaries</span> : <></>
-                            }
-                        </Link>
-                    </li> */}
-                    {/* <li>
-                        <Link to="/download">
-                            <TiDownload className='icon' />
-                            {
-                                isSidebarOpen ? <span>Download</span> : <></>
-                            }
-                        </Link>
-                    </li> */}
-                    {/* <li>
-                        <Link to="/my-switch">
-                            <TiStopwatch className='icon' />
-                            {
-                                isSidebarOpen ? <span>My Switch</span> : <></>
-                            }
-                        </Link>
-                    </li> */}
+                    
                 </ul>
                 <div className="wallet">
                     {isSidebarOpen ? 

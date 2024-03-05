@@ -9,6 +9,7 @@ import PageTemplate from './components/PageTemplate';
 import axios from 'axios';
 import { ethers } from 'ethers';
 import UploadABI from './smart-contracts/UploadABI.json';
+import dmsABI from './smart-contracts/DeadMansSwitchABI.json';
 
 const Upload: React.FC = () => {
 
@@ -19,10 +20,13 @@ const Upload: React.FC = () => {
     navigate("/");
   }
 
+  const signer = useSigner();
+
+  const dmsContract = new ethers.Contract(constants.DEAD_MANS_SWITCH_CONTRACT, dmsABI, signer);
 
   const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState(null);
-  const contract = new ethers.Contract(constants.UPLOAD_CONTRACT,UploadABI,useSigner());
+  const contract = new ethers.Contract(constants.UPLOAD_CONTRACT,UploadABI,signer);
 
   const handleSubmit = async (e: { preventDefault: () => void; }) => {
     e.preventDefault();
@@ -51,15 +55,24 @@ const Upload: React.FC = () => {
         contract.add(walletAddress, ImgHash);
         console.log(ImgHash);
 
-        alert("Successfully Image Uploaded");
+        //perform encryption of image hash!!
+        const beneficiaryAddressInput = document.getElementById("beneficiary-address") as HTMLInputElement;
+        let beneficiaryAddress = beneficiaryAddressInput.value.trim();
+        console.log(beneficiaryAddress);
+        try {
+          dmsContract.addIpfsCID(beneficiaryAddress,ImgHash, {from: walletAddress});
+        }
+        catch (e) {
+          console.log("error: ",e);
+        }
+
+        alert("Successfully uploaded data.");
         // setFileName("No image selected");
         setFile(null);
       } catch (e) {
         alert("Unable to upload image to Pinata");
       }
     }
-    // alert("Successfully Image Uploaded");
-    // setFileName("No image selected");
     setFile(null);
 
   };
@@ -112,9 +125,10 @@ const Upload: React.FC = () => {
                   type="file"
                   id="file-upload"
                   name="data"
-                  onChange={retrieveFile}
+                  onChange={() => retrieveFile}
                 />
                 <p className="text-white">File: {fileName}</p>
+                <input type='text' id="beneficiary-address" name="b_address" placeholder='Enter beneficiary address:'></input>
                 <button type="submit" className="newBtn" disabled={!file}>
                   Upload File
                 </button>
