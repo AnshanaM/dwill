@@ -79,7 +79,7 @@ main {
   max-height: 5rem;
   margin-top: 0;
   position: fixed;
-  background-color: black;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
 
 }
 
@@ -285,6 +285,7 @@ main {
 
 .benefactor button:hover, .beneficiary button:hover{
   background-color: #504d9a;
+  cursor:pointer;
 }
 
 .popup {

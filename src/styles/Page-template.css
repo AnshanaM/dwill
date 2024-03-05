@@ -1,3 +1,10 @@
+.screen {
+  display: flex;
+  flex-direction: row;
+  justify-content: left;
+  width: 100vw;
+  gap: 300px;
+}
 .sidebar {
   height: 100%;
   width: 200px;
@@ -6,8 +13,38 @@
   transition: width 0.3s ease;
 }
 
+.benefactor-address {
+  width: 35vw;
+  padding: 5px;
+  border:none;
+  background-color: #d9d9d9;
+  border-radius: 5px;
+  margin-right: 10px;
+}
+
+button {
+  background-color: #706ddb;
+  color: #d9d9d9;
+  border-radius: 8px;
+  border: none;
+  padding: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-size: large;
+}
+
+button:hover {
+  background-color: #504d9a;
+  cursor: pointer;
+}
+
 .sidebar.closed {
   width: 4rem;
+  margin-right: 20px;
+}
+
+.sidebar.open{
+  margin-right: 20px;
 }
 
 img.logo.open {
@@ -101,24 +138,24 @@ div .wallet div .icon {
   text-align: center;
 }
 
-.screen {
-  display: flex;
-  flex-direction: row;
-  justify-content: left;
-  margin: 0;
-  width: 100vw;
-}
-
 
 .page-container {
-  flex-grow: 1; /* Added */
-  margin: 0;
+  /* flex-grow: 1; */
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  justify-content: left;
+  align-items: left;
+  /* width: 75vw; */
+  width: 100%;
+  margin-left: 220px;
+  margin-right: 20px;
 }
 
+.page-content {
+  background-color: #21212c;
+  border-radius: 15px;
+  padding: 20px;
+}
 
 .wallet {
   margin-bottom: 1rem;
