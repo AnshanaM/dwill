@@ -117,8 +117,8 @@ const Dashboard: React.FC = () => {
     <main>
       <div>
         {walletAddress && 
-          <PageTemplate pageTitle={<div className='page-title'><h1>Dashboard</h1></div>} pageContent={
-            <div className='page-content'>
+          <PageTemplate pageTitle={<h1>Dashboard</h1>} pageContent={
+            <div>
 
               <div>!Display countdown here for both benefactor and beneficiaries!</div>
 
@@ -140,6 +140,8 @@ const Dashboard: React.FC = () => {
                     <div>
                       <button onClick={() => handleDisableSwitch()}>Disable switch</button>
                     </div>
+                  
+                  
 
                   <br/>
                   <div>
@@ -147,12 +149,11 @@ const Dashboard: React.FC = () => {
                     {
                       beneficiaries.map((val,i)=>
                       <div>
-                        <input name="beneficiary-address" value={val.beneficiaryAddress} onChange={(e)=>handleChange(e,i)}/>
+                        <input name="beneficiaryAddress" value={val.beneficiaryAddress} onChange={(e)=>handleChange(e,i)}/>
                         <button onClick={()=>handleRemove(i)}><b>&times;</b></button>
                       </div>
                       )
                     }
-                    <br/>
                     <button onClick={() => handleAssign(beneficiaries)}>Assign</button>
                   </div>
                 </>
@@ -163,9 +164,9 @@ const Dashboard: React.FC = () => {
                     <button>Download</button>
                   </div>
               
-                  <div style={{paddingTop: "20px"}}>
-                  <input className="benefactor-address" type="text" value={benefactorAddress} onChange={(e)=>handleAddressChange(e)} placeholder="Enter benefactor address" />
-                  <button style={{marginTop: "20px"}}onClick={() => handleEnableSwitch(benefactorAddress.toString())}>Enable switch</button>
+                  <div>
+                  <input type="text" value={benefactorAddress} onChange={(e)=>handleAddressChange(e)} placeholder="Enter benefactor address" />
+                  <button onClick={() => handleEnableSwitch(benefactorAddress.toString())}>Enable switch</button>
                   </div>
                 </>
               }
