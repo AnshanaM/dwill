@@ -22,21 +22,6 @@
   margin-right: 10px;
 }
 
-button {
-  background-color: #706ddb;
-  color: #d9d9d9;
-  border-radius: 8px;
-  border: none;
-  padding: 0.85rem;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  font-size: large;
-}
-
-button:hover {
-  background-color: #504d9a;
-  cursor: pointer;
-}
 
 .sidebar.closed {
   width: 4rem;

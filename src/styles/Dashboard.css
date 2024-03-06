@@ -1,0 +1,49 @@
+.title-container {
+    display: flex;
+    flex-direction: row;
+    padding: 2rem;
+    align-items: center;
+}
+
+.title-container .right-content {
+    margin-left: auto;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 2rem;
+}
+
+.title-container .beneficiary-right {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+}
+
+.title-container button {
+    background-color: #db6d6d;
+    color: #d9d9d9;
+    border-radius: 8px;
+    border: none;
+    padding: 0.85rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: medium;
+    width: max-content;
+    height: max-content;
+    text-wrap: nowrap;
+}
+
+.title-container button:hover {
+    background-color: #b25959;
+    cursor: pointer;
+}
+
+.title-container .beneficiary-right input {
+    width: max-content;
+    height: max-content;
+    padding: 10px;
+    border-radius: 10px;
+    background-color: #d9d9d9;
+    border-color: #d9d9d9;
+  }
