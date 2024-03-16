@@ -8,6 +8,8 @@ import * as constants from "./constants";
 import PageTemplate from './components/PageTemplate';
 import dmsABI from './smart-contracts/DeadMansSwitchABI.json';
 import { ethers } from 'ethers';
+import { PINATA_API_KEY, PINATA_SECRET_KEY } from './constants'; 
+import axios from 'axios';
 
 const Dashboard: React.FC = () => {
   const location = useLocation();
@@ -23,6 +25,8 @@ const Dashboard: React.FC = () => {
   const signer = provider.getSigner();
   const dmsContract = new ethers.Contract(constants.DEAD_MANS_SWITCH_CONTRACT, dmsABI, signer);
 
+  const [ipfsCid, setIpfsCid] = useState('');
+  const [downloadUrl, setDownloadUrl] = useState('');
 
   const navigate = useNavigate();
   function redirectToHomePage(): void {
@@ -111,7 +115,39 @@ const Dashboard: React.FC = () => {
       alert("An error occured when enabling your benefactor's switch.");
     }
     
+
   }
+
+  const handleRetrieveIpfsCid = () => {
+    // Make an API call to retrieve the IPFS CID or hash
+    axios
+      .get('https://api.pinata.cloud/data/pinList?status=pinned', {
+        headers: {
+          pinata_api_key: PINATA_API_KEY,
+          pinata_secret_api_key: PINATA_SECRET_KEY,
+        },
+      })
+      .then(response => {
+        const fileCid = response.data.rows[0].ipfs_pin_hash;
+        setIpfsCid(fileCid);
+      })
+      .catch(error => {
+        console.error('Error retrieving IPFS CID:', error);
+      });
+  };
+
+  const handleDownloadFile = () => {
+    // Assuming you have the IPFS CID stored in the state variable `ipfsCid`
+    if (ipfsCid) {
+      // Generate the download URL for the file
+      const downloadUrl = `https://gateway.pinata.cloud/ipfs/${ipfsCid}`;
+      setDownloadUrl(downloadUrl);
+      // Trigger file download
+      window.open(downloadUrl, '_blank');
+    } else {
+      console.error('IPFS CID is empty');
+    }
+  };
   
   return (
     <main>
@@ -189,7 +225,15 @@ const Dashboard: React.FC = () => {
                 <>
                   <div>
                     <h3>when countdown is over and benefactor is assumed dead, enable the download button</h3>
-                    <button>Download</button>
+                    <button onClick={handleRetrieveIpfsCid}>Retrieve IPFS CID</button>
+                    <button onClick={handleDownloadFile}>Download File</button>
+                    {ipfsCid && <p>IPFS CID: {ipfsCid}</p>}
+                    {downloadUrl && (
+                   <p>
+                    <a href={downloadUrl} target="_blank" rel="noopener noreferrer">Download Link
+                  </a>
+                  </p>
+                    )}
                   </div>
                 </>
               }
