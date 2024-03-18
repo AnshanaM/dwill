@@ -2,20 +2,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-/**
- * @title BenefactorsDeadManSwitch
- * @dev Smart contract for managing a benefactor's dead man's switch with assigned beneficiaries.
- */
-
 contract BenefactorsDeadManSwitch {
 
     struct Beneficiary {
         bool exists;
-        string[] ipfsCIDs; // array to store IPFS CIDs
+        string[] ipfsCIDs;
     }
+
     struct BenefactorInfo {
         bool exists;
         mapping(address => Beneficiary) beneficiaries;
+        address[] beneficiaryAddresses;
         uint256 countdownDuration;
         uint256 lastBenefactorResponseTime;
         bool isSwitchedOff;
@@ -36,37 +33,29 @@ contract BenefactorsDeadManSwitch {
     event IpfsCIDAdded(address indexed benefactor, address indexed beneficiary, string ipfsCID);
     event IpfsCIDRemoved(address indexed benefactor, address indexed beneficiary, string ipfsCID);
 
-
-    /**
-     * @dev Modifier to check if the caller is the benefactor.
-     */
     modifier onlyBenefactor() {
         require(benefactors[msg.sender].exists && benefactors[msg.sender].isAlive, "Not a valid benefactor");
         _;
     }
 
+
     constructor() {}
 
-    /**
-     * @dev Sets up a benefactor. Only callable by benefactor.
-     */
-    function setBenefactor() public{
+    function setBenefactor() public {
         require(!benefactors[msg.sender].exists,"benefactor already exists");
-        benefactors[msg.sender].exists=true;
-        //benefactors[msg.sender].countdownDuration = 7*24*3600 seconds; // count down set to 1 week
-        benefactors[msg.sender].countdownDuration = 120 seconds;
-        benefactors[msg.sender].isSwitchedOff = true;
-        benefactors[msg.sender].isAlive = true;
-        benefactors[msg.sender].lastBenefactorResponseTime = 0;
+        BenefactorInfo storage newBenefactor = benefactors[msg.sender];
+        newBenefactor.exists = true;
+        newBenefactor.countdownDuration = 7*24*3600 seconds;
+        newBenefactor.isSwitchedOff = true;
+        newBenefactor.isAlive = true;
+        newBenefactor.lastBenefactorResponseTime = 0;
     }
 
-    /**
-     * @dev Removes a benefactor. Only callable by benefactor.
-     */
+
     function removeBenefactor(address _benefactor) public {
-        require(benefactors[msg.sender].exists, "Benefactor not registered");
-        benefactors[msg.sender].exists = false;
-        delete benefactors[_benefactor];
+        BenefactorInfo storage newBenefactor = benefactors[_benefactor];
+        newBenefactor.exists = false;
+        newBenefactor.isAlive = false;
     }
 
     function getSwitchStatus(address _benefactor) public view returns (bool) {
@@ -74,111 +63,65 @@ contract BenefactorsDeadManSwitch {
         return !benefactors[_benefactor].isSwitchedOff;
     }
 
-    /**
-     * @dev Checks if the given address is a beneficiary. Only benefactor
-     * @param _address The address to check.
-     * @return A boolean indicating whether the address is a beneficiary.
-     */
     function isBeneficiary(address _benefactor, address _address) public view returns (bool) {
         return benefactors[_benefactor].beneficiaries[_address].exists;
     }
 
-    /**
-     * @dev Removes a beneficiary from the list. Only callable by the benefactor.
-     * @param _beneficiary The address of the beneficiary to be removed.
-     */
     function removeBeneficiary(address _beneficiary) external onlyBenefactor {
         require(isBeneficiary(msg.sender,_beneficiary), "Beneficiary not found");
         delete benefactors[msg.sender].beneficiaries[_beneficiary];
         emit BeneficiaryRemoved(msg.sender,_beneficiary);
     }
 
-    /**
-     * @dev Adds a new beneficiary to the list. Only callable by the benefactor.
-     * @param _beneficiary The address of the new beneficiary.
-     */
     function addBeneficiary(address _beneficiary) external onlyBenefactor {
         require(!isBeneficiary(msg.sender,_beneficiary), "Beneficiary already exists");
         benefactors[msg.sender].beneficiaries[_beneficiary] = Beneficiary(true, new string[](0));
+        benefactors[msg.sender].beneficiaryAddresses.push(_beneficiary);
         emit BeneficiaryAdded(msg.sender,_beneficiary);
     }
 
-    /**
-     * @dev Adds an IPFS CID to the specified beneficiary. Only callable by the benefactor.
-     * @param _beneficiary The address of the beneficiary.
-     * @param _ipfsCID The IPFS CID to add.
-     */
     function addIpfsCID(address _beneficiary, string memory _ipfsCID) external onlyBenefactor {
         require(isBeneficiary(msg.sender,_beneficiary), "Beneficiary not found");
         string[] storage ipfsCIDs = benefactors[msg.sender].beneficiaries[_beneficiary].ipfsCIDs;
-        //check if cid already exists
         for (uint256 i = 0; i < ipfsCIDs.length; i++) {
             require(keccak256(abi.encodePacked(ipfsCIDs[i])) != keccak256(abi.encodePacked(_ipfsCID)), "CID already assigned to this beneficiary");
         }
-        //if CID doesn't exist, append it to the list
         benefactors[msg.sender].beneficiaries[_beneficiary].ipfsCIDs.push(_ipfsCID);
         emit IpfsCIDAdded(msg.sender,_beneficiary, _ipfsCID);
     }
 
-    /**
-     * @dev Removes an IPFS CID from the specified beneficiary. Only callable by benefactor.
-     * @param _beneficiary The address of the beneficiary.
-     * @param _ipfsCID The IPFS CID to remove.
-     */
     function removeIpfsCID(address _beneficiary, string memory _ipfsCID) external onlyBenefactor {
         require(isBeneficiary(msg.sender, _beneficiary), "Beneficiary not found");
 
         string[] storage ipfsCIDs = benefactors[msg.sender].beneficiaries[_beneficiary].ipfsCIDs;
         
-        // check if the CID exists
         for (uint256 i = 0; i < ipfsCIDs.length; i++) {
             if (keccak256(abi.encodePacked(ipfsCIDs[i])) == keccak256(abi.encodePacked(_ipfsCID))) {
-                // remove CID by overwriting with the last element
                 ipfsCIDs[i] = ipfsCIDs[ipfsCIDs.length - 1];
-                // decrease the array length by one
                 ipfsCIDs.pop();
                 emit IpfsCIDRemoved(msg.sender, _beneficiary, _ipfsCID);
                 return;
             }
         }
-        // CID not found
         revert("CID not assigned to this beneficiary");
     }
 
-
-    /**
-     * @dev Enables the dead man's switch. Only callable by beneficiaries.
-     * @param _benefactor The address of the benefactor.
-     */
     function enableSwitch(address _benefactor) external {
-        //checks if the caller is a beneficiary of the benefactor
         require(benefactors[_benefactor].beneficiaries[msg.sender].exists, "Not a valid beneficiary");
         if (!benefactors[_benefactor].isSwitchedOff) {
             emit SwitchAlreadyOn(_benefactor,msg.sender);
             return;
         }
-        benefactors[_benefactor].isSwitchedOff = false; // switch is on
-        // countdown starts
-        benefactors[_benefactor].lastBenefactorResponseTime = block.timestamp; //setting last response time as current time, this shows that countdown starts at this moment when the switch is enabled
+        benefactors[_benefactor].isSwitchedOff = false;
+        benefactors[_benefactor].lastBenefactorResponseTime = block.timestamp;
         emit DeadMansSwitchEnabled(_benefactor,msg.sender, benefactors[_benefactor].countdownDuration);
     }
 
-    /**
-     * @dev Returns the remaining countdown time.
-     * @param _benefactor The address of the benefactor.
-     * @return The remaining countdown time in seconds.
-     */
-    function getRemainingCountdownTime(address _benefactor) public returns (uint256) {
+    function getRemainingCountdownTime(address _benefactor) public view returns (uint256) {
         uint256 responseTime = block.timestamp - benefactors[_benefactor].lastBenefactorResponseTime;
-        emit RemainingCountdownInfo(_benefactor,benefactors[_benefactor].countdownDuration, responseTime, block.timestamp, benefactors[_benefactor].lastBenefactorResponseTime);
         return (responseTime > benefactors[_benefactor].countdownDuration) ? 0 : benefactors[_benefactor].countdownDuration - responseTime;
     }
 
-    /**
-     * @dev Checks the alive status of the benefactor.
-     * @param _benefactor The address of the benefactor.
-     * @return A boolean indicating whether the benefactor is alive.
-     */
     function checkAliveStatus(address _benefactor) public returns (bool) {
         if (getSwitchStatus(_benefactor)){
             if (benefactors[_benefactor].lastBenefactorResponseTime != 0) {
@@ -188,15 +131,9 @@ contract BenefactorsDeadManSwitch {
                 }
              }   
         }
-        // else{
-        //     benefactors[_benefactor].isAlive = false;
-        // }
         return benefactors[_benefactor].isAlive;
     }
 
-    /**
-     * @dev Disables the dead man's switch. Only callable by the benefactor.
-     */
     function disableSwitch() internal onlyBenefactor {
         if (benefactors[msg.sender].isSwitchedOff) {
             emit SwitchAlreadyOff(msg.sender,msg.sender);
@@ -206,9 +143,6 @@ contract BenefactorsDeadManSwitch {
         emit DeadMansSwitchDisabled(msg.sender,msg.sender, block.timestamp);
     }
 
-    /**
-     * @dev Performs actions based on benefactor's activity when responding to an enabled switch. Only callable by the benefactor.
-     */
     function respondToSwitch() external onlyBenefactor {
         if (benefactors[msg.sender].lastBenefactorResponseTime != 0) {
             if (checkAliveStatus(msg.sender)) {
@@ -226,14 +160,25 @@ contract BenefactorsDeadManSwitch {
         }
     }
     
-    /**
-     * @dev Release CIDs to beneficiary.
-     * @param _benefactor The address of the benefactor.
-     * @param _beneficiary The address of the beneficiary.
-     */
-    function getCIDs(address _benefactor, address _beneficiary) public view returns (string[] memory){
+    function getCIDs(address _benefactor, address _beneficiary) public returns (string[] memory){
         require(isBeneficiary(_benefactor,_beneficiary),"Beneficiary not found");
-        require(benefactors[_benefactor].beneficiaries[msg.sender].exists && benefactors[_benefactor].isAlive == false,"No access to CIDs");
+        require(!checkAliveStatus(_benefactor), "No access to CIDs");
         return benefactors[_benefactor].beneficiaries[_beneficiary].ipfsCIDs;
+    }
+
+
+    
+    function getDisplayCIDs() public view returns (address[] memory, string[][] memory) {
+        require(benefactors[msg.sender].exists, "No access to CIDs");
+        uint256 totalBeneficiaries = benefactors[msg.sender].beneficiaryAddresses.length;
+        address[] memory beneficiaryAddresses = new address[](totalBeneficiaries);
+        string[][] memory beneficiaryCIDs = new string[][](totalBeneficiaries);
+        for (uint256 i = 0; i < totalBeneficiaries; i++) {
+            address beneficiaryAddress = benefactors[msg.sender].beneficiaryAddresses[i];
+            string[] memory cids = benefactors[msg.sender].beneficiaries[beneficiaryAddress].ipfsCIDs;
+            beneficiaryAddresses[i] = beneficiaryAddress;
+            beneficiaryCIDs[i] = cids;
+        }
+        return (beneficiaryAddresses, beneficiaryCIDs);
     }
 }

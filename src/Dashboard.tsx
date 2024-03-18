@@ -75,9 +75,6 @@ const Dashboard: React.FC = () => {
           console.error(`Error adding beneficiary ${beneficiary.beneficiaryAddress}:`, error);
       }
     });
-
-    //0xb3a97A66169B3D37218e1C65b738cabCFA0bbfca
-    //0x3f8724A29fc72Dc694DfdfeE43668f36Df807726
   };
 
   const handleDisableSwitch = () => {
@@ -92,7 +89,7 @@ const Dashboard: React.FC = () => {
   }
 
   const [benefactorAddress, setBenefactor] = useState('');
-  const handleAddressChange = (event) => {
+  const handleAddressChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setBenefactor(event.target.value);
   };
 
@@ -109,8 +106,7 @@ const Dashboard: React.FC = () => {
     }
     catch (error){
       alert("An error occured when enabling your benefactor's switch.");
-    }
-    
+    } 
   }
   
   return (
@@ -156,18 +152,6 @@ const Dashboard: React.FC = () => {
                   <div>
                     <h2>Display files here </h2>
                   </div>
-
-                  <div>
-                    <h3>when atleast 1 file is selected, enable the encrypt button</h3>
-                    <button>Encrypt</button>
-                  </div>
-
-                  
-                    <div>
-                      <button onClick={() => handleDisableSwitch()}>Disable switch</button>
-                    </div>
-                  
-                  
 
                   <br/>
                   <div>
