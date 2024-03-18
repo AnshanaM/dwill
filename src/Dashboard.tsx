@@ -1,6 +1,6 @@
 // code written by the group
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import "./styles/Dashboard.css";
 import { ConnectWallet, MediaRenderer, Web3Button, useAddress, useContract, useContractRead, useStorageUpload } from '@thirdweb-dev/react';
@@ -119,7 +119,7 @@ const Dashboard: React.FC = () => {
   }
 
   const handleRetrieveIpfsCid = () => {
-    // Make an API call to retrieve the IPFS CID or hash
+    // Make an API call to retrieve the IPFS CIDs or hashes
     axios
       .get('https://api.pinata.cloud/data/pinList?status=pinned', {
         headers: {
@@ -128,24 +128,62 @@ const Dashboard: React.FC = () => {
         },
       })
       .then(response => {
-        const fileCid = response.data.rows[0].ipfs_pin_hash;
-        setIpfsCid(fileCid);
+        const fileCids = response.data.rows.map(row => row.ipfs_pin_hash);
+        setIpfsCid(fileCids);
       })
       .catch(error => {
-        console.error('Error retrieving IPFS CID:', error);
+        console.error('Error retrieving IPFS CIDs:', error);
       });
   };
+  
+  // const handleDownloadFiles = () => {
+  //   // Assuming you have the IPFS CIDs stored in the state variable `ipfsCid`
+  //   if (ipfsCid && ipfsCid.length > 0) {
+  //     // Iterate over each IPFS CID and download the corresponding file
+  //     ipfsCid.forEach(cid => {
+  //       // Generate the download URL for the file
+  //       const downloadUrl = `https://gateway.pinata.cloud/ipfs/${cid}`;
+  //       // Trigger file download
+  //       const link = document.createElement('a');
+  //       link.href = downloadUrl;
+  //       link.target = '_blank';
+  //       link.rel = 'noopener noreferrer';
+  //       link.click();
+  //     });
+  //   } else {
+  //     console.error('IPFS CIDs are empty');
+  //   }
+  // };
 
-  const handleDownloadFile = () => {
-    // Assuming you have the IPFS CID stored in the state variable `ipfsCid`
-    if (ipfsCid) {
-      // Generate the download URL for the file
-      const downloadUrl = `https://gateway.pinata.cloud/ipfs/${ipfsCid}`;
-      setDownloadUrl(downloadUrl);
-      // Trigger file download
-      window.open(downloadUrl, '_blank');
+  useEffect(() => {
+    // Retrieve the IPFS CIDs when the component mounts
+    handleRetrieveIpfsCid();
+  }, []);
+
+  const handleDownloadFile = async () => {
+    if (ipfsCid && ipfsCid.length > 0) {
+      // Iterate over each IPFS CID and download the corresponding file
+      ipfsCid.forEach(async (cid) => {
+        try {
+          // Retrieve the file data from IPFS
+          const response = await axios.get(`https://gateway.pinata.cloud/ipfs/${cid}`, {
+            responseType: 'blob', // Set the response type to blob
+          });
+  
+          // Create a download link for the file
+          const downloadUrl = window.URL.createObjectURL(new Blob([response.data]));
+  
+          // Trigger file download
+          const link = document.createElement('a');
+          link.href = downloadUrl;
+          link.download = cid; // Set the file name to the CID
+          link.click();
+        } catch (error) {
+          console.error(`Error downloading file with CID ${cid}:`, error);
+        }
+      });
     } else {
-      console.error('IPFS CID is empty');
+      console.error('IPFS CIDs are empty');
     }
   };
   
@@ -225,7 +263,7 @@ const Dashboard: React.FC = () => {
                 <>
                   <div>
                     <h3>when countdown is over and benefactor is assumed dead, enable the download button</h3>
-                    <button onClick={handleRetrieveIpfsCid}>Retrieve IPFS CID</button>
+                    {/* <button onClick={handleRetrieveIpfsCid}>Retrieve IPFS CID</button> */}
                     <button onClick={handleDownloadFile}>Download File</button>
                     {ipfsCid && <p>IPFS CID: {ipfsCid}</p>}
                     {downloadUrl && (
