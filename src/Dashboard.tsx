@@ -17,6 +17,7 @@ const Dashboard: React.FC = () => {
   const userType: string | null = searchParams.get("userType");
 
   const benefactor = userType=="benefactor" ? 1 : 0;
+  const [imageUrl, setImageUrl] = useState('');
 
   const [beneficiaries,setBeneficiary] = useState([{beneficiaryAddress:""}])
 
@@ -27,6 +28,7 @@ const Dashboard: React.FC = () => {
 
   const [ipfsCid, setIpfsCid] = useState('');
   const [downloadUrl, setDownloadUrl] = useState('');
+  console.log(imageUrl);
 
   const navigate = useNavigate();
   function redirectToHomePage(): void {
@@ -130,62 +132,41 @@ const Dashboard: React.FC = () => {
       .then(response => {
         const fileCids = response.data.rows.map(row => row.ipfs_pin_hash);
         setIpfsCid(fileCids);
+        if (fileCids.length > 0) {
+          const cid = fileCids[0]; // Assuming the first CID corresponds to the image
+          const imageUrl = `https://gateway.pinata.cloud/ipfs/${cid}`;
+          setImageUrl(imageUrl);
+        }
       })
       .catch(error => {
         console.error('Error retrieving IPFS CIDs:', error);
       });
   };
   
-  // const handleDownloadFiles = () => {
-  //   // Assuming you have the IPFS CIDs stored in the state variable `ipfsCid`
-  //   if (ipfsCid && ipfsCid.length > 0) {
-  //     // Iterate over each IPFS CID and download the corresponding file
-  //     ipfsCid.forEach(cid => {
-  //       // Generate the download URL for the file
-  //       const downloadUrl = `https://gateway.pinata.cloud/ipfs/${cid}`;
-  //       // Trigger file download
-  //       const link = document.createElement('a');
-  //       link.href = downloadUrl;
-  //       link.target = '_blank';
-  //       link.rel = 'noopener noreferrer';
-  //       link.click();
-  //     });
-  //   } else {
-  //     console.error('IPFS CIDs are empty');
-  //   }
-  // };
+  const handleDownloadFiles = () => {
+    // Assuming you have the IPFS CIDs stored in the state variable `ipfsCid`
+    if (ipfsCid && ipfsCid.length > 0) {
+      // Iterate over each IPFS CID and download the corresponding file
+      ipfsCid.forEach(cid => {
+        // Generate the download URL for the file
+        const downloadUrl = `https://gateway.pinata.cloud/ipfs/${cid}`;
+        // Trigger file download
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.click();
+      });
+    } else {
+      console.error('IPFS CIDs are empty');
+    }
+  };
 
   useEffect(() => {
     // Retrieve the IPFS CIDs when the component mounts
     handleRetrieveIpfsCid();
   }, []);
 
-  const handleDownloadFile = async () => {
-    if (ipfsCid && ipfsCid.length > 0) {
-      // Iterate over each IPFS CID and download the corresponding file
-      ipfsCid.forEach(async (cid) => {
-        try {
-          // Retrieve the file data from IPFS
-          const response = await axios.get(`https://gateway.pinata.cloud/ipfs/${cid}`, {
-            responseType: 'blob', // Set the response type to blob
-          });
-  
-          // Create a download link for the file
-          const downloadUrl = window.URL.createObjectURL(new Blob([response.data]));
-  
-          // Trigger file download
-          const link = document.createElement('a');
-          link.href = downloadUrl;
-          link.download = cid; // Set the file name to the CID
-          link.click();
-        } catch (error) {
-          console.error(`Error downloading file with CID ${cid}:`, error);
-        }
-      });
-    } else {
-      console.error('IPFS CIDs are empty');
-    }
-  };
   
   return (
     <main>
@@ -264,8 +245,15 @@ const Dashboard: React.FC = () => {
                   <div>
                     <h3>when countdown is over and benefactor is assumed dead, enable the download button</h3>
                     {/* <button onClick={handleRetrieveIpfsCid}>Retrieve IPFS CID</button> */}
-                    <button onClick={handleDownloadFile}>Download File</button>
-                    {ipfsCid && <p>IPFS CID: {ipfsCid}</p>}
+                    {imageUrl && (
+                      <div className="image-container">
+                        <img src={imageUrl} alt="IPFS Image"
+                        />
+                      </div>
+                    )}
+     
+                    <button onClick={handleDownloadFiles}>Download File</button>
+                    {ipfsCid && <p>IPFS CID: {ipfsCid}<br></br></p>}
                     {downloadUrl && (
                    <p>
                     <a href={downloadUrl} target="_blank" rel="noopener noreferrer">Download Link
