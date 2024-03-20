@@ -1,72 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="shourtcut icon" type="image/png" href="/images/dwill-logo.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#000000" />
-    <link rel="manifest" href="/manifest.json" />
-    <title>dWill PWA</title>
-    <style type="text/css">
-      body {
-        margin: 0;
-        padding: 0;
-        font-family: sans-serif;
+<head>
+  <meta charset="UTF-8" />
+  <link rel="shortcut icon" type="image/png" href="/images/dwill-logo.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="manifest" href="/manifest.json" />
+  <title>dWill PWA</title>
+  <style type="text/css">
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+    }
+    .navbar {
+      background-color: #131417;
+    }
+    .navbar h3 {
+      display: inline-block;
+      text-align: left;
+      padding: 10px;
+      color: black;
+      text-decoration: none;
+    }
+    .navbar a {
+      display: inline-block;
+      padding: 10px;
+      color: #fff;
+      text-decoration: none;
+    }
+    .page-info {
+      padding: 10px;
+    }
+    .Current {
+      color: #2e8b57;
+    }
+    .Completed {
+      color: #ff6347;
+      text-decoration: line-through;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker
+          .register("/worker.js")
+          .then(
+            function (registration) {
+              console.log(
+                "Worker registration successful",
+                registration.scope
+              );
+
+              // Request notification permission when the service worker is registered
+              requestNotifPermission();
+            },
+            function (err) {
+              console.log("Worker registration failed", err);
+            }
+          )
+          .catch(function (err) {
+            console.log(err);
+          });
+      });
+    } else {
+      console.log("Service Worker is not supported by browser.");
+    }
+
+    // Function to request notification permission
+    const requestNotifPermission = async () => {
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          throw new Error("Notification permission not granted");
+        } else {
+          console.log("Notification permission granted");
+        }
+      } catch (error) {
+        console.error(error);
       }
-      .navbar {
-        background-color: #131417;
-      }
-      .navbar h3 {
-        display: inline-block;
-        text-align: left;
-        padding: 10px;
-        color: black;
-        text-decoration: none;
-      }
-      .navbar a {
-        display: inline-block;
-        padding: 10px;
-        color: #fff;
-        text-decoration: none;
-      }
-      .page-info {
-        padding: 10px;
-      }
-      .Current {
-        color: #2e8b57;
-      }
-      .Completed {
-        color: #ff6347;
-        text-decoration: line-through;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-    <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", function () {
-          navigator.serviceWorker
-            .register("/worker.js")
-            .then(
-              function (registration) {
-                console.log(
-                  "Worker registration successful",
-                  registration.scope
-                );
-              },
-              function (err) {
-                console.log("Worker registration failed", err);
-              }
-            )
-            .catch(function (err) {
-              console.log(err);
-            });
-        });
-      } else {
-        console.log("Service Worker is not supported by browser.");
-      }
-    </script>
-  </body>
+    };
+  </script>
+</body>
 </html>

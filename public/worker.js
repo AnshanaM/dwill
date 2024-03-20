@@ -40,3 +40,23 @@ self.addEventListener("activate", (event) => {
     })
   );
 });
+
+
+const checkPermission = () => {
+  if (!('serviceWorker' in navigator)){
+    throw new Error("No support for service worker")
+  }
+
+  if (!('Notification' in window)){
+    throw new Error("No support for notifications")
+  }
+}
+
+const requestNotifPermission = async () => {
+  const permission = await Notification.requestPermission();
+  if (permission !== 'granted'){
+    throw new Error("Notification permit not granted")
+  }else{
+    new Notification("Hello world")
+  }
+}

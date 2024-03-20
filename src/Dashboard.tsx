@@ -98,52 +98,68 @@ const Dashboard: React.FC = () => {
 
   const handleTriggerCountdown = () => {
     setCountdownStarted(true);
-    // handleSendTriggerEmail();
-    // setEmailSent(true);
   };
 
   const handleEnableSwitch = async (_benefactor: string) => {
-    try{
+    try {
       console.log(_benefactor);
-      if (dmsContract.checkAliveStatus(_benefactor)){
-        await dmsContract.enableSwitch(_benefactor,{from: signer.getAddress()}); 
-        handleTriggerCountdown();
-        alert("Successfully enabled your benefactor's dead mans switch.");
-      }
-      else{
+      if (dmsContract.checkAliveStatus(_benefactor)) {
+        const remainingCountdown = await dmsContract.getRemainingCountdownTime(_benefactor);
+        setCountdownStarted(true);
+        setCountdownEnded(false);
+        setCountdown(formatCountdown(remainingCountdown)); // Assuming you have a function to format countdown time
+        alert("Successfully enabled your benefactor's dead man's switch.");
+      } else {
         alert("Benefactor does not exist.");
       }
+    } catch (error) {
+      alert("An error occurred when enabling your benefactor's switch.");
     }
-    catch (error){
-      alert("An error occured when enabling your benefactor's switch.");
-    } 
   }
 
+  const formatCountdown = (remainingTimeInSeconds: number): string => {
+    const days = Math.floor(remainingTimeInSeconds / (60 * 60 * 24));
+    const hours = Math.floor((remainingTimeInSeconds % (60 * 60 * 24)) / (60 * 60));
+    const minutes = Math.floor((remainingTimeInSeconds % (60 * 60)) / 60);
+    const seconds = remainingTimeInSeconds % 60;
+    let formattedCountdown = '';
+    if (days > 0) {
+      formattedCountdown += `${days} day${days !== 1 ? 's' : ''} `;
+    }
+    if (hours > 0) {
+      formattedCountdown += `${hours} hour${hours !== 1 ? 's' : ''} `;
+    }
+    if (minutes > 0) {
+      formattedCountdown += `${minutes} min${minutes !== 1 ? 's' : ''} `;
+    }
+    if (seconds > 0) {
+      formattedCountdown += `${seconds} sec${seconds !== 1 ? 's' : ''}`;
+    }
+    return formattedCountdown.trim();
+  }
+  
 
   useEffect(() => {
     if (countdownStarted && !countdownEnded) {
-      const targetDate = new Date();
-      targetDate.setMinutes(targetDate.getMinutes() + 1);
-
-      const updateCountdown = () => {
-        const currentDate = new Date().getTime();
-        const difference = targetDate.getTime() - currentDate;
-
-        if (difference <= 0) {
-          setCountdown("00:00:00:00");
-          setCountdownEnded(true);
-        } else {
-          const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-          const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-          const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-          const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-          const formattedCountdown = `${days.toString().padStart(2, '0')}:${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-          setCountdown(formattedCountdown);
+      const updateCountdown = async () => {
+        try {
+          const remainingCountdown = await dmsContract.getRemainingCountdownTime(benefactorAddress);
+          if (remainingCountdown <= 0) {
+            setCountdown("00:00:00:00");
+            setCountdownEnded(true);
+          } else {
+            const formattedCountdown = formatCountdown(remainingCountdown);
+            setCountdown(formattedCountdown);
+          }
+        } catch (error) {
+          console.error("Error updating countdown:", error);
         }
       };
+  
       updateCountdown(); //update to display countdown initially
       const interval = setInterval(updateCountdown, 1000); //update countdown every second
-      // clean up the interval when the component unmounts or the countdown ends
+  
+      //clean up the interval when the component unmounts or the countdown ends
       return () => {
         clearInterval(interval);
         if (countdownEnded) {
@@ -151,17 +167,8 @@ const Dashboard: React.FC = () => {
         }
       };
     }
-  }, [countdownStarted, countdownEnded]);
-
-  // const handleSendTriggerEmail = async () => {
-  //   try {
-  //     await sendTriggerEmail(); // Call the sendEmail function
-  //     alert('Email sent successfully!');
-  //   } catch (error) {
-  //     console.error('Email failed to send:', error);
-  //     alert('Failed to send email. Please try again later.');
-  //   }
-  // };
+  }, [countdownStarted, countdownEnded, dmsContract, benefactorAddress]);
+  
 
   return (
     <main>
