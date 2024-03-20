@@ -1,6 +1,6 @@
 // code written by the group
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import "./styles/Dashboard.css";
 import { ConnectWallet, MediaRenderer, Web3Button, useAddress, useContract, useContractRead, useStorageUpload } from '@thirdweb-dev/react';
@@ -18,11 +18,16 @@ const Dashboard: React.FC = () => {
 
   const [beneficiaries,setBeneficiary] = useState([{beneficiaryAddress:""}])
 
+  const [benefactorAddress, setBenefactor] = useState('');
+
   const walletAddress = useAddress();
   const provider = new ethers.providers.Web3Provider(window.ethereum);
   const signer = provider.getSigner();
   const dmsContract = new ethers.Contract(constants.DEAD_MANS_SWITCH_CONTRACT, dmsABI, signer);
 
+  const [countdown, setCountdown] = useState("00:00:01:00");
+  const [countdownStarted, setCountdownStarted] = useState(false);
+  const [countdownEnded, setCountdownEnded] = useState(false);
 
   const navigate = useNavigate();
   function redirectToHomePage(): void {
@@ -84,13 +89,17 @@ const Dashboard: React.FC = () => {
     }
     catch(error){
       alert("An error occured when responding to your switch.");
-    }
-      
+    } 
   }
 
-  const [benefactorAddress, setBenefactor] = useState('');
   const handleAddressChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setBenefactor(event.target.value);
+  };
+
+  const handleTriggerCountdown = () => {
+    setCountdownStarted(true);
+    // handleSendTriggerEmail();
+    // setEmailSent(true);
   };
 
   const handleEnableSwitch = async (_benefactor: string) => {
@@ -98,6 +107,7 @@ const Dashboard: React.FC = () => {
       console.log(_benefactor);
       if (dmsContract.checkAliveStatus(_benefactor)){
         await dmsContract.enableSwitch(_benefactor,{from: signer.getAddress()}); 
+        handleTriggerCountdown();
         alert("Successfully enabled your benefactor's dead mans switch.");
       }
       else{
@@ -108,7 +118,51 @@ const Dashboard: React.FC = () => {
       alert("An error occured when enabling your benefactor's switch.");
     } 
   }
-  
+
+
+  useEffect(() => {
+    if (countdownStarted && !countdownEnded) {
+      const targetDate = new Date();
+      targetDate.setMinutes(targetDate.getMinutes() + 1);
+
+      const updateCountdown = () => {
+        const currentDate = new Date().getTime();
+        const difference = targetDate.getTime() - currentDate;
+
+        if (difference <= 0) {
+          setCountdown("00:00:00:00");
+          setCountdownEnded(true);
+        } else {
+          const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+          const formattedCountdown = `${days.toString().padStart(2, '0')}:${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+          setCountdown(formattedCountdown);
+        }
+      };
+      updateCountdown(); //update to display countdown initially
+      const interval = setInterval(updateCountdown, 1000); //update countdown every second
+      // clean up the interval when the component unmounts or the countdown ends
+      return () => {
+        clearInterval(interval);
+        if (countdownEnded) {
+          setCountdownStarted(false);
+        }
+      };
+    }
+  }, [countdownStarted, countdownEnded]);
+
+  // const handleSendTriggerEmail = async () => {
+  //   try {
+  //     await sendTriggerEmail(); // Call the sendEmail function
+  //     alert('Email sent successfully!');
+  //   } catch (error) {
+  //     console.error('Email failed to send:', error);
+  //     alert('Failed to send email. Please try again later.');
+  //   }
+  // };
+
   return (
     <main>
       <div>
@@ -117,7 +171,9 @@ const Dashboard: React.FC = () => {
             <div className='title-container'>
               <h1>Dashboard</h1>
               <div className='right-content'>
-                <h2>COUNTDOWN</h2>
+
+                <h2>{countdown}</h2>
+
                 {benefactor ? 
                   //benefactor
                   <button onClick={() => handleDisableSwitch()}>Disable switch</button>
@@ -130,12 +186,14 @@ const Dashboard: React.FC = () => {
                       onChange={(e) => handleAddressChange(e)} 
                       placeholder="Enter benefactor address" 
                     />
-                    <button 
-                      onClick={() => handleEnableSwitch(benefactorAddress.toString())} 
-                      disabled={!benefactorAddress}
-                    >
-                      Enable switch
-                    </button>
+                    {!countdownStarted && !countdownEnded &&
+                      <button 
+                        onClick={() => handleEnableSwitch(benefactorAddress.toString())} 
+                        disabled={!benefactorAddress}
+                      >
+                        Enable switch
+                      </button>
+                    }
                   </div>
                 }
               </div>
