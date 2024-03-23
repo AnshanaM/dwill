@@ -8,6 +8,7 @@ import * as constants from "./constants";
 import PageTemplate from './components/PageTemplate';
 import dmsABI from './smart-contracts/DeadMansSwitchABI.json';
 import { ethers } from 'ethers';
+import { createDiffieHellman, DiffieHellman } from 'crypto';
 
 const Dashboard: React.FC = () => {
   const location = useLocation();
@@ -58,29 +59,51 @@ const Dashboard: React.FC = () => {
     setBeneficiary(deleteBeneficiary);
   };
 
-  const handleAssign = (beneficiaryList: { beneficiaryAddress: string; }[]) => {
-    //create a set to store unique addresses
-    const uniqueAddresses = new Set<string>();
-    //iterate and add non-empty unique addresses to the set
-    beneficiaryList.forEach(beneficiary => {
-      const trimmedAddress = beneficiary.beneficiaryAddress.trim();
-      if (trimmedAddress !== '' && !uniqueAddresses.has(trimmedAddress)) {
-        uniqueAddresses.add(trimmedAddress);
-      }
-    });
-    //convert the set to arrray
-    const uniqueBeneficiaries = Array.from(uniqueAddresses).map(address => ({ beneficiaryAddress: address }));
-    console.log(uniqueBeneficiaries);
-    uniqueBeneficiaries.forEach(async beneficiary => {
-      try {
-          await dmsContract.addBeneficiary(beneficiary.beneficiaryAddress);
-          console.log(`Added beneficiary: ${beneficiary.beneficiaryAddress}`);
-      } catch (error) {
-        alert("Beneficiary already exists or some other error");
-          console.error(`Error adding beneficiary ${beneficiary.beneficiaryAddress}:`, error);
-      }
-    });
+  const handleAssign = async (beneficiaryList: { beneficiaryAddress: string; }[]) => {
+    try {
+        const uniqueAddresses = new Set<string>();
+        beneficiaryList.forEach(beneficiary => {
+            const trimmedAddress = beneficiary.beneficiaryAddress.trim();
+            if (trimmedAddress !== '' && !uniqueAddresses.has(trimmedAddress)) {
+                uniqueAddresses.add(trimmedAddress);
+            }
+        });
+        const uniqueBeneficiaries = Array.from(uniqueAddresses).map(address => ({ beneficiaryAddress: address }));
+
+        // Perform asynchronous operations inside a loop using Promise.all
+        await Promise.all(uniqueBeneficiaries.map(async beneficiary => {
+            try {
+                const overrides = {
+                    gasLimit: 10000000 // Increase gas limit as needed
+                };
+                await dmsContract.addBeneficiary(beneficiary.beneficiaryAddress, overrides);
+                console.log(`Added beneficiary: ${beneficiary.beneficiaryAddress}`);
+
+                const beneficiaryDH: DiffieHellman = createDiffieHellman(15);
+                beneficiaryDH.generateKeys();
+                const beneficiaryPublicKey = beneficiaryDH.getPublicKey('hex');
+                await dmsContract.addBeneficiaryPublicKey(walletAddress, beneficiary.beneficiaryAddress, beneficiaryPublicKey);
+                console.log(`Stored public key for beneficiary ${beneficiary.beneficiaryAddress}`);
+            } catch (error) {
+                // Handle specific errors
+                if (error.code === -32000 && error.data && error.data.code === -32000 && error.data.data) {
+                    // Gas estimation error, transaction may fail or require manual gas limit
+                    alert("Gas estimation error. Transaction may fail or require manual gas limit.");
+                    console.error("Gas estimation error:", error);
+                } else {
+                    // Other errors
+                    alert("Error adding beneficiary. Please try again later.");
+                    console.error(`Error adding beneficiary ${beneficiary.beneficiaryAddress}:`, error);
+                }
+            }
+        }));
+    } catch (error) {
+        // Handle unexpected errors
+        alert("An unexpected error occurred. Please try again later.");
+        console.error("Unexpected error in handleAssign:", error);
+    }
   };
+
 
   const handleDisableSwitch = () => {
     try{
@@ -103,11 +126,12 @@ const Dashboard: React.FC = () => {
   const handleEnableSwitch = async (_benefactor: string) => {
     try {
       console.log(_benefactor);
+      await dmsContract.enableSwitch(_benefactor);
       if (dmsContract.checkAliveStatus(_benefactor)) {
         const remainingCountdown = await dmsContract.getRemainingCountdownTime(_benefactor);
         setCountdownStarted(true);
         setCountdownEnded(false);
-        setCountdown(formatCountdown(remainingCountdown)); // Assuming you have a function to format countdown time
+        setCountdown(formatCountdown(remainingCountdown));
         alert("Successfully enabled your benefactor's dead man's switch.");
       } else {
         alert("Benefactor does not exist.");
@@ -145,7 +169,7 @@ const Dashboard: React.FC = () => {
         try {
           const remainingCountdown = await dmsContract.getRemainingCountdownTime(benefactorAddress);
           if (remainingCountdown <= 0) {
-            setCountdown("00:00:00:00");
+            setCountdown("COUNTDOWN");
             setCountdownEnded(true);
           } else {
             const formattedCountdown = formatCountdown(remainingCountdown);

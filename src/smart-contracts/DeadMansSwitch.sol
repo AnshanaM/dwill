@@ -7,6 +7,8 @@ contract BenefactorsDeadManSwitch {
     struct Beneficiary {
         bool exists;
         string[] ipfsCIDs;
+        string benefactorPublicKey;
+        string beneficiaryPublicKey;
     }
 
     struct BenefactorInfo {
@@ -32,6 +34,8 @@ contract BenefactorsDeadManSwitch {
     event BenefactorIsDead(address indexed benefactor, string deadStatus);
     event IpfsCIDAdded(address indexed benefactor, address indexed beneficiary, string ipfsCID);
     event IpfsCIDRemoved(address indexed benefactor, address indexed beneficiary, string ipfsCID);
+    event BenefactorKeyAdded(address indexed benefactor, address indexed beneficiary, string key);
+    event BeneficiaryKeyAdded(address indexed benefactor, address indexed beneficiary, string key);
 
     modifier onlyBenefactor() {
         require(benefactors[msg.sender].exists && benefactors[msg.sender].isAlive, "Not a valid benefactor");
@@ -51,6 +55,17 @@ contract BenefactorsDeadManSwitch {
         newBenefactor.lastBenefactorResponseTime = 0;
     }
 
+    function getData(address _benefactor) public view returns (bool switchStatus, address[] memory beneficiaries, uint256 remainingTime) {
+        require(benefactors[_benefactor].exists, "Benefactor does not exist");
+        switchStatus = !benefactors[_benefactor].isSwitchedOff;
+        beneficiaries = benefactors[_benefactor].beneficiaryAddresses;
+        if (benefactors[_benefactor].isSwitchedOff) {
+            remainingTime = 0;
+        } else {
+            remainingTime = getRemainingCountdownTime(_benefactor);
+        }
+        return (switchStatus, beneficiaries, remainingTime);
+    }
 
     function removeBenefactor(address _benefactor) public {
         BenefactorInfo storage newBenefactor = benefactors[_benefactor];
@@ -74,10 +89,12 @@ contract BenefactorsDeadManSwitch {
     }
 
     function addBeneficiary(address _beneficiary) external onlyBenefactor {
-        require(!isBeneficiary(msg.sender,_beneficiary), "Beneficiary already exists");
-        benefactors[msg.sender].beneficiaries[_beneficiary] = Beneficiary(true, new string[](0));
-        benefactors[msg.sender].beneficiaryAddresses.push(_beneficiary);
-        emit BeneficiaryAdded(msg.sender,_beneficiary);
+        if (isBeneficiary(msg.sender, _beneficiary)){
+            benefactors[msg.sender].beneficiaries[_beneficiary] = Beneficiary(true, new string[](0),"","");
+            benefactors[msg.sender].beneficiaryAddresses.push(_beneficiary);
+            emit BeneficiaryAdded(msg.sender,_beneficiary);
+        }
+        // require(!isBeneficiary(msg.sender,_beneficiary), "Beneficiary already exists");
     }
 
     function addIpfsCID(address _beneficiary, string memory _ipfsCID) external onlyBenefactor {
@@ -105,6 +122,35 @@ contract BenefactorsDeadManSwitch {
         }
         revert("CID not assigned to this beneficiary");
     }
+
+    function addBenefactorPublicKey(address _benefactor, address _beneficiary, string memory _key) public {
+        require(isBeneficiary(_benefactor,_beneficiary), "Beneficiary/Benefactor not found");
+        benefactors[_benefactor].beneficiaries[_beneficiary].benefactorPublicKey = _key;
+        emit BenefactorKeyAdded(_benefactor,_beneficiary, _key);
+    }
+
+    function addBeneficiaryPublicKey(address _benefactor, address _beneficiary, string memory _key) public {
+        require(isBeneficiary(_benefactor,_beneficiary), "Beneficiary/Benefactor not found");
+        benefactors[_benefactor].beneficiaries[_beneficiary].beneficiaryPublicKey = _key;
+        emit BeneficiaryKeyAdded(_benefactor,_beneficiary, _key);
+    }
+
+    function getBenefactorPublicKey(address _benefactor, address _beneficiary) public view returns(string memory) {
+        if (isBeneficiary(_benefactor, _beneficiary)) {
+            return benefactors[_benefactor].beneficiaries[_beneficiary].benefactorPublicKey;
+        } else {
+            return "";
+        }
+    }
+
+    function getBeneficiaryPublicKey(address _benefactor, address _beneficiary) public view returns(string memory) {
+        if (isBeneficiary(_benefactor, _beneficiary)) {
+            return benefactors[_benefactor].beneficiaries[_beneficiary].beneficiaryPublicKey;
+        } else {
+            return "";
+        }
+    }
+
 
     function enableSwitch(address _benefactor) external {
         require(benefactors[_benefactor].beneficiaries[msg.sender].exists, "Not a valid beneficiary");
