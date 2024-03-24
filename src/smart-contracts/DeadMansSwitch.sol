@@ -12,6 +12,8 @@ contract BenefactorsDeadManSwitch {
     struct Beneficiary {
         bool exists;
         string[] ipfsCIDs; // array to store IPFS CIDs
+        string benefactorPublicKey;
+        string beneficiaryPublicKey;
     }
     struct BenefactorInfo {
         bool exists;
@@ -22,7 +24,10 @@ contract BenefactorsDeadManSwitch {
         bool isAlive;
     }
 
-    mapping(address => BenefactorInfo) private benefactors;
+    mapping(address => BenefactorInfo) private benefactors; 
+
+    // Auxiliary mapping to store keys of beneficiaries
+    mapping(address => address[]) private beneficiaryKeys;
 
     event DeadMansSwitchEnabled(address indexed benefactor, address indexed beneficiary, uint256 countdownDuration);
     event DeadMansSwitchDisabled(address indexed benefactor, address indexed caller, uint256 responseTime);
@@ -35,7 +40,9 @@ contract BenefactorsDeadManSwitch {
     event BenefactorIsDead(address indexed benefactor, string deadStatus);
     event IpfsCIDAdded(address indexed benefactor, address indexed beneficiary, string ipfsCID);
     event IpfsCIDRemoved(address indexed benefactor, address indexed beneficiary, string ipfsCID);
-
+    event BenefactorKeyAdded(address indexed benefactor, address indexed beneficiary, string key);
+    event BeneficiaryKeyAdded(address indexed benefactor, address indexed beneficiary, string key);
+    event BeneficiariesData(bool switchStatus, address[] beneficiaries, uint256 remainingTime);
 
     /**
      * @dev Modifier to check if the caller is the benefactor.
@@ -53,11 +60,79 @@ contract BenefactorsDeadManSwitch {
     function setBenefactor() public{
         require(!benefactors[msg.sender].exists,"benefactor already exists");
         benefactors[msg.sender].exists=true;
-        //benefactors[msg.sender].countdownDuration = 7*24*3600 seconds; // count down set to 1 week
-        benefactors[msg.sender].countdownDuration = 120 seconds;
+        benefactors[msg.sender].countdownDuration = 7*24*3600 seconds; // count down set to 1 week
+        // benefactors[msg.sender].countdownDuration = 120 seconds;
         benefactors[msg.sender].isSwitchedOff = true;
         benefactors[msg.sender].isAlive = true;
         benefactors[msg.sender].lastBenefactorResponseTime = 0;
+    }
+
+    /**
+     * @dev Returns current status of benefactor.
+     */
+    function getData(address _benefactor) public returns (bool switchStatus, address[] memory beneficiaries, uint256 remainingTime) {
+        require(benefactors[_benefactor].exists, "Benefactor does not exist");
+        switchStatus = !benefactors[_benefactor].isSwitchedOff;
+        beneficiaries = new address[](getBeneficiariesCount(_benefactor));
+        uint256 index = 0;
+        for (uint256 i = 0; i < beneficiaries.length; i++) {
+            if (benefactors[_benefactor].beneficiaries[beneficiaryKeys[_benefactor][i]].exists) {
+                beneficiaries[index] = beneficiaryKeys[_benefactor][i];
+                index++;
+            }
+        }
+        if (benefactors[_benefactor].isSwitchedOff) {
+            remainingTime = 0;
+        } else {
+            remainingTime = getRemainingCountdownTime(_benefactor);
+        }
+        // emit BeneficiariesData(switchStatus, beneficiaries, remainingTime);
+        return (switchStatus, beneficiaries, remainingTime);
+    }
+
+    /**
+    * @dev Auxiliary function to return the number of beneficiaries for a benefactor.
+    */
+    function getBeneficiariesCount(address _benefactor) private view returns (uint256) {
+        return beneficiaryKeys[_benefactor].length;
+    }
+    /**
+    * @dev adds the benefactor public key to the specified benefactor-beneficiary pair
+    */
+    function addBenefactorPublicKey(address _benefactor, address _beneficiary, string memory _key) public {
+        require(isBeneficiary(_benefactor,_beneficiary), "Beneficiary/Benefactor not found");
+        benefactors[_benefactor].beneficiaries[_beneficiary].benefactorPublicKey = _key;
+        emit BenefactorKeyAdded(_benefactor,_beneficiary, _key);
+    }
+    /**
+    * @dev adds the beneficiary public key to the specified benefactor-beneficiary pair
+    */
+    function addBeneficiaryPublicKey(address _benefactor, address _beneficiary, string memory _key) public {
+        require(isBeneficiary(_benefactor,_beneficiary), "Beneficiary/Benefactor not found");
+        benefactors[_benefactor].beneficiaries[_beneficiary].beneficiaryPublicKey = _key;
+        emit BeneficiaryKeyAdded(_benefactor,_beneficiary, _key);
+    }
+
+    /**
+    * @dev returns the benefactor public key from the specified benefactor-beneficiary pair
+    */
+    function getBenefactorPublicKey(address _benefactor, address _beneficiary) public view returns(string memory) {
+        if (isBeneficiary(_benefactor, _beneficiary)) {
+            return benefactors[_benefactor].beneficiaries[_beneficiary].benefactorPublicKey;
+        } else {
+            return "";
+        }
+    }
+
+    /**
+    * @dev returns the beneficiary public key from the specified benefactor-beneficiary pair
+    */
+    function getBeneficiaryPublicKey(address _benefactor, address _beneficiary) public view returns(string memory) {
+        if (isBeneficiary(_benefactor, _beneficiary)) {
+            return benefactors[_benefactor].beneficiaries[_beneficiary].beneficiaryPublicKey;
+        } else {
+            return "";
+        }
     }
 
     /**
@@ -99,7 +174,7 @@ contract BenefactorsDeadManSwitch {
      */
     function addBeneficiary(address _beneficiary) external onlyBenefactor {
         require(!isBeneficiary(msg.sender,_beneficiary), "Beneficiary already exists");
-        benefactors[msg.sender].beneficiaries[_beneficiary] = Beneficiary(true, new string[](0));
+        benefactors[msg.sender].beneficiaries[_beneficiary] = Beneficiary(true, new string[](0),"","");
         emit BeneficiaryAdded(msg.sender,_beneficiary);
     }
 
@@ -216,7 +291,6 @@ contract BenefactorsDeadManSwitch {
                 disableSwitch();
                 benefactors[msg.sender].lastBenefactorResponseTime = block.timestamp;
             } else {
-                removeBenefactor(msg.sender);
                 emit BenefactorIsDead(msg.sender,"Benefactor is dead");
             }
         } else {

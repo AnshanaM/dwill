@@ -160,39 +160,39 @@
     },
     "deployedBytecode": {
       "functionDebugData": {
-        "@accessList_1441": {
+        "@accessList_1717": {
           "entryPoint": 341,
-          "id": 1441,
+          "id": 1717,
           "parameterSlots": 0,
           "returnSlots": 0
         },
-        "@add_1462": {
+        "@add_1738": {
           "entryPoint": 286,
-          "id": 1462,
+          "id": 1738,
           "parameterSlots": 3,
           "returnSlots": 0
         },
-        "@allow_1545": {
+        "@allow_1821": {
           "entryPoint": 1207,
-          "id": 1545,
+          "id": 1821,
           "parameterSlots": 1,
           "returnSlots": 0
         },
-        "@disallow_1597": {
+        "@disallow_1873": {
           "entryPoint": 408,
-          "id": 1597,
+          "id": 1873,
           "parameterSlots": 1,
           "returnSlots": 0
         },
-        "@display_1640": {
+        "@display_1916": {
           "entryPoint": 770,
-          "id": 1640,
+          "id": 1916,
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@shareAccess_1653": {
+        "@shareAccess_1929": {
           "entryPoint": 639,
-          "id": 1653,
+          "id": 1929,
           "parameterSlots": 0,
           "returnSlots": 1
         },
@@ -232,7 +232,7 @@
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "abi_encode_tuple_t_array$_t_struct$_Access_$1424_memory_ptr_$dyn_memory_ptr__to_t_array$_t_struct$_Access_$1424_memory_ptr_$dyn_memory_ptr__fromStack_reversed": {
+        "abi_encode_tuple_t_array$_t_struct$_Access_$1700_memory_ptr_$dyn_memory_ptr__to_t_array$_t_struct$_Access_$1700_memory_ptr_$dyn_memory_ptr__fromStack_reversed": {
           "entryPoint": 1870,
           "id": null,
           "parameterSlots": 2,
@@ -2175,7 +2175,7 @@
                     }
                   ]
                 },
-                "name": "abi_encode_tuple_t_array$_t_struct$_Access_$1424_memory_ptr_$dyn_memory_ptr__to_t_array$_t_struct$_Access_$1424_memory_ptr_$dyn_memory_ptr__fromStack_reversed",
+                "name": "abi_encode_tuple_t_array$_t_struct$_Access_$1700_memory_ptr_$dyn_memory_ptr__to_t_array$_t_struct$_Access_$1700_memory_ptr_$dyn_memory_ptr__fromStack_reversed",
                 "nodeType": "YulFunctionDefinition",
                 "parameters": [
                   {
@@ -5792,7 +5792,7 @@
               }
             ]
           },
-          "contents": "{\n    { }\n    function abi_decode_address(offset) -> value\n    {\n        value := calldataload(offset)\n        if iszero(eq(value, and(value, 0xffffffffffffffffffffffffffffffffffffffff))) { revert(0, 0) }\n    }\n    function abi_decode_tuple_t_addresst_string_calldata_ptr(headStart, dataEnd) -> value0, value1, value2\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        value0 := abi_decode_address(headStart)\n        let offset := calldataload(add(headStart, 32))\n        let _1 := 0xffffffffffffffff\n        if gt(offset, _1) { revert(0, 0) }\n        let _2 := add(headStart, offset)\n        if iszero(slt(add(_2, 0x1f), dataEnd)) { revert(0, 0) }\n        let length := calldataload(_2)\n        if gt(length, _1) { revert(0, 0) }\n        if gt(add(add(_2, length), 32), dataEnd) { revert(0, 0) }\n        value1 := add(_2, 32)\n        value2 := length\n    }\n    function abi_decode_tuple_t_addresst_uint256(headStart, dataEnd) -> value0, value1\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        value0 := abi_decode_address(headStart)\n        value1 := calldataload(add(headStart, 32))\n    }\n    function abi_encode_tuple_t_address_t_bool__to_t_address_t_bool__fromStack_reversed(headStart, value1, value0) -> tail\n    {\n        tail := add(headStart, 64)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n        mstore(add(headStart, 32), iszero(iszero(value1)))\n    }\n    function abi_decode_tuple_t_address(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        value0 := abi_decode_address(headStart)\n    }\n    function abi_encode_tuple_t_array$_t_struct$_Access_$1424_memory_ptr_$dyn_memory_ptr__to_t_array$_t_struct$_Access_$1424_memory_ptr_$dyn_memory_ptr__fromStack_reversed(headStart, value0) -> tail\n    {\n        let _1 := 32\n        let tail_1 := add(headStart, _1)\n        mstore(headStart, _1)\n        let pos := tail_1\n        let length := mload(value0)\n        mstore(tail_1, length)\n        let _2 := 64\n        pos := add(headStart, _2)\n        let srcPtr := add(value0, _1)\n        let i := 0\n        for { } lt(i, length) { i := add(i, 1) }\n        {\n            let _3 := mload(srcPtr)\n            mstore(pos, and(mload(_3), 0xffffffffffffffffffffffffffffffffffffffff))\n            mstore(add(pos, _1), iszero(iszero(mload(add(_3, _1)))))\n            pos := add(pos, _2)\n            srcPtr := add(srcPtr, _1)\n        }\n        tail := pos\n    }\n    function abi_encode_tuple_t_array$_t_string_memory_ptr_$dyn_memory_ptr__to_t_array$_t_string_memory_ptr_$dyn_memory_ptr__fromStack_reversed(headStart, value0) -> tail\n    {\n        let _1 := 32\n        let tail_1 := add(headStart, _1)\n        mstore(headStart, _1)\n        let pos := tail_1\n        let length := mload(value0)\n        mstore(tail_1, length)\n        pos := add(headStart, 64)\n        let tail_2 := add(add(headStart, shl(5, length)), 64)\n        let srcPtr := add(value0, _1)\n        let i := 0\n        let i_1 := i\n        for { } lt(i_1, length) { i_1 := add(i_1, 1) }\n        {\n            mstore(pos, add(sub(tail_2, headStart), not(63)))\n            let _2 := mload(srcPtr)\n            let length_1 := mload(_2)\n            mstore(tail_2, length_1)\n            let i_2 := i\n            for { } lt(i_2, length_1) { i_2 := add(i_2, _1) }\n            {\n                mstore(add(add(tail_2, i_2), _1), mload(add(add(_2, i_2), _1)))\n            }\n            mstore(add(add(tail_2, length_1), _1), i)\n            tail_2 := add(add(tail_2, and(add(length_1, 31), not(31))), _1)\n            srcPtr := add(srcPtr, _1)\n            pos := add(pos, _1)\n        }\n        tail := tail_2\n    }\n    function panic_error_0x41()\n    {\n        mstore(0, shl(224, 0x4e487b71))\n        mstore(4, 0x41)\n        revert(0, 0x24)\n    }\n    function extract_byte_array_length(data) -> length\n    {\n        length := shr(1, data)\n        let outOfPlaceEncoding := and(data, 1)\n        if iszero(outOfPlaceEncoding) { length := and(length, 0x7f) }\n        if eq(outOfPlaceEncoding, lt(length, 32))\n        {\n            mstore(0, shl(224, 0x4e487b71))\n            mstore(4, 0x22)\n            revert(0, 0x24)\n        }\n    }\n    function array_dataslot_string_storage(ptr) -> data\n    {\n        mstore(0, ptr)\n        data := keccak256(0, 0x20)\n    }\n    function clean_up_bytearray_end_slots_string_storage(array, len, startIndex)\n    {\n        if gt(len, 31)\n        {\n            let _1 := 0\n            mstore(_1, array)\n            let data := keccak256(_1, 0x20)\n            let deleteStart := add(data, shr(5, add(startIndex, 31)))\n            if lt(startIndex, 0x20) { deleteStart := data }\n            let _2 := add(data, shr(5, add(len, 31)))\n            let start := deleteStart\n            for { } lt(start, _2) { start := add(start, 1) }\n            { sstore(start, _1) }\n        }\n    }\n    function extract_used_part_and_set_length_of_short_byte_array(data, len) -> used\n    {\n        used := or(and(data, not(shr(shl(3, len), not(0)))), shl(1, len))\n    }\n    function copy_byte_array_to_storage_from_t_string_calldata_ptr_to_t_string_storage(slot, src, len)\n    {\n        if gt(len, 0xffffffffffffffff) { panic_error_0x41() }\n        clean_up_bytearray_end_slots_string_storage(slot, extract_byte_array_length(sload(slot)), len)\n        let srcOffset := 0\n        switch gt(len, 31)\n        case 1 {\n            let loopEnd := and(len, not(31))\n            let dstPtr := array_dataslot_string_storage(slot)\n            let i := srcOffset\n            for { } lt(i, loopEnd) { i := add(i, 0x20) }\n            {\n                sstore(dstPtr, calldataload(add(src, srcOffset)))\n                dstPtr := add(dstPtr, 1)\n                srcOffset := add(srcOffset, 0x20)\n            }\n            if lt(loopEnd, len)\n            {\n                sstore(dstPtr, and(calldataload(add(src, srcOffset)), not(shr(and(shl(3, len), 248), not(0)))))\n            }\n            sstore(slot, add(shl(1, len), 1))\n        }\n        default {\n            let value := 0\n            if len\n            {\n                value := calldataload(add(src, srcOffset))\n            }\n            sstore(slot, extract_used_part_and_set_length_of_short_byte_array(value, len))\n        }\n    }\n    function panic_error_0x32()\n    {\n        mstore(0, shl(224, 0x4e487b71))\n        mstore(4, 0x32)\n        revert(0, 0x24)\n    }\n    function increment_t_uint256(value) -> ret\n    {\n        if eq(value, not(0))\n        {\n            mstore(0, shl(224, 0x4e487b71))\n            mstore(4, 0x11)\n            revert(0, 0x24)\n        }\n        ret := add(value, 1)\n    }\n    function abi_encode_tuple_t_stringliteral_23b648a70fb9ffdbde98910288174d2416a8a3d77e4d3e725740ca94318323d5__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 21)\n        mstore(add(headStart, 64), \"You don't have access\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_bool__to_t_bool__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, iszero(iszero(value0)))\n    }\n}",
+          "contents": "{\n    { }\n    function abi_decode_address(offset) -> value\n    {\n        value := calldataload(offset)\n        if iszero(eq(value, and(value, 0xffffffffffffffffffffffffffffffffffffffff))) { revert(0, 0) }\n    }\n    function abi_decode_tuple_t_addresst_string_calldata_ptr(headStart, dataEnd) -> value0, value1, value2\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        value0 := abi_decode_address(headStart)\n        let offset := calldataload(add(headStart, 32))\n        let _1 := 0xffffffffffffffff\n        if gt(offset, _1) { revert(0, 0) }\n        let _2 := add(headStart, offset)\n        if iszero(slt(add(_2, 0x1f), dataEnd)) { revert(0, 0) }\n        let length := calldataload(_2)\n        if gt(length, _1) { revert(0, 0) }\n        if gt(add(add(_2, length), 32), dataEnd) { revert(0, 0) }\n        value1 := add(_2, 32)\n        value2 := length\n    }\n    function abi_decode_tuple_t_addresst_uint256(headStart, dataEnd) -> value0, value1\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        value0 := abi_decode_address(headStart)\n        value1 := calldataload(add(headStart, 32))\n    }\n    function abi_encode_tuple_t_address_t_bool__to_t_address_t_bool__fromStack_reversed(headStart, value1, value0) -> tail\n    {\n        tail := add(headStart, 64)\n        mstore(headStart, and(value0, 0xffffffffffffffffffffffffffffffffffffffff))\n        mstore(add(headStart, 32), iszero(iszero(value1)))\n    }\n    function abi_decode_tuple_t_address(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        value0 := abi_decode_address(headStart)\n    }\n    function abi_encode_tuple_t_array$_t_struct$_Access_$1700_memory_ptr_$dyn_memory_ptr__to_t_array$_t_struct$_Access_$1700_memory_ptr_$dyn_memory_ptr__fromStack_reversed(headStart, value0) -> tail\n    {\n        let _1 := 32\n        let tail_1 := add(headStart, _1)\n        mstore(headStart, _1)\n        let pos := tail_1\n        let length := mload(value0)\n        mstore(tail_1, length)\n        let _2 := 64\n        pos := add(headStart, _2)\n        let srcPtr := add(value0, _1)\n        let i := 0\n        for { } lt(i, length) { i := add(i, 1) }\n        {\n            let _3 := mload(srcPtr)\n            mstore(pos, and(mload(_3), 0xffffffffffffffffffffffffffffffffffffffff))\n            mstore(add(pos, _1), iszero(iszero(mload(add(_3, _1)))))\n            pos := add(pos, _2)\n            srcPtr := add(srcPtr, _1)\n        }\n        tail := pos\n    }\n    function abi_encode_tuple_t_array$_t_string_memory_ptr_$dyn_memory_ptr__to_t_array$_t_string_memory_ptr_$dyn_memory_ptr__fromStack_reversed(headStart, value0) -> tail\n    {\n        let _1 := 32\n        let tail_1 := add(headStart, _1)\n        mstore(headStart, _1)\n        let pos := tail_1\n        let length := mload(value0)\n        mstore(tail_1, length)\n        pos := add(headStart, 64)\n        let tail_2 := add(add(headStart, shl(5, length)), 64)\n        let srcPtr := add(value0, _1)\n        let i := 0\n        let i_1 := i\n        for { } lt(i_1, length) { i_1 := add(i_1, 1) }\n        {\n            mstore(pos, add(sub(tail_2, headStart), not(63)))\n            let _2 := mload(srcPtr)\n            let length_1 := mload(_2)\n            mstore(tail_2, length_1)\n            let i_2 := i\n            for { } lt(i_2, length_1) { i_2 := add(i_2, _1) }\n            {\n                mstore(add(add(tail_2, i_2), _1), mload(add(add(_2, i_2), _1)))\n            }\n            mstore(add(add(tail_2, length_1), _1), i)\n            tail_2 := add(add(tail_2, and(add(length_1, 31), not(31))), _1)\n            srcPtr := add(srcPtr, _1)\n            pos := add(pos, _1)\n        }\n        tail := tail_2\n    }\n    function panic_error_0x41()\n    {\n        mstore(0, shl(224, 0x4e487b71))\n        mstore(4, 0x41)\n        revert(0, 0x24)\n    }\n    function extract_byte_array_length(data) -> length\n    {\n        length := shr(1, data)\n        let outOfPlaceEncoding := and(data, 1)\n        if iszero(outOfPlaceEncoding) { length := and(length, 0x7f) }\n        if eq(outOfPlaceEncoding, lt(length, 32))\n        {\n            mstore(0, shl(224, 0x4e487b71))\n            mstore(4, 0x22)\n            revert(0, 0x24)\n        }\n    }\n    function array_dataslot_string_storage(ptr) -> data\n    {\n        mstore(0, ptr)\n        data := keccak256(0, 0x20)\n    }\n    function clean_up_bytearray_end_slots_string_storage(array, len, startIndex)\n    {\n        if gt(len, 31)\n        {\n            let _1 := 0\n            mstore(_1, array)\n            let data := keccak256(_1, 0x20)\n            let deleteStart := add(data, shr(5, add(startIndex, 31)))\n            if lt(startIndex, 0x20) { deleteStart := data }\n            let _2 := add(data, shr(5, add(len, 31)))\n            let start := deleteStart\n            for { } lt(start, _2) { start := add(start, 1) }\n            { sstore(start, _1) }\n        }\n    }\n    function extract_used_part_and_set_length_of_short_byte_array(data, len) -> used\n    {\n        used := or(and(data, not(shr(shl(3, len), not(0)))), shl(1, len))\n    }\n    function copy_byte_array_to_storage_from_t_string_calldata_ptr_to_t_string_storage(slot, src, len)\n    {\n        if gt(len, 0xffffffffffffffff) { panic_error_0x41() }\n        clean_up_bytearray_end_slots_string_storage(slot, extract_byte_array_length(sload(slot)), len)\n        let srcOffset := 0\n        switch gt(len, 31)\n        case 1 {\n            let loopEnd := and(len, not(31))\n            let dstPtr := array_dataslot_string_storage(slot)\n            let i := srcOffset\n            for { } lt(i, loopEnd) { i := add(i, 0x20) }\n            {\n                sstore(dstPtr, calldataload(add(src, srcOffset)))\n                dstPtr := add(dstPtr, 1)\n                srcOffset := add(srcOffset, 0x20)\n            }\n            if lt(loopEnd, len)\n            {\n                sstore(dstPtr, and(calldataload(add(src, srcOffset)), not(shr(and(shl(3, len), 248), not(0)))))\n            }\n            sstore(slot, add(shl(1, len), 1))\n        }\n        default {\n            let value := 0\n            if len\n            {\n                value := calldataload(add(src, srcOffset))\n            }\n            sstore(slot, extract_used_part_and_set_length_of_short_byte_array(value, len))\n        }\n    }\n    function panic_error_0x32()\n    {\n        mstore(0, shl(224, 0x4e487b71))\n        mstore(4, 0x32)\n        revert(0, 0x24)\n    }\n    function increment_t_uint256(value) -> ret\n    {\n        if eq(value, not(0))\n        {\n            mstore(0, shl(224, 0x4e487b71))\n            mstore(4, 0x11)\n            revert(0, 0x24)\n        }\n        ret := add(value, 1)\n    }\n    function abi_encode_tuple_t_stringliteral_23b648a70fb9ffdbde98910288174d2416a8a3d77e4d3e725740ca94318323d5__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 21)\n        mstore(add(headStart, 64), \"You don't have access\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_bool__to_t_bool__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, iszero(iszero(value0)))\n    }\n}",
           "id": 4,
           "language": "Yul",
           "name": "#utility.yul"
@@ -18148,7 +18148,7 @@
   "storageLayout": {
     "storage": [
       {
-        "astId": 1429,
+        "astId": 1705,
         "contract": "Upload.sol:Upload",
         "label": "value",
         "offset": 0,
@@ -18156,7 +18156,7 @@
         "type": "t_mapping(t_address,t_array(t_string_storage)dyn_storage)"
       },
       {
-        "astId": 1435,
+        "astId": 1711,
         "contract": "Upload.sol:Upload",
         "label": "ownership",
         "offset": 0,
@@ -18164,15 +18164,15 @@
         "type": "t_mapping(t_address,t_mapping(t_address,t_bool))"
       },
       {
-        "astId": 1441,
+        "astId": 1717,
         "contract": "Upload.sol:Upload",
         "label": "accessList",
         "offset": 0,
         "slot": "2",
-        "type": "t_mapping(t_address,t_array(t_struct(Access)1424_storage)dyn_storage)"
+        "type": "t_mapping(t_address,t_array(t_struct(Access)1700_storage)dyn_storage)"
       },
       {
-        "astId": 1447,
+        "astId": 1723,
         "contract": "Upload.sol:Upload",
         "label": "previousData",
         "offset": 0,
@@ -18192,8 +18192,8 @@
         "label": "string[]",
         "numberOfBytes": "32"
       },
-      "t_array(t_struct(Access)1424_storage)dyn_storage": {
-        "base": "t_struct(Access)1424_storage",
+      "t_array(t_struct(Access)1700_storage)dyn_storage": {
+        "base": "t_struct(Access)1700_storage",
         "encoding": "dynamic_array",
         "label": "struct Upload.Access[]",
         "numberOfBytes": "32"
@@ -18210,12 +18210,12 @@
         "numberOfBytes": "32",
         "value": "t_array(t_string_storage)dyn_storage"
       },
-      "t_mapping(t_address,t_array(t_struct(Access)1424_storage)dyn_storage)": {
+      "t_mapping(t_address,t_array(t_struct(Access)1700_storage)dyn_storage)": {
         "encoding": "mapping",
         "key": "t_address",
         "label": "mapping(address => struct Upload.Access[])",
         "numberOfBytes": "32",
-        "value": "t_array(t_struct(Access)1424_storage)dyn_storage"
+        "value": "t_array(t_struct(Access)1700_storage)dyn_storage"
       },
       "t_mapping(t_address,t_bool)": {
         "encoding": "mapping",
@@ -18236,12 +18236,12 @@
         "label": "string",
         "numberOfBytes": "32"
       },
-      "t_struct(Access)1424_storage": {
+      "t_struct(Access)1700_storage": {
         "encoding": "inplace",
         "label": "struct Upload.Access",
         "members": [
           {
-            "astId": 1421,
+            "astId": 1697,
             "contract": "Upload.sol:Upload",
             "label": "user",
             "offset": 0,
@@ -18249,7 +18249,7 @@
             "type": "t_address"
           },
           {
-            "astId": 1423,
+            "astId": 1699,
             "contract": "Upload.sol:Upload",
             "label": "access",
             "offset": 20,

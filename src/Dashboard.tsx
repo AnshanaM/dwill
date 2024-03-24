@@ -68,16 +68,13 @@ const Dashboard: React.FC = () => {
     console.log(uniqueBeneficiaries);
     uniqueBeneficiaries.forEach(async beneficiary => {
       try {
-          await dmsContract.addBeneficiary(beneficiary.beneficiaryAddress);
+        await dmsContract.addBeneficiary(beneficiary.beneficiaryAddress, { from: walletAddress });
           console.log(`Added beneficiary: ${beneficiary.beneficiaryAddress}`);
       } catch (error) {
         alert("Beneficiary already exists or some other error");
           console.error(`Error adding beneficiary ${beneficiary.beneficiaryAddress}:`, error);
       }
     });
-
-    //0xb3a97A66169B3D37218e1C65b738cabCFA0bbfca
-    //0x3f8724A29fc72Dc694DfdfeE43668f36Df807726
   };
 
   const handleDisableSwitch = () => {

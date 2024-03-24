@@ -94,7 +94,9 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
       console.log('Subscription successful');
       alert('Subscription successful');
       const dmsContract = new ethers.Contract(constants.DEAD_MANS_SWITCH_CONTRACT, dmsABI, signer);
-      await dmsContract.setBenefactor();
+      await dmsContract.setBenefactor({
+        from: address
+      });
       setSuccessBenefactor(true);
     } catch (error) {
       console.error('Error subscribing:', error);
