@@ -5,6 +5,7 @@ import MainContent from "./MainContent";
 import { ThirdwebProvider, metamaskWallet, embeddedWallet, localWallet, ConnectWallet, darkTheme, ThirdwebSDKProvider } from "@thirdweb-dev/react";
 import { BrowserRouter as Router, Route, Routes, BrowserRouter } from "react-router-dom";
 import Upload from "./Upload";
+import Encrypt from "./Encrypt";
 import Dashboard from "./Dashboard";
 import * as constants from "./constants";
 import {ethers} from "ethers";
@@ -37,6 +38,7 @@ const App: React.FC<AppProps> = ({ isAppInstalled, handleInstallClick }) => {
             <Route path="/" element={<MainContent handleInstallClick={handleInstallClick} />}/>
             <Route path="upload" element={<Upload />} />
             <Route path="dashboard" element={<Dashboard />}/>
+            <Route path="encrypt" element={<Encrypt />}/>
 
           </Routes>
       </BrowserRouter>

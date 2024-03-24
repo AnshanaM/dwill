@@ -79,6 +79,14 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageTitle, pageContent,user
                             }
                         </Link>
                     </li>
+                    <li>
+                        <Link to="/encrypt">
+                            <SiLetsencrypt className='icon' />
+                            {
+                                isSidebarOpen ? <span>Encrypt</span> : <></>
+                            }
+                        </Link>
+                    </li>
                     
                 </ul>
                 <div className="wallet">
