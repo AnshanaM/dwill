@@ -8,7 +8,7 @@ import Upload from "./Upload";
 import Encrypt from "./Encrypt";
 import Dashboard from "./Dashboard";
 import * as constants from "./constants";
-import {ethers} from "ethers";
+import { DiffieHellmanProvider } from './DiffieHellmanContext';
 
 interface AppProps {
   isAppInstalled: boolean;
@@ -33,16 +33,19 @@ const App: React.FC<AppProps> = ({ isAppInstalled, handleInstallClick }) => {
       ]}
     >
       
+      <DiffieHellmanProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<MainContent handleInstallClick={handleInstallClick} />}/>
+            <Route path="/" element={<MainContent handleInstallClick={handleInstallClick} />} />
             <Route path="upload" element={<Upload />} />
-            <Route path="dashboard" element={<Dashboard />}/>
-            <Route path="encrypt" element={<Encrypt />}/>
-
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="encrypt" element={<Encrypt />} />
           </Routes>
-      </BrowserRouter>
+        </BrowserRouter>
+      </DiffieHellmanProvider>
+
     </ThirdwebProvider>
+    
     </>
     
   );

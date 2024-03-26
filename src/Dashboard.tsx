@@ -8,6 +8,9 @@ import * as constants from "./constants";
 import PageTemplate from './components/PageTemplate';
 import dmsABI from './smart-contracts/DeadMansSwitchABI.json';
 import { ethers } from 'ethers';
+import {createDiffieHellman, DiffieHellman} from 'crypto';
+import { useDiffieHellman } from './DiffieHellmanContext';
+
 
 const Dashboard: React.FC = () => {
   const location = useLocation();
@@ -22,6 +25,11 @@ const Dashboard: React.FC = () => {
   const provider = new ethers.providers.Web3Provider(window.ethereum);
   const signer = provider.getSigner();
   const dmsContract = new ethers.Contract(constants.DEAD_MANS_SWITCH_CONTRACT, dmsABI, signer);
+
+  const [benefactorAddress, setBenefactor] = useState('');
+  const [beneficiaryPrivateKey, setBeneficiaryPrivateKey] = useState('');
+
+  const { diffieHellman } = useDiffieHellman();
 
 
   const navigate = useNavigate();
@@ -70,6 +78,21 @@ const Dashboard: React.FC = () => {
       try {
         await dmsContract.addBeneficiary(beneficiary.beneficiaryAddress, { from: walletAddress });
           console.log(`Added beneficiary: ${beneficiary.beneficiaryAddress}`);
+          try {
+            // const beneficiaryDH = createDiffieHellman(256);
+            diffieHellman.generateKeys();
+            const beneficiaryPublicKey = diffieHellman.getPublicKey('hex');
+            const beneficiaryAdd = beneficiary.beneficiaryAddress;
+            const beneficiaryPrivateKey = diffieHellman.getPrivateKey('hex');
+            console.log("public key: ",beneficiaryPublicKey);
+            console.log("private key: ",beneficiaryPrivateKey);
+            await dmsContract.addBeneficiaryPublicKey(walletAddress, beneficiaryAdd, beneficiaryPublicKey, { gasLimit: 3000000 });
+            console.log(`Stored public key for beneficiary ${beneficiary.beneficiaryAddress}`);
+
+        } catch (e) {
+            console.error(`Error adding beneficiary public key: `, e);
+        }        
+          
       } catch (error) {
         alert("Beneficiary already exists or some other error");
           console.error(`Error adding beneficiary ${beneficiary.beneficiaryAddress}:`, error);
@@ -88,9 +111,12 @@ const Dashboard: React.FC = () => {
       
   }
 
-  const [benefactorAddress, setBenefactor] = useState('');
   const handleAddressChange = (event) => {
     setBenefactor(event.target.value);
+  };
+
+  const handleKeyChange = (event) => {
+    setBeneficiaryPrivateKey(event.target.value);
   };
 
   const handleEnableSwitch = async (_benefactor: string) => {
@@ -108,6 +134,25 @@ const Dashboard: React.FC = () => {
       alert("An error occured when enabling your benefactor's switch.");
     }
     
+  }
+
+  const generateSecretKey = async () => {
+    console.log(`Beneficiary address: ${walletAddress}`);
+  
+    diffieHellman.setPrivateKey(beneficiaryPrivateKey,'hex');
+    const beneficiaryPublicKey = await dmsContract.getBeneficiaryPublicKey(benefactorAddress,walletAddress);
+    console.log("beneficiary public key: ",beneficiaryPublicKey);
+    diffieHellman.setPublicKey(beneficiaryPublicKey,'hex');
+    const benefactorPublicKey = await dmsContract.getBenefactorPublicKey(benefactorAddress,walletAddress);
+    console.log("benefactor public key: ",benefactorPublicKey);
+    if (typeof benefactorPublicKey === 'string') {
+        const buffer = Buffer.from(benefactorPublicKey, 'hex');
+        const beneficiarySecret: string = diffieHellman.computeSecret(buffer, 'binary', 'hex');
+        const secretHexString = Buffer.from(beneficiarySecret).toString('hex');
+        console.log("secret key in hex: ",secretHexString);
+    } else {
+        console.error("Beneficiary public key is not in string format.");
+    }
   }
   
   return (
@@ -187,6 +232,22 @@ const Dashboard: React.FC = () => {
                   <div>
                     <h3>when countdown is over and benefactor is assumed dead, enable the download button</h3>
                     <button>Download</button>
+                  </div>
+
+                  <div>
+                    <input 
+                      type="text" 
+                      value={benefactorAddress} 
+                      onChange={(e) => handleAddressChange(e)} 
+                      placeholder="Enter benefactor address" 
+                    />
+                    <input 
+                      type="text" 
+                      value={beneficiaryPrivateKey} 
+                      onChange={(e) => handleKeyChange(e)} 
+                      placeholder="Enter your private key" 
+                    />
+                    <button onClick={generateSecretKey}>Generate Shared Key</button>
                   </div>
                 </>
               }

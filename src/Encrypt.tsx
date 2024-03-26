@@ -10,12 +10,15 @@ import * as constants from "./constants";
 import { createDiffieHellman, DiffieHellman } from 'crypto';
 import { ethers } from 'ethers';
 import dmsABI from './smart-contracts/DeadMansSwitchABI.json';
+import { useDiffieHellman } from './DiffieHellmanContext';
 
 const Encrypt: React.FC = () => {
 
   const walletAddress = useAddress();
   const provider = new ethers.providers.Web3Provider(window.ethereum);
   const signer = provider.getSigner();
+
+  const { diffieHellman } = useDiffieHellman();
 
   if (walletAddress == null) {
     const navigate = useNavigate();
@@ -44,14 +47,16 @@ const Encrypt: React.FC = () => {
     }
   };
 
-  const algorithm = 'aes-256-ctr';
+  const algorithm = 'aes-128-ctr';
 
   // //encrypt function
-  const encrypt = (buffer) => {
+  const encrypt = (buffer: crypto.BinaryLike) => {
       //create an initialization vector
       const initVector = crypto.randomBytes(16);
+      const key = encryptionKey.slice(0,16);
+      console.log("16 bytes key: ",key);
       //create new cipher using algo, key and initVector
-      const cipher = crypto.createCipheriv(algorithm,encryptionKey,initVector);
+      const cipher = crypto.createCipheriv(algorithm,key,initVector);
       //create new encrypted buffer
       const result = Buffer.concat([initVector,cipher.update(buffer),cipher.final()]);
       return result;
@@ -81,15 +86,25 @@ const Encrypt: React.FC = () => {
     }
   };
 
-  const generateKeys = async () => {
-    console.log(`Beneficiary address: ${beneficiaryAddress}`);
-    const benefactorDH: DiffieHellman = createDiffieHellman(15);
-    benefactorDH.generateKeys();
-    await dmsContract.addBenefactorPublicKey(walletAddress,beneficiaryAddress,benefactorDH.getPublicKey('hex'));
-    const beneficiaryPublicKey = dmsContract.getBeneficiaryPublicKey(walletAddress,beneficiaryAddress);
-    const benefactorSecret: string = benefactorDH.computeSecret(beneficiaryPublicKey, 'hex', 'hex');
-    console.log(benefactorSecret)
-    setEncryptionKey(benefactorSecret)
+  const generateSecretKeys = async () => {
+      console.log(`Beneficiary address: ${beneficiaryAddress}`);
+
+
+      diffieHellman.generateKeys();
+      const benefactorPublicKey = diffieHellman.getPublicKey('hex');
+      await dmsContract.addBenefactorPublicKey(walletAddress,beneficiaryAddress,benefactorPublicKey,{gasLimit: "3000000"});
+      const beneficiaryPublicKey = await dmsContract.getBeneficiaryPublicKey(walletAddress,beneficiaryAddress);
+      console.log("beneficiary public key: ",beneficiaryPublicKey);
+      console.log("benefactor public key: ",benefactorPublicKey);
+      if (typeof beneficiaryPublicKey === 'string') {
+          const buffer = Buffer.from(beneficiaryPublicKey, 'hex');
+          const benefactorSecret: string = diffieHellman.computeSecret(buffer, 'binary', 'hex');
+          const secretHexString = Buffer.from(benefactorSecret).toString('hex');
+          console.log("secret key in hex: ",secretHexString);
+          setEncryptionKey(secretHexString)
+      } else {
+          console.error("Beneficiary public key is not in string format.");
+      }
   };
 
   return (
@@ -104,7 +119,7 @@ const Encrypt: React.FC = () => {
                     value={beneficiaryAddress}
                     onChange={handleBeneficiaryAddressChange}
                 />
-                <button onClick={generateKeys}><b>Generate Keys</b></button>
+                <button onClick={generateSecretKeys}><b>Generate Keys</b></button>
 
                 <br />
 

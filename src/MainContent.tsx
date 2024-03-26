@@ -157,15 +157,16 @@ const renew = async (contract, signer) => {
           console.log("Subscription status:", status);
           if (status === "expired" || status === "not subscribed") {
             alert("The address you have provided does not belong to a subscribed benefactor.");
+            handleClosePopUp();
           } else {
             const dmsContract = new ethers.Contract(constants.DEAD_MANS_SWITCH_CONTRACT, dmsABI, signer);
-            const isBeneficiary = await dmsContract.isBeneficiary(inputValue,signer.getAddress());
-            const benefactorIsAlive = await dmsContract.checkAliveStatus(inputValue);
-            isBeneficiary && benefactorIsAlive ? redirectToDashboard("beneficiary") : alert("You are not a beneficiary of the specified benefactor or the benefactor does not exist.");
+            const isBeneficiary = await dmsContract.isBeneficiary(inputValue,address);
+            // const benefactorIsAlive = await dmsContract.checkAliveStatus(inputValue);
+            isBeneficiary ? redirectToDashboard("beneficiary") : alert("You are not a beneficiary of the specified benefactor or the benefactor does not exist.");
           }
         });
         //call the checkSubscriptionStatus function
-        await contract.checkSubscriptionStatus(signer.getAddress());
+        await contract.checkSubscriptionStatus(inputValue);
       } catch (error) {
         console.error('Error:', error);
         (address === null) ? alert('Connect your wallet to continue.') : alert('Error.');
