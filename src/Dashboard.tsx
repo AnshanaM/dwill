@@ -8,14 +8,15 @@ import * as constants from "./constants";
 import PageTemplate from './components/PageTemplate';
 import dmsABI from './smart-contracts/DeadMansSwitchABI.json';
 import { ethers } from 'ethers';
-import {createDiffieHellman, DiffieHellman} from 'crypto';
-import { useDiffieHellman } from './DiffieHellmanContext';
+import { useDiffieHellman} from './DiffieHellmanContext';
 
 
 const Dashboard: React.FC = () => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const userType: string | null = searchParams.get("userType");
+
+  const { computeSecret, generatePublicKey } = useDiffieHellman();
 
   const benefactor = userType=="benefactor" ? 1 : 0;
 
@@ -77,22 +78,9 @@ const Dashboard: React.FC = () => {
     uniqueBeneficiaries.forEach(async beneficiary => {
       try {
         await dmsContract.addBeneficiary(beneficiary.beneficiaryAddress, { from: walletAddress });
-          console.log(`Added beneficiary: ${beneficiary.beneficiaryAddress}`);
-          try {
-            // const beneficiaryDH = createDiffieHellman(256);
-            diffieHellman.generateKeys();
-            const beneficiaryPublicKey = diffieHellman.getPublicKey('hex');
-            const beneficiaryAdd = beneficiary.beneficiaryAddress;
-            const beneficiaryPrivateKey = diffieHellman.getPrivateKey('hex');
-            console.log("public key: ",beneficiaryPublicKey);
-            console.log("private key: ",beneficiaryPrivateKey);
-            await dmsContract.addBeneficiaryPublicKey(walletAddress, beneficiaryAdd, beneficiaryPublicKey, { gasLimit: 3000000 });
-            console.log(`Stored public key for beneficiary ${beneficiary.beneficiaryAddress}`);
-
-        } catch (e) {
-            console.error(`Error adding beneficiary public key: `, e);
-        }        
-          
+          console.log(`Added beneficiary: ${beneficiary.beneficiaryAddress}`);    
+          //benefactor notify beneficiary to generate their keys
+          //beneficiary must go to their dashboard and click generate keys button
       } catch (error) {
         alert("Beneficiary already exists or some other error");
           console.error(`Error adding beneficiary ${beneficiary.beneficiaryAddress}:`, error);
@@ -137,24 +125,30 @@ const Dashboard: React.FC = () => {
   }
 
   const generateSecretKey = async () => {
-    console.log(`Beneficiary address: ${walletAddress}`);
-  
-    diffieHellman.setPrivateKey(beneficiaryPrivateKey,'hex');
-    const beneficiaryPublicKey = await dmsContract.getBeneficiaryPublicKey(benefactorAddress,walletAddress);
-    console.log("beneficiary public key: ",beneficiaryPublicKey);
-    diffieHellman.setPublicKey(beneficiaryPublicKey,'hex');
+    // get benefactor public key from contract
     const benefactorPublicKey = await dmsContract.getBenefactorPublicKey(benefactorAddress,walletAddress);
-    console.log("benefactor public key: ",benefactorPublicKey);
-    if (typeof benefactorPublicKey === 'string') {
-        const buffer = Buffer.from(benefactorPublicKey, 'hex');
-        const beneficiarySecret: string = diffieHellman.computeSecret(buffer, 'binary', 'hex');
-        const secretHexString = Buffer.from(beneficiarySecret).toString('hex');
-        console.log("secret key in hex: ",secretHexString);
-    } else {
-        console.error("Beneficiary public key is not in string format.");
-    }
+    console.log(`Benefactor public key: ${benefactorPublicKey}`)
+    // generate the secret key using beneficiarys public key and benefactors private key
+    console.log(`Beneficiary private key: ${beneficiaryPrivateKey}`)
+    const privateKey = parseInt(beneficiaryPrivateKey, 16);
+    const secretKey = computeSecret(benefactorPublicKey, privateKey);
+    console.log(`Secret key: ${secretKey}`);
+
+    // beneficiary notify benefactor that keys are already generated
+
   }
-  
+
+  const generateBPublicKey = async () => {
+    console.log(`Beneficiary private key: ${beneficiaryPrivateKey}`)
+    // generate the public key using the beneficiary entered private key
+    const privateKey = parseInt(beneficiaryPrivateKey, 16);
+    const beneficiaryPublicKey = generatePublicKey(privateKey, diffieHellman.prime, diffieHellman.generator);
+    // store beneficiary public key in contract
+    await dmsContract.addBeneficiaryPublicKey(benefactorAddress,walletAddress,beneficiaryPublicKey);
+    console.log(`Beneficiary public key: ${beneficiaryPublicKey}`)
+    return beneficiaryPublicKey;
+  }
+
   return (
     <main>
       <div>
@@ -247,7 +241,10 @@ const Dashboard: React.FC = () => {
                       onChange={(e) => handleKeyChange(e)} 
                       placeholder="Enter your private key" 
                     />
-                    <button onClick={generateSecretKey}>Generate Shared Key</button>
+                    {/* check if public key in contract is "", if so then render the following, otherwise dont render it at all */}
+                    <button onClick={generateBPublicKey}>Generate Public Key</button>
+                    {/* only render the following if the benefactor died already */}
+                    <button onClick={generateSecretKey}>Generate Secret Key</button>
                   </div>
                 </>
               }

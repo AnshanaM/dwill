@@ -24,6 +24,9 @@ contract BenefactorsDeadManSwitch {
         bool isAlive;
     }
 
+    uint256 private prime = 0;
+    uint256 private generator = 0;
+
     mapping(address => BenefactorInfo) private benefactors; 
 
     // Auxiliary mapping to store keys of beneficiaries
@@ -309,5 +312,22 @@ contract BenefactorsDeadManSwitch {
         require(isBeneficiary(_benefactor,_beneficiary),"Beneficiary not found");
         require(benefactors[_benefactor].beneficiaries[msg.sender].exists && benefactors[_benefactor].isAlive == false,"No access to CIDs");
         return benefactors[_benefactor].beneficiaries[_beneficiary].ipfsCIDs;
+    }
+
+    /**
+     * @dev Setter function to set both prime and generator values
+     * @param _prime The prime number used in the Diffie-Hellman algorithm.
+     * @param _generator The generator used in the Diffie-Hellman algorithm.
+     */
+    function setPrimeAndGenerator(uint256 _prime, uint256 _generator) public {
+        prime = _prime;
+        generator = _generator;
+    }
+
+    /**
+     * @dev Getter function to get both prime and generator values
+    */
+    function getPrimeAndGenerator() public view returns (uint256, uint256) {
+        return (prime, generator);
     }
 }

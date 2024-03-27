@@ -558,6 +558,24 @@
   },
   {
     "type": "function",
+    "name": "getPrimeAndGenerator",
+    "inputs": [],
+    "outputs": [
+      {
+        "type": "uint256",
+        "name": "",
+        "internalType": "uint256"
+      },
+      {
+        "type": "uint256",
+        "name": "",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "getRemainingCountdownTime",
     "inputs": [
       {
@@ -673,6 +691,24 @@
     "type": "function",
     "name": "setBenefactor",
     "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setPrimeAndGenerator",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "_prime",
+        "internalType": "uint256"
+      },
+      {
+        "type": "uint256",
+        "name": "_generator",
+        "internalType": "uint256"
+      }
+    ],
     "outputs": [],
     "stateMutability": "nonpayable"
   }

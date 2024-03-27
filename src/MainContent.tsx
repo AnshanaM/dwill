@@ -223,9 +223,7 @@ const renew = async (contract, signer) => {
           <source src="/images/bg-landing-pg.mp4" type="video/mp4" />
         </video>
         <h1>Your will, at your fingertips.</h1>
-        {/* <div className="button-container"> */}
           <button className="landing-button" onClick={handleStartNowClick}>Start now!</button>
-        {/* </div> */}
       </div>
 
           
@@ -239,7 +237,6 @@ const renew = async (contract, signer) => {
               <button onClick={redirectToDashboard("benefactor")}>Dashboard</button>:
               <button onClick={handleSubscribe}>Subscribe</button>
               }
-              {/* <button onClick={handleSubscribe}>Subscribe</button> */}
               <p>Already subscribed? <u onClick={handleRenewal}>Renew here.</u></p>
           </div>
           <div className="beneficiary">

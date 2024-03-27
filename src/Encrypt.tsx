@@ -18,6 +18,9 @@ const Encrypt: React.FC = () => {
   const provider = new ethers.providers.Web3Provider(window.ethereum);
   const signer = provider.getSigner();
 
+
+  const { computeSecret, generatePublicKey } = useDiffieHellman();
+
   const { diffieHellman } = useDiffieHellman();
 
   if (walletAddress == null) {
@@ -30,6 +33,8 @@ const Encrypt: React.FC = () => {
 
   const [beneficiaryAddress, setBeneficiaryAddress] = useState<string>('');
 
+  const [benefactorPrivateKey, setBenefactorPrivateKey] = useState<string>('');
+
   const dmsContract = new ethers.Contract(constants.DEAD_MANS_SWITCH_CONTRACT, dmsABI, signer);
 
   const handleEncryptionKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,6 +43,10 @@ const Encrypt: React.FC = () => {
 
   const handleBeneficiaryAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setBeneficiaryAddress(e.target.value);
+  };
+
+  const handleBenefactorPrivateKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setBenefactorPrivateKey(e.target.value);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,22 +97,24 @@ const Encrypt: React.FC = () => {
 
   const generateSecretKeys = async () => {
       console.log(`Beneficiary address: ${beneficiaryAddress}`);
-
-
-      diffieHellman.generateKeys();
-      const benefactorPublicKey = diffieHellman.getPublicKey('hex');
-      await dmsContract.addBenefactorPublicKey(walletAddress,beneficiaryAddress,benefactorPublicKey,{gasLimit: "3000000"});
+      console.log(`Benefactor private key: ${benefactorPrivateKey}`);
+      // get benefactors private key
+      const privateKey = parseInt(benefactorPrivateKey, 16);
+      // generate public key from private key
+      const benefactorPublicKey = generatePublicKey(privateKey, diffieHellman.prime, diffieHellman.generator);
+      // store benefacotrs public key in the contract
+      await dmsContract.addBenefactorPublicKey(walletAddress,beneficiaryAddress,benefactorPublicKey);
+      // get beneficiary's public key from smart contract
       const beneficiaryPublicKey = await dmsContract.getBeneficiaryPublicKey(walletAddress,beneficiaryAddress);
-      console.log("beneficiary public key: ",beneficiaryPublicKey);
-      console.log("benefactor public key: ",benefactorPublicKey);
-      if (typeof beneficiaryPublicKey === 'string') {
-          const buffer = Buffer.from(beneficiaryPublicKey, 'hex');
-          const benefactorSecret: string = diffieHellman.computeSecret(buffer, 'binary', 'hex');
-          const secretHexString = Buffer.from(benefactorSecret).toString('hex');
-          console.log("secret key in hex: ",secretHexString);
-          setEncryptionKey(secretHexString)
+      // generate the secret key using beneficiarys public key and benefactors private key
+      const secretKey = computeSecret(beneficiaryPublicKey, privateKey);
+      console.log(`Secret key: ${secretKey}`);
+      // ensure secretKey is not null before setting encryption key state variable
+      if (secretKey !== null) {
+          // set the encryption key state variable as this secret key
+          setEncryptionKey(secretKey.toString());
       } else {
-          console.error("Beneficiary public key is not in string format.");
+          console.error("Failed to compute secret key.");
       }
   };
 
@@ -115,10 +126,18 @@ const Encrypt: React.FC = () => {
             <div>
                 <input
                     type="text"
-                    placeholder="Enter Beneficiary Address: "
+                    placeholder="Enter Beneficiary Address "
                     value={beneficiaryAddress}
                     onChange={handleBeneficiaryAddressChange}
                 />
+                <input
+                    type="text"
+                    placeholder="Enter your private key "
+                    value={benefactorPrivateKey}
+                    onChange={handleBenefactorPrivateKeyChange}
+                />
+
+                {/* only render this button if the beneficiary has already generated their keys!! */}
                 <button onClick={generateSecretKeys}><b>Generate Keys</b></button>
 
                 <br />
