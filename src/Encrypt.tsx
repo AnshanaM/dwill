@@ -58,10 +58,17 @@ const Encrypt: React.FC = () => {
 
   const algorithm = 'aes-128-ctr';
 
+  const deriveIV = (buffer: crypto.BinaryLike) => {
+    const hash = crypto.createHash('sha256');
+    hash.update(buffer);
+    return hash.digest().slice(0, 16);
+}
+
   // //encrypt function
   const encrypt = (buffer: crypto.BinaryLike) => {
       //create an initialization vector
-      const initVector = crypto.randomBytes(16);
+      const initVector = deriveIV(buffer);
+      console.log(`init vector for encryption: ${initVector}`);
       const key = encryptionKey.slice(0,16);
       console.log("16 bytes key: ",key);
       //create new cipher using algo, key and initVector
@@ -100,14 +107,16 @@ const Encrypt: React.FC = () => {
       console.log(`Benefactor private key: ${benefactorPrivateKey}`);
       // get benefactors private key
       const privateKey = parseInt(benefactorPrivateKey, 16);
+      console.log(`Private key: ${privateKey}`);
       // generate public key from private key
-      const benefactorPublicKey = generatePublicKey(privateKey, diffieHellman.prime, diffieHellman.generator);
+      const benefactorPublicKey = generatePublicKey(privateKey);
       // store benefacotrs public key in the contract
-      await dmsContract.addBenefactorPublicKey(walletAddress,beneficiaryAddress,benefactorPublicKey);
+      await dmsContract.addBenefactorPublicKey(walletAddress,beneficiaryAddress,benefactorPublicKey.toString());
       // get beneficiary's public key from smart contract
       const beneficiaryPublicKey = await dmsContract.getBeneficiaryPublicKey(walletAddress,beneficiaryAddress);
+      console.log(`Beneficiary public key: ${beneficiaryPublicKey}`);
       // generate the secret key using beneficiarys public key and benefactors private key
-      const secretKey = computeSecret(beneficiaryPublicKey, privateKey);
+      const secretKey = computeSecret(parseInt(beneficiaryPublicKey), privateKey);
       console.log(`Secret key: ${secretKey}`);
       // ensure secretKey is not null before setting encryption key state variable
       if (secretKey !== null) {

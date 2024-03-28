@@ -131,7 +131,8 @@ const Dashboard: React.FC = () => {
     // generate the secret key using beneficiarys public key and benefactors private key
     console.log(`Beneficiary private key: ${beneficiaryPrivateKey}`)
     const privateKey = parseInt(beneficiaryPrivateKey, 16);
-    const secretKey = computeSecret(benefactorPublicKey, privateKey);
+    console.log(`Private key: ${privateKey}`);
+    const secretKey = computeSecret(parseInt(benefactorPublicKey), privateKey);
     console.log(`Secret key: ${secretKey}`);
 
     // beneficiary notify benefactor that keys are already generated
@@ -142,9 +143,10 @@ const Dashboard: React.FC = () => {
     console.log(`Beneficiary private key: ${beneficiaryPrivateKey}`)
     // generate the public key using the beneficiary entered private key
     const privateKey = parseInt(beneficiaryPrivateKey, 16);
-    const beneficiaryPublicKey = generatePublicKey(privateKey, diffieHellman.prime, diffieHellman.generator);
+    console.log(`Private key: ${privateKey}`);
+    const beneficiaryPublicKey = generatePublicKey(privateKey);
     // store beneficiary public key in contract
-    await dmsContract.addBeneficiaryPublicKey(benefactorAddress,walletAddress,beneficiaryPublicKey);
+    await dmsContract.addBeneficiaryPublicKey(benefactorAddress,walletAddress,beneficiaryPublicKey.toString());
     console.log(`Beneficiary public key: ${beneficiaryPublicKey}`)
     return beneficiaryPublicKey;
   }

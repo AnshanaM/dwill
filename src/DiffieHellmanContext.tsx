@@ -13,7 +13,7 @@ interface DiffieHellmanContextType {
   diffieHellman: DiffieHellmanType | null;
   setDiffieHellman: (dh: DiffieHellmanType) => void;
   computeSecret: (publicKey: number, privateKey: number) => number | null;
-  generatePublicKey: (privateKey: number, prime: number, generator: number) => number;
+  generatePublicKey: (privateKey: number) => number;
 }
 
 const DiffieHellmanContext = createContext<DiffieHellmanContextType>({
@@ -31,36 +31,61 @@ const dmsContract = new ethers.Contract(constants.DEAD_MANS_SWITCH_CONTRACT, dms
 export const DiffieHellmanProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [diffieHellman, setDiffieHellman] = useState<DiffieHellmanType | null>(null);
 
-  useEffect(() => {
-    const initializeDiffieHellman = async () => {
-      // Get prime and generator from the contract or use default values
-      const [contractPrime, contractGenerator] = await dmsContract.getPrimeAndGenerator();
-      // Initialize with default values if not set in the contract
-      const prime = contractPrime.toString() !== '0' ? Number(contractPrime) : 23;
-      const generator = contractGenerator.toString() !== '0' ? Number(contractGenerator) : 5;
-      if (contractPrime.toString() == '0'){
-        // if the prime/generator is 0, not yet set, then set it in the contract
-        await dmsContract.setPrimeAndGenerator(23,5);
-      }
+  // useEffect(() => {
+  //   const initializeDiffieHellman = async () => {
+  //     // Get prime and generator from the contract or use default values
+  //     const [contractPrime, contractGenerator] = await dmsContract.getPrimeAndGenerator();
+  //     // Initialize with default values if not set in the contract
+  //     const prime = contractPrime.toString() !== '0' ? Number(contractPrime) : 23;
+  //     const generator = contractGenerator.toString() !== '0' ? Number(contractGenerator) : 5;
+  //     if (contractPrime.toString() == '0'){
+  //       // if the prime/generator is 0, not yet set, then set it in the contract
+  //       await dmsContract.setPrimeAndGenerator(23,5);
+  //     }
+  //     // Set the Diffie-Hellman context
+  //     setDiffieHellman({
+  //       prime,
+  //       generator,
+  //     });
+  //   };
 
-      // Set the Diffie-Hellman context
-      setDiffieHellman({
-        prime,
-        generator,
-      });
-    };
+  //   initializeDiffieHellman();
+  // }, []);
 
-    initializeDiffieHellman();
-  }, []);
-
-  // Function to compute the secret number
-  const computeSecret = (publicKey: number, privateKey: number): number | null => {
-    if (!diffieHellman) return null;
-    return Math.pow(publicKey,privateKey) % diffieHellman.prime;
+  const initializeDiffieHellman = async () => {
+    // Get prime and generator from the contract or use default values
+    const [contractPrime, contractGenerator] = await dmsContract.getPrimeAndGenerator();
+    // Initialize with default values if not set in the contract
+    const prime = contractPrime.toString() !== '0' ? Number(contractPrime) : 23;
+    const generator = contractGenerator.toString() !== '0' ? Number(contractGenerator) : 5;
+    if (contractPrime.toString() == '0'){
+      // if the prime/generator is 0, not yet set, then set it in the contract
+      await dmsContract.setPrimeAndGenerator(23,5);
+    }
+    // Set the Diffie-Hellman context
+    setDiffieHellman({
+      prime,
+      generator,
+    });
   };
 
-  // Function to generate public key from private key
-  function modExp(base: number, exponent: number, modulus: number): number {
+  initializeDiffieHellman();
+  const computeSecret = (publicKey: number, privateKey: number): number | null => {
+    console.log(`Public key: ${publicKey}`)
+    console.log(`Private key: ${privateKey}`)
+    //parse private key as BigInt
+    const privateKeyNum = BigInt(privateKey.toString().replace(".", "").replace("e+76", "").slice(0,8));
+    console.log(`Private key num: ${privateKeyNum}`);
+    //convert publicKey to BigInt
+    const publicKeyBigInt = BigInt(publicKey);
+    //calculate the shared secret using modular exponentiation and multiplying with prime to make the number larger for encryption
+    const sharedSecret = (Number(publicKeyBigInt ** privateKeyNum % BigInt(diffieHellman.prime)))*(diffieHellman.prime**(diffieHellman.generator*diffieHellman.generator));
+    return sharedSecret;
+  };
+
+  function modExp(base: number, exp: number, modulus: number): number {
+    var exponent = parseInt(exp.toString().replace(".", "").replace("e+76", ""));
+    console.log(`Exponent: ${exponent}`)
     let result = 1;
     base = base % modulus;
     while (exponent > 0) {
@@ -70,11 +95,15 @@ export const DiffieHellmanProvider: React.FC<{ children: ReactNode }> = ({ child
         exponent = exponent >> 1;
         base = (base * base) % modulus;
     }
+    console.log(`result: ${result}`)
     return result;
+
   };
 
-  const generatePublicKey = (privateKey: number, prime: number, generator: number): number => {
-      return modExp(generator, privateKey, prime);
+  const generatePublicKey = (privateKey: number): number => {
+      console.log("Inside diffie hellman context");
+      console.log(`Private key: ${privateKey} Prime: ${diffieHellman.prime} Generator: ${diffieHellman.generator}`);
+      return modExp(diffieHellman.generator, privateKey, diffieHellman.prime);
   };
 
   return (

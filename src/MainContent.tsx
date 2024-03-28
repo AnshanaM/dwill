@@ -57,13 +57,17 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
       const contract = new ethers.Contract(constants.SUBSCRIPTION_CONTRACT, subscriptionABI, signer);
   
       //subscribe to the Status event
-      contract.on("Status", (subscriber, status) => {
+      contract.on("Status", async (subscriber, status) => {
         console.log("Subscription status:", status);
         if (status === "expired" || status === "not subscribed") {
           //subscription status is EXPIRED or NEW, proceed with subscription
           subscribe(contract, signer);
           redirectToDashboard("benefactor");
         } else if (status === "within grace period, requires renewal") {
+          const dmsContract = new ethers.Contract(constants.DEAD_MANS_SWITCH_CONTRACT, dmsABI, signer);
+          await dmsContract.setBenefactor({
+            from: address
+          });
           if (confirm("Your subscription is within the grace period. Click confirm to renew your subscription.")){
             handleRenewal();
           }
@@ -235,7 +239,7 @@ const renew = async (contract, signer) => {
               <h3>I am here to allot my assets.</h3>
               {successBenefactor ? 
               <button onClick={redirectToDashboard("benefactor")}>Dashboard</button>:
-              <button onClick={handleSubscribe}>Subscribe</button>
+              <button onClick={handleSubscribe}>Sign in</button>
               }
               <p>Already subscribed? <u onClick={handleRenewal}>Renew here.</u></p>
           </div>

@@ -61,7 +61,6 @@ contract BenefactorsDeadManSwitch {
      * @dev Sets up a benefactor. Only callable by benefactor.
      */
     function setBenefactor() public{
-        require(!benefactors[msg.sender].exists,"benefactor already exists");
         benefactors[msg.sender].exists=true;
         benefactors[msg.sender].countdownDuration = 7*24*3600 seconds; // count down set to 1 week
         // benefactors[msg.sender].countdownDuration = 120 seconds;
@@ -70,28 +69,16 @@ contract BenefactorsDeadManSwitch {
         benefactors[msg.sender].lastBenefactorResponseTime = 0;
     }
 
+
     /**
-     * @dev Returns current status of benefactor.
+     * @dev Checks if the given address is a beneficiary. Only benefactor
+     * @param _address The address to check.
+     * @return A boolean indicating whether the address is a beneficiary.
      */
-    function getData(address _benefactor) public returns (bool switchStatus, address[] memory beneficiaries, uint256 remainingTime) {
-        require(benefactors[_benefactor].exists, "Benefactor does not exist");
-        switchStatus = !benefactors[_benefactor].isSwitchedOff;
-        beneficiaries = new address[](getBeneficiariesCount(_benefactor));
-        uint256 index = 0;
-        for (uint256 i = 0; i < beneficiaries.length; i++) {
-            if (benefactors[_benefactor].beneficiaries[beneficiaryKeys[_benefactor][i]].exists) {
-                beneficiaries[index] = beneficiaryKeys[_benefactor][i];
-                index++;
-            }
-        }
-        if (benefactors[_benefactor].isSwitchedOff) {
-            remainingTime = 0;
-        } else {
-            remainingTime = getRemainingCountdownTime(_benefactor);
-        }
-        // emit BeneficiariesData(switchStatus, beneficiaries, remainingTime);
-        return (switchStatus, beneficiaries, remainingTime);
+    function isBeneficiary(address _benefactor, address _address) public view returns (bool) {
+        return benefactors[_benefactor].beneficiaries[_address].exists;
     }
+
 
     /**
     * @dev Auxiliary function to return the number of beneficiaries for a benefactor.
@@ -150,15 +137,6 @@ contract BenefactorsDeadManSwitch {
     function getSwitchStatus(address _benefactor) public view returns (bool) {
         require(benefactors[_benefactor].exists,"Benefactor does not exist");
         return !benefactors[_benefactor].isSwitchedOff;
-    }
-
-    /**
-     * @dev Checks if the given address is a beneficiary. Only benefactor
-     * @param _address The address to check.
-     * @return A boolean indicating whether the address is a beneficiary.
-     */
-    function isBeneficiary(address _benefactor, address _address) public view returns (bool) {
-        return benefactors[_benefactor].beneficiaries[_address].exists;
     }
 
     /**
@@ -329,5 +307,28 @@ contract BenefactorsDeadManSwitch {
     */
     function getPrimeAndGenerator() public view returns (uint256, uint256) {
         return (prime, generator);
+    }
+
+    /**
+     * @dev Returns current status of benefactor.
+     */
+    function getData(address _benefactor) public returns (bool switchStatus, address[] memory beneficiaries, uint256 remainingTime) {
+        require(benefactors[_benefactor].exists, "Benefactor does not exist");
+        switchStatus = !benefactors[_benefactor].isSwitchedOff;
+        beneficiaries = new address[](getBeneficiariesCount(_benefactor));
+        uint256 index = 0;
+        for (uint256 i = 0; i < beneficiaries.length; i++) {
+            if (benefactors[_benefactor].beneficiaries[beneficiaryKeys[_benefactor][i]].exists) {
+                beneficiaries[index] = beneficiaryKeys[_benefactor][i];
+                index++;
+            }
+        }
+        if (benefactors[_benefactor].isSwitchedOff) {
+            remainingTime = 0;
+        } else {
+            remainingTime = getRemainingCountdownTime(_benefactor);
+        }
+        // emit BeneficiariesData(switchStatus, beneficiaries, remainingTime);
+        return (switchStatus, beneficiaries, remainingTime);
     }
 }
