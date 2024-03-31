@@ -209,51 +209,52 @@ const Dashboard: React.FC = () => {
     }
 };
 
-
-  const handleDownloadZip = async () => {
-    if (ipfsCid && ipfsCid.length > 0) {
+const handleDownloadZip = async () => {
+  if (ipfsCid && ipfsCid.length > 0) {
       const zip = new JSZip();
-  
+
       // Iterate over each IPFS CID and add the file to the zip folder
       await Promise.all(
-        ipfsCid.map(async (cid, index) => {
-          try {
-            const response = await axios.get(`https://gateway.pinata.cloud/ipfs/${cid}`, {
-              responseType: 'blob',
-            });
-  
-            // Get the file name from the response headers
-            const contentDisposition = response.headers['content-disposition'];
-            const fileName = contentDisposition
-              ? contentDisposition.split('filename=')[1].trim()
-              : `file${index + 1}`;
-  
-            // Add the file to the zip folder
-            zip.file(fileName, response.data);
-          } catch (error) {
-            console.error(`Error downloading file with CID ${cid}:`, error);
-          }
-        })
+          ipfsCid.map(async (cid, index) => {
+              try {
+                  const response = await fetch(`https://ipfs.io/ipfs/${cid}`, {
+                      responseType: 'blob',
+                  });
+
+                  if (!response.ok) {
+                      throw new Error('Failed to download file');
+                  }
+
+                  const blob = await response.blob();
+
+                  // Get the file name from the CID
+                  const fileName = `file_${cid}`;
+
+                  // Add the file to the zip folder
+                  zip.file(fileName, blob);
+              } catch (error) {
+                  console.error(`Error downloading file with CID ${cid}:`, error);
+              }
+          })
       );
-  
+
       // Generate the zip file and trigger the download
       zip.generateAsync({ type: 'blob' }).then(blob => {
-        const downloadUrl = URL.createObjectURL(blob);
-  
-        // Create a temporary link element and trigger the download
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = 'ipfs_files.zip';
-        link.click();
-  
-        // Clean up the temporary URL object
-        URL.revokeObjectURL(downloadUrl);
-      });
-    } else {
-      console.error('IPFS CIDs are empty');
-    }
-  };
+          const downloadUrl = URL.createObjectURL(blob);
 
+          // Create a temporary link element and trigger the download
+          const link = document.createElement('a');
+          link.href = downloadUrl;
+          link.download = 'ipfs_files.zip';
+          link.click();
+
+          // Clean up the temporary URL object
+          URL.revokeObjectURL(downloadUrl);
+      });
+  } else {
+      console.error('IPFS CIDs are empty');
+  }
+};
   useEffect(() => {
     // Retrieve the IPFS CIDs when the component mounts
     handleRetrieveIpfsCid();
