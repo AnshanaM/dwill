@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import "./styles/UploadPage.css";
 import { ConnectWallet, MediaRenderer, ThirdwebProvider, Web3Button, useAddress, useContract, useContractRead, useSigner, useStorageUpload } from '@thirdweb-dev/react';
 import * as constants from "./constants";
-import PageTemplate from './components/PageTemplate';
+import PageTemplate from './components/PageTemplateBenefactor';
 import axios from 'axios';
 import { ethers } from 'ethers';
 import UploadABI from './smart-contracts/UploadABI.json';
@@ -18,8 +18,7 @@ const Upload: React.FC = () => {
     const navigate = useNavigate();
     navigate("/");
   }
-
-
+  
   const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const contract = new ethers.Contract(constants.UPLOAD_CONTRACT,UploadABI,useSigner());
@@ -128,7 +127,8 @@ const Upload: React.FC = () => {
           </ThirdwebProvider>
             
 
-          } address={walletAddress} user='benefactor'/>
+          } address={walletAddress} 
+          />
         }
       </div>
     </main>

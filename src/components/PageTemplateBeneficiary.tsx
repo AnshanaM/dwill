@@ -9,11 +9,11 @@ import { FaWallet } from "react-icons/fa";
 interface PageTemplateProps {
     pageTitle: ReactNode;
     pageContent: ReactNode;
-    user:string;
+    // user:string;
     address: string;
 }
 
-const PageTemplate: React.FC<PageTemplateProps> = ({ pageTitle, pageContent, address }) => {
+const PageTemplateBeneficiary: React.FC<PageTemplateProps> = ({ pageTitle, pageContent, address }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true); // State to control sidebar visibility
     const navigate = useNavigate();
 
@@ -52,57 +52,35 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageTitle, pageContent, add
                     </li>
 
                     <li>
-                        <Link to="/dashboard">
+                        <Link to="/Beneficiarydashboard">
                             <TiThLarge className='icon' />
                             {
                                 isSidebarOpen ? <span>Dashboard</span> : <></>
                             }
                         </Link>
                     </li>
-                    <li>
+                    {/* <li>
                         <Link to="/upload">
                             <TiUpload className='icon' />
                             {
                                 isSidebarOpen ? <span>Upload</span> : <></>
                             }
                         </Link>
-                    </li>
-                    {/* <li>
-                        <Link to="/encrypt">
-                            <SiLetsencrypt className='icon' />
-                            {
-                                isSidebarOpen ? <span>Encrypt</span> : <></>
-                            }
-                        </Link>
                     </li> */}
-                    {/* <li>
-                        <Link to="/assignBeneficiaries">
-                            <SiLetsencrypt className='icon' />
-                            {
-                                isSidebarOpen ? <span>assignBeneficiaries</span> : <></>
-                            }
-                        </Link>
-                    </li> */}
-                    {/* <li>
-                        <Link to="/download">
-                            <TiDownload className='icon' />
-                            {
-                                isSidebarOpen ? <span>Download</span> : <></>
-                            }
-                        </Link>
-                    </li> */}
-                    {/* <li>
-                        <Link to="/my-switch">
-                            <TiStopwatch className='icon' />
-                            {
-                                isSidebarOpen ? <span>My Switch</span> : <></>
-                            }
-                        </Link>
-                    </li> */}
+                    
                 </ul>
                 <div className="wallet">
                     {isSidebarOpen ? 
                     <ConnectWallet
+                        auth={{
+                            loginOptional: true,
+                            onLogin(token) {
+                                console.log("user logged in", token);
+                            },
+                            onLogout() {
+                                console.log("user logged out");
+                            },
+                        }}
                         theme={darkTheme({
                             colors: {
                                 primaryText: "#d9d9d9",
@@ -142,4 +120,4 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageTitle, pageContent, add
     );
 };
 
-export default PageTemplate;
+export default PageTemplateBeneficiary;

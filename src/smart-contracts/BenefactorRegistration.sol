@@ -14,6 +14,11 @@ contract BenefactorRegistration {
 
     mapping(address => Benefactor) public benefactors;
 
+    event BenefactorDisconnected(address indexed benefactor);
+
+    address[] public benefactorAddresses;
+
+
     /**
      * @dev Emitted when a beneficiary is added to a benefactor's list.
      * @param benefactor The address of the benefactor.
@@ -29,12 +34,13 @@ contract BenefactorRegistration {
     event BeneficiaryRemoved(address indexed benefactor, address indexed beneficiary);
 
     /**
-     * @dev Registers the caller as a benefactor.
-     * Reverts if the caller is already a registered benefactor.
-     */
+    * @dev Registers the caller as a benefactor.
+    * Reverts if the caller is already a registered benefactor.
+    */
     function registerBenefactor() external {
         require(!benefactors[msg.sender].exists, "Benefactor already registered");
         benefactors[msg.sender].exists = true;
+        benefactorAddresses.push(msg.sender); // Add the benefactor address to the array
     }
 
     /**
@@ -90,15 +96,37 @@ contract BenefactorRegistration {
     }
 
     /**
-     * @dev Retrieves the list of beneficiaries for a specified benefactor.
-     * Reverts if the specified benefactor is not registered.
-     * @param _benefactor The address of the benefactor.
-     * @return An array of beneficiary addresses.
-     */
+    * @dev Retrieves the list of beneficiaries for a specified benefactor.
+    * Reverts if the specified benefactor is not registered.
+    * @param _benefactor The address of the benefactor.
+    * @return An array of beneficiary addresses.
+    */
     function getBeneficiaries(address _benefactor) external view returns (address[] memory) {
         require(benefactors[_benefactor].exists, "Benefactor not registered");
-        return benefactors[_benefactor].beneficiaries;
+        
+        // Get the list of beneficiaries
+        address[] memory beneficiaries = benefactors[_benefactor].beneficiaries;
+        
+        // Create a new array to store filtered beneficiaries
+        address[] memory filteredBeneficiaries = new address[](beneficiaries.length);
+        uint256 count = 0;
+        
+        // Filter out the 0x0000000000000000000000000000000000000000 address
+        for (uint256 i = 0; i < beneficiaries.length; i++) {
+            if (beneficiaries[i] != address(0)) {
+                filteredBeneficiaries[count] = beneficiaries[i];
+                count++;
+            }
+        }
+        
+        // Resize the array to remove any unused slots
+        assembly {
+            mstore(filteredBeneficiaries, count)
+        }
+        
+        return filteredBeneficiaries;
     }
+
 
     /**
      * @dev Checks if the caller is a beneficiary of a specified benefactor.
@@ -113,4 +141,35 @@ contract BenefactorRegistration {
         }
         return false;
     }
+
+    /**
+     * @dev Disconnects the benefactor and emits an event.
+     * Reverts if the caller is not a benefactor.
+     */
+    function disconnect() external {
+        require(benefactors[msg.sender].exists, "Benefactor not registered");
+
+        // Remove the benefactor
+        delete benefactors[msg.sender];
+
+        // Emit event
+        emit BenefactorDisconnected(msg.sender);
+    }
+
+    /**
+    * @dev Retrieves the benefactor address associated with a specified beneficiary.
+    * Reverts if the beneficiary is not associated with any benefactor.
+    * @param _beneficiary The address of the beneficiary.
+    * @return The address of the associated benefactor.
+    */
+    function getBenefactorAddress(address _beneficiary) external view returns (address) {
+        for (uint256 i = 0; i < benefactorAddresses.length; i++) {
+            address benefactorAddress = benefactorAddresses[i];
+            if (benefactors[benefactorAddress].isBeneficiary[_beneficiary]) {
+                return benefactorAddress;
+            }
+        }
+        revert("Beneficiary not associated with any benefactor");
+    }
+
 }

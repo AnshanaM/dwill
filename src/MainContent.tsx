@@ -1,6 +1,6 @@
 // code written by the group
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { ConnectWallet, darkTheme, useAddress } from "@thirdweb-dev/react";
 import "./styles/Home.css";
 import { isInStandaloneMode } from "./utils";
@@ -9,9 +9,9 @@ import * as constants from "./constants";
 import {scroller } from "react-scroll";
 import subscriptionABI from './smart-contracts/SubscriptionABI.json';
 import dmsABI from './smart-contracts/DeadMansSwitchABI.json';
+import benefactorRegistrationABI from './smart-contracts/RegistrationABI.json';
+import signalABI from './smart-contracts/SignalABI.json';
 import { ethers } from "ethers";
-
-
 
 interface MainContentProps {
   handleInstallClick: () => void;
@@ -21,26 +21,36 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
 
   const SUBSCRIPTION_PAYMENT = '0.001';
   const RENEWAL_PAYMENT = '0.0005';
+  const [copied, setCopied] = useState(false); // Track whether address is copied
+  const [benefactorAddress, setBenefactorAddress] = useState('');
+  // Instantiate the BenefactorRegistration contract
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const signer = provider.getSigner();
+  const benefactorRegistrationContract = new ethers.Contract(
+    constants.OWNER_REGISTRATION, 
+    benefactorRegistrationABI, 
+    signer
+  );
+  const communicationContract = new ethers.Contract(
+    constants.SIGNAL,
+    signalABI,
+    signer
+  );
 
-  const [successBenefactor, setSuccessBenefactor] = useState(false); 
+  const [isBenefactorLoggedOut, setIsBenefactorLoggedOut] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
+  const [showCheckPopup, setCheckShowPopup] = useState(false);
   const [inputValue, setInputValue] = useState('');
 
   const navigate = useNavigate();
-  console.log("client id: ",constants.DWILL_CLIENT_ID);
+  // console.log("client id: ",constants.DWILL_CLIENT_ID);
 
-  const address = useAddress();
+  const address: string | undefined = useAddress(); 
 
-  const redirectToDashboard = (userType: string) => {
-    if (address!=null){
-      navigate(`/dashboard?userType=${userType}`);
-    }
-    else{
-      navigate("/");
-    }
-  }
+  console.log("address: ", address);
 
   const buildContainerRef = useRef<HTMLDivElement>(null);
+
   const handleStartNowClick = () => {
     if (buildContainerRef.current) {
       scroller.scrollTo("container", {
@@ -50,125 +60,97 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
     }
   };
 
+  const sendMessageToBeneficiary = async () => {
+    try {
+        // Call the sendMessage function on the smart contract
+        await communicationContract.sendMessage("Benefactor logged out");
+    } catch (error) {
+        console.error("Error sending message:", error);
+        alert("Error sending message. Please try again.");
+    }
+  };
+
+  const handlelogout = async () => {
+    console.log("user logged out");
+    // Store current date and time to localStorage
+    const logoutTime = new Date().toISOString();
+    localStorage.setItem(`logoutTime_${address}`, logoutTime);
+    alert("Please confirm Metamask transaction before leaving the page.");
+    setIsBenefactorLoggedOut(true);
+    sendMessageToBeneficiary();
+  };
+
+  const registerAsBenefactor = async () => {
+    try {
+        // Call the isBenefactor function from the smart contract
+        const isRegistered = await benefactorRegistrationContract.isBenefactor();
+        if (isRegistered) {
+            alert("You are already registered as a benefactor.");
+            navigate("/BenefactorDashboard");
+        } else {
+            // If not registered, register the user as a benefactor
+            const transaction = await benefactorRegistrationContract.registerBenefactor();
+            await transaction.wait();
+            alert("You have successfully registered as a benefactor.");
+            navigate("/BenefactorDashboard");
+        }
+    } catch (error) {
+        console.error("Error registering as a benefactor:", error);
+        alert("Error registering as a benefactor. Please try again.");
+    }
+  };
+
+  const handlenavigatedashboard = async () => {
+    const isRegistered = await benefactorRegistrationContract.isBenefactor();
+    if (isRegistered) {
+        navigate("/BenefactorDashboard");
+    } else {
+        alert("Please subcscribe.");
+    }  
+  };
+
   const handleSubscribe = async () => {
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const signer = provider.getSigner();
-    try {
-      const contract = new ethers.Contract(constants.SUBSCRIPTION_CONTRACT, subscriptionABI, signer);
-  
-      //subscribe to the Status event
-      contract.on("Status", (subscriber, status) => {
-        console.log("Subscription status:", status);
-        if (status === "expired" || status === "not subscribed") {
-          //subscription status is EXPIRED or NEW, proceed with subscription
-          subscribe(contract, signer);
-          redirectToDashboard("benefactor");
-        } else if (status === "within grace period, requires renewal") {
-          if (confirm("Your subscription is within the grace period. Click confirm to renew your subscription.")){
-            handleRenewal();
-          }
-          else{
-            redirectToDashboard("benefactor");
-          }
-        } else if (status === "no need to renew, subscription is valid") {
-          alert("Your subscription is valid. Redirecting to dashboard.");
-          redirectToDashboard("benefactor");
-        }
-      });
-      //call the checkSubscriptionStatus function
-      await contract.checkSubscriptionStatus(signer.getAddress());
-  
-    } catch (error) {
-      console.error('Error subscribing:', error);
-      (address === null) ? alert('Connect your wallet to continue.') : alert('Error.');
-    }
-  };
-  
-  const subscribe = async (contract: ethers.Contract, signer: ethers.Signer) => {
-    try {
-      //subscription status is either NEW or EXPIRED, proceed with subscription
-      const transaction = await contract.subscribe({
-        value: ethers.utils.parseEther(SUBSCRIPTION_PAYMENT)
-      });
-      await transaction.wait();
-      console.log('Subscription successful');
-      alert('Subscription successful');
-      const dmsContract = new ethers.Contract(constants.DEAD_MANS_SWITCH_CONTRACT, dmsABI, signer);
-      await dmsContract.setBenefactor();
-      setSuccessBenefactor(true);
-    } catch (error) {
-      console.error('Error subscribing:', error);
-      alert('Error subscribing');
-    }
-  };
-  
-  const handleRenewal = async () => {
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const signer = provider.getSigner();
-    try {
-      const contract = new ethers.Contract(constants.SUBSCRIPTION_CONTRACT, subscriptionABI, signer);
-  
-      //subscribe to the Status event
-      contract.on("Status", (subscriber, status) => {
-        console.log("Subscription status:", status);
-        if (status === "expired" || status === "not subscribed") {
-          alert("You are not subscribed.");
-        } else if (status === "within grace period, requires renewal") {
-          alert("Your subscription is within the grace period. Renewing your subscription...");
-          renew(contract, signer);
-        } else if (status === "no need to renew, subscription is valid") {
-          alert("Your subscription is valid. Redirecting to dashboard.");
-          redirectToDashboard("benefactor");
-        }
-      });
-      //call the checkSubscriptionStatus function
-      await contract.checkSubscriptionStatus(signer.getAddress());
-  
-    } catch (error) {
-      console.error('Error renewing:', error);
-      (address === null) ? alert('Connect your wallet to renew.') : alert('Error.');
-    }
-  }
-
-const renew = async (contract: ethers.Contract, signer: ethers.Signer) => {
-    try {
-      const transaction = await contract.subscribe({
-        value: ethers.utils.parseEther(RENEWAL_PAYMENT)
-      });
-      await transaction.wait();
-      console.log('Renewal successful');
-      alert('Renewal successful');
-      setSuccessBenefactor(true);
-    } catch (error) {
-      console.error('Error renewing:', error);
-      alert('Error renewing');
-    }
+    registerAsBenefactor();
   };
 
-  const handleRegister = async () => {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      try {
-        const contract = new ethers.Contract(constants.SUBSCRIPTION_CONTRACT, subscriptionABI, signer);
-        //subscribe to the Status event
-        contract.on("Status", async (subscriber, status) => {
-          console.log("Subscription status:", status);
-          if (status === "expired" || status === "not subscribed") {
-            alert("The address you have provided does not belong to a subscribed benefactor.");
-          } else {
-            const dmsContract = new ethers.Contract(constants.DEAD_MANS_SWITCH_CONTRACT, dmsABI, signer);
-            const isBeneficiary = await dmsContract.isBeneficiary(inputValue,signer.getAddress());
-            const benefactorIsAlive = await dmsContract.checkAliveStatus(inputValue);
-            isBeneficiary && benefactorIsAlive ? redirectToDashboard("beneficiary") : alert("You are not a beneficiary of the specified benefactor or the benefactor does not exist.");
-          }
-        });
-        //call the checkSubscriptionStatus function
-        await contract.checkSubscriptionStatus(signer.getAddress());
-      } catch (error) {
-        console.error('Error:', error);
-        (address === null) ? alert('Connect your wallet to continue.') : alert('Error.');
+  const handleBeneficiary = async () => {
+    try {
+      // Call the isBeneficiary function from the smart contract
+      const isBeneficiary = await benefactorRegistrationContract.isBeneficiary(inputValue);
+
+      if (isBeneficiary) {
+        // User is a beneficiary, navigate to the dashboard
+        navigate("/BeneficiaryDashboard");
+      } else {
+        // User is not a beneficiary, display an error message
+        alert('You are not a beneficiary of the entered benefactor.');
       }
-      handleClosePopUp();
+    } catch (error) {
+      console.error('Error checking beneficiary status:', error);
+      alert('An error occurred while checking beneficiary status. Please try again.');
+    }
+  };
+
+  const handleCheckBeneficiary = async () => {
+    try {
+      // Call the isBeneficiary function from the smart contract
+      const benefactorAddress = await benefactorRegistrationContract.getBenefactorAddress(address);
+      const isBeneficiary = await benefactorRegistrationContract.isBeneficiary(benefactorAddress);
+
+      if (isBeneficiary) {
+        // User is a beneficiary, navigate to the dashboard
+        setBenefactorAddress(benefactorAddress);
+        handleOpenCheckPopUp();
+        console.log('Benefactor address:', benefactorAddress);
+      } else {
+        // User is not a beneficiary, display an error message
+        alert('You are not a beneficiary of any benefactor.');
+      }
+      
+    } catch (error) {
+      console.error('Error checking beneficiary status:', error);
+      alert('An error occurred while checking beneficiary status. Please try again.');
+    }
   };
 
   const handleOpenPopUp = async () => {
@@ -179,19 +161,42 @@ const renew = async (contract: ethers.Contract, signer: ethers.Signer) => {
     setShowPopup(false);
   };
 
+  const handleOpenCheckPopUp = async () => {
+    setCheckShowPopup(true);
+  };
+
+  const handleCloseCheckPopUp = async () => {
+    setCheckShowPopup(false);
+  };
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(benefactorAddress);
+      setCopied(true); // Update state to indicate address is copied
+      setTimeout(() => setCopied(false), 3000); // Reset copied state after 3 seconds
+    } catch (error) {
+      console.error('Error copying to clipboard:', error);
+      alert('An error occurred while copying to clipboard. Please try again.');
+    }
+  };
+
   return (
     <>
     <main>
       <div className="nav-bar">
         <img className="logo" src="/images/logo.png" alt="dWill logo"/>
         <p className="nav-bar-item">Home</p>
-        <p className="nav-bar-item">About</p>
-        {(!isInStandaloneMode()) && (
-          handleInstallClick ? 
-          <p className="nav-bar-item" onClick={handleInstallClick}>Install</p> : <></>
-        )}
-        <p className="nav-bar-item" >
+        <p className="nav-bar-item">About</p>        
+        <p className="nav-bar-item">Install</p> 
+        <p className="nav-bar-item">
         <ConnectWallet
+            auth={{
+              loginOptional: true,
+              onLogin(token: any) {
+                  console.log("user logged in", token);
+              },
+              onLogout: handlelogout,
+            }}
           theme={darkTheme({
               colors: {
               primaryText: "#d9d9d9",
@@ -225,26 +230,21 @@ const renew = async (contract: ethers.Contract, signer: ethers.Signer) => {
         {/* </div> */}
       </div>
 
-          
       <div className="container" ref={buildContainerRef}>
         <div className="choice">
           <div className="benefactor">
               <h2>I am a benefactor.</h2>
               <img src="../images/benefactor-1.png"/>
               <h3>I am here to allot my assets.</h3>
-              {successBenefactor ? 
-              <button onClick={()=>redirectToDashboard("benefactor")}>Dashboard</button>:
               <button onClick={handleSubscribe}>Subscribe</button>
-              }
-              {/* <button onClick={handleSubscribe}>Subscribe</button> */}
-              <p>Already subscribed? <u onClick={handleRenewal}>Renew here.</u></p>
+              <p>Already subscribed? <u onClick={handlenavigatedashboard}>Go to dashboard.</u></p>
           </div>
           <div className="beneficiary">
               <h2>I am a beneficiary.</h2>
               <img src="../images/beneficiary-1.png"/>
               <h3>I am here to claim my assets.</h3>
               <button onClick={handleOpenPopUp}>Dashboard</button>
-              <p>Already registered? <u onClick={handleOpenPopUp}>Login here.</u></p>
+              <p>Are you a beneficiary? <u onClick={handleCheckBeneficiary}>Check here.</u></p>
           </div>
             {showPopup && 
               <div className="popup">
@@ -256,10 +256,19 @@ const renew = async (contract: ethers.Contract, signer: ethers.Signer) => {
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                 />
-                <button onClick={handleRegister} className="landing-button">Log in</button>
+                <button onClick={handleBeneficiary} className="landing-button">Log In</button>
+              </div>
+            }
+            {showCheckPopup && 
+              <div className="popup">
+                <button className="close-btn" onClick={handleCloseCheckPopUp}><b>&times;</b></button>
+                    <h3>Your benefactor's address:</h3>
+                    <p>{benefactorAddress}</p>
+                <button onClick={copyToClipboard} className="landing-button">{copied ? 'Copied' : 'Copy'}</button>
               </div>
             }
         </div>
+        
       </div>
 
         <div>
