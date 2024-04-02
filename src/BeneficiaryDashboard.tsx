@@ -41,8 +41,6 @@ const BeneficiaryDashboard: React.FC = () => {
 
   const navigate = useNavigate();
 
-  console.log(walletAddress);
-
   if (walletAddress==null){
     navigate("/");
   }
@@ -133,6 +131,8 @@ const BeneficiaryDashboard: React.FC = () => {
 
             if (isBeneficiary) {
                 localStorage.setItem(`logoutTime`, message);
+                setInactivityCountdownStarted(true);
+                setInactivityCountdownEnded(false);
             } else {
                 console.log("you are not beneficiary of :", sender);
             }
@@ -212,56 +212,6 @@ const BeneficiaryDashboard: React.FC = () => {
     }
   }, [countdownStarted, countdownEnded]);
 
-  // const storedValue = localStorage.getItem(`logoutTime_${walletAddress}`);
-  // let targetDate: Date | null = null;
-
-  // if (storedValue !== null) {
-  //     const lastLogout = new Date(storedValue).getTime();
-  //     targetDate = new Date(lastLogout);
-  //   } else {
-  //     console.log("No logout time found in localStorage.");
-  // }
-
-  //inactivity countdown logic
-  // useEffect(() => {
-  //   if (inactivityCountdownStarted && !inactivityCountdownEnded) {
-  //     const targetDate = new Date();
-  //     targetDate.setMinutes(targetDate.getMinutes() + 14400);
-
-  //     const updateinactivityCountdown = () => {
-        
-  //       const currentDate = new Date().getTime();
-  //       const difference = targetDate.getTime() - currentDate;
-
-  //       if (difference <= 0) {
-  //         setinactivityCountdown("00:00:00:00");
-  //         setInactivityCountdownEnded(true);
-  //       } else {
-  //         const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-  //         const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  //         const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-  //         const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-
-  //         const formattedCountdown = `${days.toString().padStart(2, '0')}:${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  //         setinactivityCountdown(formattedCountdown);
-  //       }
-  //     };
-
-  //     // Update the countdown initially
-  //     updateinactivityCountdown();
-
-  //     // Update the countdown every second
-  //     const interval = setInterval(updateinactivityCountdown, 1000);
-
-  //     // Clean up the interval when the component unmounts or the countdown ends
-  //     return () => {
-  //       clearInterval(interval);
-  //       if (inactivityCountdownEnded) {
-  //         setInactivityCountdownStarted(false);
-  //       }
-  //     };
-  //   }
-  // }, [inactivityCountdownStarted, inactivityCountdownEnded]);
   useEffect(() => {
     if (inactivityCountdownStarted && !inactivityCountdownEnded) {
       if (!targetDate) {
