@@ -13,6 +13,7 @@ import benefactorRegistrationABI from './smart-contracts/RegistrationABI.json';
 import signalABI from './smart-contracts/SignalABI.json';
 import signal2ABI from './smart-contracts/Signal2ABI.json';
 import signal3ABI from './smart-contracts/Signal3ABI.json';
+import { send } from 'vite';
 
 const BeneficiaryDashboard: React.FC = () => {
 
@@ -20,7 +21,7 @@ const BeneficiaryDashboard: React.FC = () => {
   const provider = new ethers.providers.Web3Provider(window.ethereum);
   const signer = provider.getSigner();
   const dmsContract = new ethers.Contract(constants.DEAD_MANS_SWITCH_CONTRACT, dmsABI, signer);
-  // const benefactorRegistrationContract = new ethers.Contract(constants.OWNER_REGISTRATION, benefactorRegistrationABI, signer);
+  const benefactorRegistrationContract = new ethers.Contract(constants.OWNER_REGISTRATION, benefactorRegistrationABI, signer);
   const StopCountdownContract = new ethers.Contract(constants.SIGNAL2, signal2ABI, signer);
   const TriggerCountdownContract = new ethers.Contract(constants.SIGNAL3, signal3ABI, signer);
   const communicationContract = new ethers.Contract(
@@ -29,8 +30,9 @@ const BeneficiaryDashboard: React.FC = () => {
       signer
   );
 
+  const [isBeneficiary, setIsBeneficiary] = useState<boolean | null>(null);
   const [inactivityCountdown, setinactivityCountdown] = useState("10:00:00:00");
-  const [inactivityCountdownStarted, setInactivityCountdownStarted] = useState(false);
+  const [inactivityCountdownStarted, setInactivityCountdownStarted] = useState(true);
   const [inactivityCountdownEnded, setInactivityCountdownEnded] = useState(false);
   const [countdown, setCountdown] = useState("00:00:01:00");
   const [countdownStarted, setCountdownStarted] = useState(false);
@@ -88,9 +90,9 @@ const BeneficiaryDashboard: React.FC = () => {
     }
   };
 
-  const handleInactivityCountdown = () => {
-    setInactivityCountdownStarted(true);
-  };
+  // const handleInactivityCountdown = () => {
+  //   setInactivityCountdownStarted(true);
+  // };
 
   const handlebenefactorstopcountdown = () => {
     setCountdownStarted(false);
@@ -101,19 +103,61 @@ const BeneficiaryDashboard: React.FC = () => {
     setinactivityCountdown("10:00:00:00");
   };
 
-  // Listen for messages 
+  const handlecheckusertype = async (sender: string): Promise<boolean> => {
+    try {
+        const isBeneficiary = await benefactorRegistrationContract.isBeneficiary(sender);
+
+        if (isBeneficiary) {
+            setIsBeneficiary(true);
+            console.log("you are beneficiary of :", sender);
+        } else {
+            setIsBeneficiary(false);
+            console.log("you are not beneficiary of :", sender);
+        }
+
+        return isBeneficiary; // Return the boolean value
+    } catch (error) {
+        console.error('Error checking user status:', error);
+        alert('An error occurred while checking user status. Please try again.');
+        return false; // Return false in case of error
+    }
+}
+
   useEffect(() => {
     // Listen for MessageSent events emitted by the smart contract
-    communicationContract.on("MessageSent", (sender, message) => {
+    communicationContract.on("MessageSent", async (sender, message) => {
         console.log("Message received:", sender, message);
-        handleInactivityCountdown();
+
+        try {
+            const isBeneficiary = await handlecheckusertype(sender);
+
+            if (isBeneficiary) {
+                localStorage.setItem(`logoutTime`, message);
+            } else {
+                console.log("you are not beneficiary of :", sender);
+            }
+        } catch (error) {
+            console.error('Error checking user status:', error);
+            alert('An error occurred while checking user status. Please try again.');
+        }
+        // handleInactivityCountdown();
     });
 
     // Cleanup the event listener when the component unmounts
     return () => {
         communicationContract.removeAllListeners("MessageSent");
     };
-  }, []);
+}, []);
+
+  const storedValue = localStorage.getItem(`logoutTime`);
+  let targetDate: Date | null = null;
+
+  if (storedValue !== null) {
+      const lastLogout = new Date(storedValue).getTime();
+      targetDate = new Date(lastLogout);
+    } else {
+      console.log("No logout time found in localStorage.");
+  }
 
   useEffect(() => {
     // Listen for MessageSent events emitted by the smart contract
@@ -179,19 +223,64 @@ const BeneficiaryDashboard: React.FC = () => {
   // }
 
   //inactivity countdown logic
+  // useEffect(() => {
+  //   if (inactivityCountdownStarted && !inactivityCountdownEnded) {
+  //     const targetDate = new Date();
+  //     targetDate.setMinutes(targetDate.getMinutes() + 14400);
+
+  //     const updateinactivityCountdown = () => {
+        
+  //       const currentDate = new Date().getTime();
+  //       const difference = targetDate.getTime() - currentDate;
+
+  //       if (difference <= 0) {
+  //         setinactivityCountdown("00:00:00:00");
+  //         setInactivityCountdownEnded(true);
+  //       } else {
+  //         const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+  //         const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  //         const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+  //         const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+  //         const formattedCountdown = `${days.toString().padStart(2, '0')}:${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  //         setinactivityCountdown(formattedCountdown);
+  //       }
+  //     };
+
+  //     // Update the countdown initially
+  //     updateinactivityCountdown();
+
+  //     // Update the countdown every second
+  //     const interval = setInterval(updateinactivityCountdown, 1000);
+
+  //     // Clean up the interval when the component unmounts or the countdown ends
+  //     return () => {
+  //       clearInterval(interval);
+  //       if (inactivityCountdownEnded) {
+  //         setInactivityCountdownStarted(false);
+  //       }
+  //     };
+  //   }
+  // }, [inactivityCountdownStarted, inactivityCountdownEnded]);
   useEffect(() => {
     if (inactivityCountdownStarted && !inactivityCountdownEnded) {
-      const targetDate = new Date();
-      targetDate.setMinutes(targetDate.getMinutes() + 14400);
+      if (!targetDate) {
+        console.error("Target date is null.");
+        return;
+      }
+      targetDate.setMinutes(targetDate.getMinutes() + 14400);  
 
-      const updateinactivityCountdown = () => {
-        
+      const updateCountdown = () => {
+        if (!targetDate) {
+          return;
+        }
         const currentDate = new Date().getTime();
         const difference = targetDate.getTime() - currentDate;
 
         if (difference <= 0) {
           setinactivityCountdown("00:00:00:00");
           setInactivityCountdownEnded(true);
+          console.log("Countdown ended.");
         } else {
           const days = Math.floor(difference / (1000 * 60 * 60 * 24));
           const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -204,10 +293,10 @@ const BeneficiaryDashboard: React.FC = () => {
       };
 
       // Update the countdown initially
-      updateinactivityCountdown();
+      updateCountdown();
 
       // Update the countdown every second
-      const interval = setInterval(updateinactivityCountdown, 1000);
+      const interval = setInterval(updateCountdown, 1000);
 
       // Clean up the interval when the component unmounts or the countdown ends
       return () => {
@@ -217,7 +306,7 @@ const BeneficiaryDashboard: React.FC = () => {
         }
       };
     }
-  }, [inactivityCountdownStarted, inactivityCountdownEnded]);
+  }, [inactivityCountdownStarted, inactivityCountdownEnded, targetDate]);
 
   const handleSendTriggerEmail = async () => {
     try {

@@ -18,7 +18,7 @@ interface PageTemplateProps {
 }
 
 const PageTemplateBenefactor: React.FC<PageTemplateProps> = ({ pageTitle, pageContent, address}) => {
-    const addresss: string | undefined = useAddress(); 
+    const WalletAddress: string = useAddress() || ""; 
     const [isSidebarOpen, setIsSidebarOpen] = useState(true); // State to control sidebar visibility
     const navigate = useNavigate();
     const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -34,7 +34,7 @@ const PageTemplateBenefactor: React.FC<PageTemplateProps> = ({ pageTitle, pageCo
         signer
     );
 
-    if (address == null) {
+    if (WalletAddress == null) {
         navigate("/");
     }
 
@@ -42,24 +42,25 @@ const PageTemplateBenefactor: React.FC<PageTemplateProps> = ({ pageTitle, pageCo
         setIsSidebarOpen(!isSidebarOpen);
     };
 
-    const sendMessageToBeneficiary = async () => {
+    const sendMessageToBeneficiary = async (logoutTime: string) => {
         try {
-            // Call the sendMessage function on the smart contract
-            await communicationContract.sendMessage("Benefactor logged out");  
+            // Call the sendMessage function on the smart contract with the logout time as the message
+            await communicationContract.sendMessage(logoutTime);  
         } catch (error) {
             console.error("Error sending message:", error);
             alert("Error sending message. Please try again.");
         }
     };
-
+    
     const handlelogout = async () => {
         console.log("user logged out");
         // Store current date and time to localStorage
         const logoutTime = new Date().toISOString();
-        localStorage.setItem(`logoutTime_${addresss}`, logoutTime);
+        localStorage.setItem(`logoutTime_${WalletAddress}`, logoutTime);
         alert("Please confirm Metamask transaction before leaving the page.");
-        sendMessageToBeneficiary();
+        sendMessageToBeneficiary(logoutTime);
     };
+    
 
     return (
         <div className="screen">

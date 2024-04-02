@@ -37,7 +37,7 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
     signer
   );
 
-  const [isBenefactorLoggedOut, setIsBenefactorLoggedOut] = useState(false);
+  const [isBeneficiary, setIsBeneficiary] = useState<boolean | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [showCheckPopup, setCheckShowPopup] = useState(false);
   const [inputValue, setInputValue] = useState('');
@@ -45,9 +45,9 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
   const navigate = useNavigate();
   // console.log("client id: ",constants.DWILL_CLIENT_ID);
 
-  const address: string | undefined = useAddress(); 
+  const WalletAddress: string = useAddress() || ""; 
 
-  console.log("address: ", address);
+  console.log("address: ", WalletAddress);
 
   const buildContainerRef = useRef<HTMLDivElement>(null);
 
@@ -60,10 +60,10 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
     }
   };
 
-  const sendMessageToBeneficiary = async () => {
+  const sendMessageToBeneficiary = async (logoutTime: string) => {
     try {
-        // Call the sendMessage function on the smart contract
-        await communicationContract.sendMessage("Benefactor logged out");
+        // Call the sendMessage function on the smart contract with the logout time as the message
+        await communicationContract.sendMessage(logoutTime);  
     } catch (error) {
         console.error("Error sending message:", error);
         alert("Error sending message. Please try again.");
@@ -74,10 +74,9 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
     console.log("user logged out");
     // Store current date and time to localStorage
     const logoutTime = new Date().toISOString();
-    localStorage.setItem(`logoutTime_${address}`, logoutTime);
+    localStorage.setItem(`logoutTime_${WalletAddress}`, logoutTime);
     alert("Please confirm Metamask transaction before leaving the page.");
-    setIsBenefactorLoggedOut(true);
-    sendMessageToBeneficiary();
+    sendMessageToBeneficiary(logoutTime);
   };
 
   const registerAsBenefactor = async () => {
@@ -134,7 +133,7 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
   const handleCheckBeneficiary = async () => {
     try {
       // Call the isBeneficiary function from the smart contract
-      const benefactorAddress = await benefactorRegistrationContract.getBenefactorAddress(address);
+      const benefactorAddress = await benefactorRegistrationContract.getBenefactorAddress(WalletAddress);
       const isBeneficiary = await benefactorRegistrationContract.isBeneficiary(benefactorAddress);
 
       if (isBeneficiary) {
@@ -152,6 +151,27 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
       alert('An error occurred while checking beneficiary status. Please try again.');
     }
   };
+
+  const handlecheckusertype = async (sender: string): Promise<boolean> => {
+    try {
+        const isBeneficiary = await benefactorRegistrationContract.isBeneficiary(sender);
+
+        if (isBeneficiary) {
+            setIsBeneficiary(true);
+            console.log("you are beneficiary of :", sender);
+        } else {
+            setIsBeneficiary(false);
+            console.log("you are not beneficiary of :", sender);
+        }
+
+        return isBeneficiary; // Return the boolean value
+    } catch (error) {
+        console.error('Error checking user status:', error);
+        alert('An error occurred while checking user status. Please try again.');
+        return false; // Return false in case of error
+    }
+}
+
 
   const handleOpenPopUp = async () => {
     setShowPopup(true);
@@ -179,6 +199,33 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
       alert('An error occurred while copying to clipboard. Please try again.');
     }
   };
+
+  useEffect(() => {
+    // Listen for MessageSent events emitted by the smart contract
+    communicationContract.on("MessageSent", async (sender, message) => {
+        console.log("Message received:", sender, message);
+
+        try {
+            const isBeneficiary = await handlecheckusertype(sender);
+
+            if (isBeneficiary) {
+                localStorage.setItem(`logoutTime`, message);
+            } else {
+                console.log("you are not beneficiary of :", sender);
+            }
+        } catch (error) {
+            console.error('Error checking user status:', error);
+            alert('An error occurred while checking user status. Please try again.');
+        }
+        // handleInactivityCountdown();
+    });
+
+    // Cleanup the event listener when the component unmounts
+    return () => {
+        communicationContract.removeAllListeners("MessageSent");
+    };
+  }, []);
+
 
   return (
     <>
