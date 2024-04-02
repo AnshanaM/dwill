@@ -19,6 +19,6 @@
       "node_modules/@types"
     ]
   },
-  "include": ["src", "public/worker.js"], // Include TypeScript files in 'src' directory and 'public/worker.js' file
+  "include": ["public/worker.js", "TypeScript", "src/constants.ts", "src/utils.ts"], // Include TypeScript files in 'src' directory and 'public/worker.js' file
   "references": [{ "path": "./tsconfig.node.json" }]
 }
