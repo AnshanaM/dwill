@@ -27,7 +27,7 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
   const [inputValue, setInputValue] = useState('');
 
   const navigate = useNavigate();
-  console.log("client id: ",constants.DWILL_CLIENT_ID);
+  // console.log("client id: ",constants.DWILL_CLIENT_ID);
 
   const address = useAddress();
 
@@ -95,12 +95,12 @@ const MainContent: React.FC<MainContentProps> = ({ handleInstallClick }) => {
         value: ethers.utils.parseEther(SUBSCRIPTION_PAYMENT)
       });
       await transaction.wait();
-      console.log('Subscription successful');
-      alert('Subscription successful');
       const dmsContract = new ethers.Contract(constants.DEAD_MANS_SWITCH_CONTRACT, dmsABI, signer);
       await dmsContract.setBenefactor({
         from: address
       });
+      console.log('Subscription successful');
+      alert('Subscription successful');
       setSuccessBenefactor(true);
     } catch (error) {
       console.error('Error subscribing:', error);

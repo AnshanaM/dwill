@@ -112,6 +112,7 @@ const Encrypt: React.FC = () => {
       const benefactorPublicKey = generatePublicKey(privateKey);
       // store benefacotrs public key in the contract
       await dmsContract.addBenefactorPublicKey(walletAddress,beneficiaryAddress,benefactorPublicKey.toString());
+      console.log(`Benefactor public key: ${benefactorPublicKey}`);
       // get beneficiary's public key from smart contract
       const beneficiaryPublicKey = await dmsContract.getBeneficiaryPublicKey(walletAddress,beneficiaryAddress);
       console.log(`Beneficiary public key: ${beneficiaryPublicKey}`);
