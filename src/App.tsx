@@ -21,7 +21,7 @@ const App: React.FC<AppProps> = ({ isAppInstalled, handleInstallClick }) => {
     <>
     <ThirdwebProvider
       clientId={constants.DWILL_CLIENT_ID}
-      activeChain="mumbai"
+      activeChain = "polygon"
       supportedWallets={[
         metamaskWallet(),
         embeddedWallet({
