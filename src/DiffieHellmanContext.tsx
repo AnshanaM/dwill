@@ -31,27 +31,6 @@ const dmsContract = new ethers.Contract(constants.DEAD_MANS_SWITCH_CONTRACT, dms
 export const DiffieHellmanProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [diffieHellman, setDiffieHellman] = useState<DiffieHellmanType | null>(null);
 
-  // useEffect(() => {
-  //   const initializeDiffieHellman = async () => {
-  //     // Get prime and generator from the contract or use default values
-  //     const [contractPrime, contractGenerator] = await dmsContract.getPrimeAndGenerator();
-  //     // Initialize with default values if not set in the contract
-  //     const prime = contractPrime.toString() !== '0' ? Number(contractPrime) : 23;
-  //     const generator = contractGenerator.toString() !== '0' ? Number(contractGenerator) : 5;
-  //     if (contractPrime.toString() == '0'){
-  //       // if the prime/generator is 0, not yet set, then set it in the contract
-  //       await dmsContract.setPrimeAndGenerator(23,5);
-  //     }
-  //     // Set the Diffie-Hellman context
-  //     setDiffieHellman({
-  //       prime,
-  //       generator,
-  //     });
-  //   };
-
-  //   initializeDiffieHellman();
-  // }, []);
-
   const initializeDiffieHellman = async () => {
     // Get prime and generator from the contract or use default values
     const [contractPrime, contractGenerator] = await dmsContract.getPrimeAndGenerator();
@@ -70,6 +49,7 @@ export const DiffieHellmanProvider: React.FC<{ children: ReactNode }> = ({ child
   };
 
   initializeDiffieHellman();
+
   const computeSecret = (publicKey: number, privateKey: number): number | null => {
     console.log(`Public key: ${publicKey}`)
     console.log(`Private key: ${privateKey}`)
@@ -79,7 +59,7 @@ export const DiffieHellmanProvider: React.FC<{ children: ReactNode }> = ({ child
     //convert publicKey to BigInt
     const publicKeyBigInt = BigInt(publicKey);
     //calculate the shared secret using modular exponentiation and multiplying with prime to make the number larger for encryption
-    const sharedSecret = (Number((publicKeyBigInt ** privateKeyNum) % BigInt(diffieHellman.prime)));
+    const sharedSecret = (Number((publicKeyBigInt ** privateKeyNum) % BigInt(diffieHellman.prime)))**diffieHellman.prime**diffieHellman.generator;
     console.log(`shared secret: ${sharedSecret}`);
     return sharedSecret;
   };
