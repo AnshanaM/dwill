@@ -59,7 +59,7 @@ export const DiffieHellmanProvider: React.FC<{ children: ReactNode }> = ({ child
     //convert publicKey to BigInt
     const publicKeyBigInt = BigInt(publicKey);
     //calculate the shared secret using modular exponentiation and multiplying with prime to make the number larger for encryption
-    const sharedSecret = (Number((publicKeyBigInt ** privateKeyNum) % BigInt(diffieHellman.prime)))**diffieHellman.prime**diffieHellman.generator;
+    const sharedSecret = (Number(publicKeyBigInt ** privateKeyNum % BigInt(diffieHellman.prime)))*(diffieHellman.prime**(diffieHellman.generator*diffieHellman.generator));
     console.log(`shared secret: ${sharedSecret}`);
     return sharedSecret;
   };

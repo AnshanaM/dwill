@@ -11,8 +11,11 @@ import { createDiffieHellman, DiffieHellman } from 'crypto';
 import { ethers } from 'ethers';
 import dmsABI from './smart-contracts/DeadMansSwitchABI.json';
 import { useDiffieHellman } from './DiffieHellmanContext';
+import Loader from './components/Loader';
 
 const Encrypt: React.FC = () => {
+
+  const [loading, setLoading] = useState(false);
 
   const walletAddress = useAddress();
   const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -103,33 +106,49 @@ const Encrypt: React.FC = () => {
   };
 
   const generateSecretKeys = async () => {
-      console.log(`Beneficiary address: ${beneficiaryAddress}`);
-      console.log(`Benefactor private key: ${benefactorPrivateKey}`);
-      // get benefactors private key
-      const privateKey = parseInt(benefactorPrivateKey, 16);
-      console.log(`Private key: ${privateKey}`);
-      // generate public key from private key
-      const benefactorPublicKey = generatePublicKey(privateKey);
-      // store benefacotrs public key in the contract
-      await dmsContract.addBenefactorPublicKey(walletAddress,beneficiaryAddress,benefactorPublicKey.toString());
-      console.log(`Benefactor public key: ${benefactorPublicKey}`);
-      // get beneficiary's public key from smart contract
-      const beneficiaryPublicKey = await dmsContract.getBeneficiaryPublicKey(walletAddress,beneficiaryAddress);
-      console.log(`Beneficiary public key: ${beneficiaryPublicKey}`);
-      // generate the secret key using beneficiarys public key and benefactors private key
-      const secretKey = computeSecret(parseInt(beneficiaryPublicKey), privateKey);
-      console.log(`Secret key: ${secretKey}`);
-      // ensure secretKey is not null before setting encryption key state variable
-      if (secretKey !== null) {
-          // set the encryption key state variable as this secret key
-          setEncryptionKey(secretKey.toString());
-      } else {
-          console.error("Failed to compute secret key.");
+      setLoading(true);
+      try{
+        console.log(`Beneficiary address: ${beneficiaryAddress}`);
+        console.log(`Benefactor private key: ${benefactorPrivateKey}`);
+
+        // get benefactors private key
+        const privateKey = parseInt(benefactorPrivateKey, 16);
+        console.log(`Private key: ${privateKey}`);
+
+        // generate public key from private key
+        const benefactorPublicKey = generatePublicKey(privateKey);
+        // store benefacotrs public key in the contract
+        await dmsContract.addBenefactorPublicKey(walletAddress,beneficiaryAddress,benefactorPublicKey.toString());
+        console.log(`Benefactor public key: ${benefactorPublicKey}`);
+
+        // get beneficiary's public key from smart contract
+        const beneficiaryPublicKey = await dmsContract.getBeneficiaryPublicKey(walletAddress,beneficiaryAddress);
+        console.log(`Beneficiary public key: ${beneficiaryPublicKey}`);
+
+        // generate the secret key using beneficiarys public key and benefactors private key
+        const secretKey = computeSecret(parseInt(beneficiaryPublicKey), privateKey);
+        console.log(`Secret key: ${secretKey}`);
+
+        // ensure secretKey is not null before setting encryption key state variable
+        if (secretKey !== null) {
+            // set the encryption key state variable as this secret key
+            setEncryptionKey(secretKey.toString());
+        } else {
+            console.error("Failed to compute secret key.");
+        }
       }
+      catch(e){
+        console.log(`error: ${e}`);
+      }
+      finally{
+        setLoading(false);
+      }
+      
   };
 
   return (
     <main>
+      {loading && <Loader lockScroll={true}/>}
       <div>
         {walletAddress &&
           <PageTemplate pageTitle={<h1>Encrypt Files</h1>} pageContent={            

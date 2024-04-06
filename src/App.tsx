@@ -6,7 +6,8 @@ import { ThirdwebProvider, metamaskWallet, embeddedWallet, localWallet, ConnectW
 import { BrowserRouter as Router, Route, Routes, BrowserRouter } from "react-router-dom";
 import Upload from "./Upload";
 import Encrypt from "./Encrypt";
-import Dashboard from "./Dashboard";
+import BeneficiaryDashboard from "./BeneficiaryDashboard";
+import BenefactorDashboard from "./BenefactorDashboard";
 import * as constants from "./constants";
 import { DiffieHellmanProvider } from './DiffieHellmanContext';
 
@@ -38,7 +39,8 @@ const App: React.FC<AppProps> = ({ isAppInstalled, handleInstallClick }) => {
           <Routes>
             <Route path="/" element={<MainContent handleInstallClick={handleInstallClick} />} />
             <Route path="upload" element={<Upload />} />
-            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="beneficiaryDashboard" element={<BeneficiaryDashboard />}/>
+            <Route path="benefactorDashboard" element={<BenefactorDashboard />}/>
             <Route path="encrypt" element={<Encrypt />} />
           </Routes>
         </BrowserRouter>

@@ -11,8 +11,11 @@ import { ethers } from 'ethers';
 import UploadABI from './smart-contracts/UploadABI.json';
 import dmsABI from './smart-contracts/DeadMansSwitchABI.json';
 import crypto from 'crypto';
+import Loader from './components/Loader';
 
 const Upload: React.FC = () => {
+
+  const [loading, setLoading] = useState(false);
 
   const walletAddress = useAddress();
 
@@ -24,15 +27,18 @@ const Upload: React.FC = () => {
   const signer = useSigner();
 
   const dmsContract = new ethers.Contract(constants.DEAD_MANS_SWITCH_CONTRACT, dmsABI, signer);
+  const contract = new ethers.Contract(constants.UPLOAD_CONTRACT, UploadABI, signer);
 
   const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState(null);
-  const contract = new ethers.Contract(constants.UPLOAD_CONTRACT, UploadABI, signer);
+
+  const [beneficiaryAddressInput, setBeneficiaryAddressInput] = useState("");
+
 
   const handleSubmit = async (e: { preventDefault: () => void; }) => {
     e.preventDefault();
-
     if (file) {
+      setLoading(true);
       try {
         const formData = new FormData();
         formData.append("file", file);
@@ -50,45 +56,37 @@ const Upload: React.FC = () => {
 
         const ImgHash = `https://gateway.pinata.cloud/ipfs/${resFile.data.IpfsHash}`;
         isConfirmed = true;
-        // uploadConfirmation();
 
-        const encryptedImgHash = hashData(ImgHash);
-        const encryptedAddress = walletAddress ? hashData(walletAddress) : '';
 
-        console.log(ImgHash);
-        console.log(encryptedImgHash);
-        console.log(encryptedAddress);
 
-        contract.add(encryptedAddress, encryptedImgHash);
-        console.log(ImgHash);
-
-        //perform encryption of image hash!!
-        const beneficiaryAddressInput = document.getElementById("beneficiary-address") as HTMLInputElement;
-        let beneficiaryAddress = beneficiaryAddressInput.value.trim();
-        console.log(beneficiaryAddress);
+        console.log(beneficiaryAddressInput);
         try {
-          dmsContract.addIpfsCID(beneficiaryAddress, ImgHash, { from: walletAddress });
+          dmsContract.addIpfsCID(beneficiaryAddressInput, ImgHash, { from: walletAddress });
         }
         catch (e) {
           console.log("error: ", e);
         }
 
         alert("Successfully uploaded data.");
+
         let dataArray = await contract.display(walletAddress);
         console.log(dataArray);
-        // setFileName("No image selected");
         setFile(null);
+
       } catch (e) {
         alert("Unable to upload image to Pinata");
+        console.log(e);
+      }
+      finally {
+        setLoading(false);
       }
     }
     setFile(null);
-
   };
 
   const retrieveFile = (e) => {
     const data = e.target.files[0]; //files array of files object
-    // console.log(data);
+    console.log(data);
     const reader = new window.FileReader();
     reader.readAsArrayBuffer(data);
     reader.onloadend = () => {
@@ -98,44 +96,23 @@ const Upload: React.FC = () => {
     e.preventDefault();
   };
 
-  function hashData(data: string): string {
-    const hash = crypto.createHash('sha256');
-    hash.update(data);
-    return hash.digest('hex');
-  }
-
-  const activeChain = 'mumbai'
-  const clientId = constants.DWILL_CLIENT_ID;
   let isConfirmed = false;
 
-  // pop up window
-
-  const uploadConfirmation = () => {
-    if (isConfirmed) {
-      console.log("Upload confirmed");
-      return (
-        <div className="w-80 h-80 bg-white rounded-xl shadow-md flex flex-col justify-center items-center">
-          <p className="textArea">Image: {fileName}</p>
-        </div>
-      )
-    } else {
-      return null;
-    }
-  }
 
   return (
     <main>
+      {loading && <Loader lockScroll={true}/>}
       <div>
         {walletAddress &&
           <PageTemplate pageTitle={<h1>Upload</h1>} pageContent={
-            <ThirdwebProvider
-              activeChain={activeChain}
-              clientId={clientId}>
+
               <div>
                 <form onSubmit={handleSubmit}>
+
                   <label htmlFor="file-upload">
                     Choose File
                   </label>
+
                   <input
                     type="file"
                     id="file-upload"
@@ -143,13 +120,20 @@ const Upload: React.FC = () => {
                     onChange={retrieveFile}
                     className="invisible" />
                   <p className="text-white">File: {fileName}</p>
+
+                  <h3>Enter beneficiary address to assign to:</h3>
+                    <input
+                      type="text"
+                      value={beneficiaryAddressInput}
+                      onChange={(e) => setBeneficiaryAddressInput(e.target.value)}
+                    />
+
                   <button type="submit" className="newBtn" disabled={!file}>
                     Upload File
                   </button>
+
                 </form>
               </div>
-            </ThirdwebProvider>
-
 
           } address={walletAddress} user='benefactor' />
         }

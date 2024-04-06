@@ -28,18 +28,10 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageTitle, pageContent,user
         setIsSidebarOpen(!isSidebarOpen);
     };
 
-    const redirectToDashboard = (userType: string) => {
-        if (address!=null){
-          navigate(`/dashboard?userType=${userType}`);
-        }
-        else{
-          navigate("/");
-        }
-      }
-
     return (
         <div className="screen">
             <div className={`sidebar ${isSidebarOpen ? 'open' : 'closed'}`}>
+            {/* <div className={isSidebarOpen?`sidebaropen`:`sidebarclosed`}> */}
                 <div className="logo-content">
                     <Link to="/">
                         <img className={`logo ${isSidebarOpen ? 'open' : 'closed'}`} src={isSidebarOpen ? "/images/logo.png" : "/images/icon-192x192.png"} alt="dWill logo" />
@@ -54,39 +46,37 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageTitle, pageContent,user
                             }
                         </div>
                     </li>
-                    <li>
-                        <Link to="/">
-                            <TiHome className='icon' />
-                            {
-                                isSidebarOpen ? <span>Home</span> : <></>
-                            }
-                        </Link>
-                    </li>
 
                     <li>
-                        <Link to="/dashboard">
+                        <Link to={userType==="benefactor"?"/benefactorDashboard":"/beneficiaryDashboard"}>
                             <TiThLarge className='icon'/>
                             {
                                 isSidebarOpen ? <span>Dashboard</span> : <></>
                             }
                         </Link>
                     </li>
-                    <li>
-                        <Link to="/upload">
-                            <TiUpload className='icon' />
-                            {
-                                isSidebarOpen ? <span>Upload</span> : <></>
-                            }
-                        </Link>
-                    </li>
-                    <li>
-                        <Link to="/encrypt">
-                            <SiLetsencrypt className='icon' />
-                            {
-                                isSidebarOpen ? <span>Encrypt</span> : <></>
-                            }
-                        </Link>
-                    </li>
+                    {userType==="benefactor"?
+                    <>
+                        <li>
+                            <Link to="/upload">
+                                <TiUpload className='icon' />
+                                {
+                                    isSidebarOpen ? <span>Upload</span> : <></>
+                                }
+                            </Link>
+                        </li>
+                        <li>
+                            <Link to="/encrypt">
+                                <SiLetsencrypt className='icon' />
+                                {
+                                    isSidebarOpen ? <span>Encrypt</span> : <></>
+                                }
+                            </Link>
+                        </li>
+                    </>
+                    :
+                    <></>
+                    }
                     
                 </ul>
                 <div className="wallet">

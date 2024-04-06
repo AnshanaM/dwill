@@ -10,12 +10,15 @@ import {scroller } from "react-scroll";
 import subscriptionABI from './smart-contracts/SubscriptionABI.json';
 import dmsABI from './smart-contracts/DeadMansSwitchABI.json';
 import { ethers } from "ethers";
+import Loader from './components/Loader';
 
 interface MainContentProps {
     handleInstallClick: () => void;
 }
 
 const MainContent: React.FC<MainContentProps> = ({handleInstallClick}) => {
+
+    const [loading, setLoading] = useState(false);
 
     const SUBSCRIPTION_PAYMENT = '0.001';
     const RENEWAL_PAYMENT = '0.0005';
@@ -37,7 +40,7 @@ const MainContent: React.FC<MainContentProps> = ({handleInstallClick}) => {
     const handleStartNowClick = () => {
       if (buildContainerRef.current) {
         scroller.scrollTo("container", {
-          duration: 800,
+          duration: 700,
           smooth: true,
         });
       }
@@ -45,14 +48,28 @@ const MainContent: React.FC<MainContentProps> = ({handleInstallClick}) => {
 
     const redirectToDashboard = (userType: string) => {
       if (address!=null){
-        navigate(`/dashboard?userType=${userType}`);
+        if (userType=="benefactor"){
+          navigate("/benefactorDashboard");
+        }
+        else{
+          navigate("/beneficiaryDashboard");
+        }
       }
       else{
         navigate("/");
       }
     }
 
+    const handleOpenPopUp = () => {
+      setShowPopup(true);
+    };
+
+    const handleClosePopUp = () => {
+      setShowPopup(false);
+    };
+
     const handleSubscribe = async () => {
+      setLoading(true);
         try {
             subscriptionContract.on("Status", async (subscriber, status) => {
                 console.log(`Subscription status: ${status}`);
@@ -82,9 +99,13 @@ const MainContent: React.FC<MainContentProps> = ({handleInstallClick}) => {
             console.error(`Error subscribing: ${error}`);
             (address === null) ? alert('Connect your wallet to continue.') : alert('Error.');
         }
+        finally{
+          setLoading(false);
+        }
     }
 
     const subscribe = async () => {
+      setLoading(true);
         try {
           //subscription status is either NEW or EXPIRED, proceed with subscription
           const transaction = await subscriptionContract.subscribe({
@@ -100,9 +121,13 @@ const MainContent: React.FC<MainContentProps> = ({handleInstallClick}) => {
           console.error('Error subscribing:', error);
           alert('Error subscribing');
         }
+        finally{
+          setLoading(false);
+        }
     };
 
     const handleRenewal = async () => {
+      setLoading(true);
         try {      
           //subscribe to the Status event
           subscriptionContract.on("Status", (subscriber, status) => {
@@ -123,9 +148,13 @@ const MainContent: React.FC<MainContentProps> = ({handleInstallClick}) => {
           console.error(`Error subscribing: ${error}`);
           (address === null) ? alert('Connect your wallet to continue.') : alert('Error.');
         }
+        finally{
+          setLoading(false);
+        }
     };
 
     const renew = async () => {
+      setLoading(true);
         try {
           const transaction = await subscriptionContract.subscribe({
             value: ethers.utils.parseEther(RENEWAL_PAYMENT)
@@ -137,38 +166,32 @@ const MainContent: React.FC<MainContentProps> = ({handleInstallClick}) => {
           console.error(`Error renewing: ${error}`);
           alert('Error renewing');
         }
+        finally{
+          setLoading(false);
+        }
     };
 
     const handleRegister = async () => {
+      setLoading(true);
         try {
-          //subscribe to the Status event
-          subscriptionContract.on("Status", async (subscriber, status) => {
-            console.log(`Subscription status: ${status}`);
-            if (status === "expired" || status === "not subscribed") {
-              alert("The address you have provided does not belong to a subscribed benefactor.");
-              handleClosePopUp();
-            } else {
-              const isBeneficiary = await dmsContract.isBeneficiary(benefactorAddress,address);
-              // const benefactorIsAlive = await dmsContract.checkAliveStatus(inputValue);
-              isBeneficiary ? redirectToDashboard("beneficiary") : alert("You are not a beneficiary of the specified benefactor or the benefactor does not exist.");
-            }
-          });
-          //call the checkSubscriptionStatus function
-          await subscriptionContract.checkSubscriptionStatus(benefactorAddress);
-        } catch (error) {
-          console.error('Error:', error);
-          (address === null) ? alert('Connect your wallet to continue.') : alert('Error.');
-        }
+        const isBeneficiary = await dmsContract.isBeneficiary(benefactorAddress,address);
+        console.log(isBeneficiary);
+        isBeneficiary 
+        ?
+        redirectToDashboard("beneficiary") 
+        : 
+        alert("You are not a beneficiary of the specified benefactor or the benefactor does not exist.");
         handleClosePopUp();
+        }
+        catch(error){
+          alert("An error occured when checking your status. Please try again later.");
+          console.log(`An error occured: ${error}`);
+        }
+        finally{
+          setLoading(true);
+        }
     };
 
-    const handleOpenPopUp = async () => {
-        setShowPopup(true);
-    };
-
-    const handleClosePopUp = async () => {
-    setShowPopup(false);
-    };
 
 
     return (
@@ -176,14 +199,21 @@ const MainContent: React.FC<MainContentProps> = ({handleInstallClick}) => {
         <>
 
         <main>
+
+        {loading && <Loader lockScroll={true}/>}
+
           <div className="nav-bar">
             <img className="logo" src="/images/logo.png" alt="dWill logo"/>
+
             <p className="nav-bar-item">Home</p>
-            <p className="nav-bar-item">About</p>
+
+            <p onClick={handleRenewal}className="nav-bar-item">Renew</p>
+
             {(!isInStandaloneMode()) && (
               handleInstallClick ? 
               <p className="nav-bar-item" onClick={handleInstallClick}>Install</p> : <></>
             )}
+
             <p className="nav-bar-item" >
             <ConnectWallet
               theme={darkTheme({
@@ -224,16 +254,17 @@ const MainContent: React.FC<MainContentProps> = ({handleInstallClick}) => {
                   <h2>I am a benefactor.</h2>
                   <img src="../images/benefactor-1.png"/>
                   <h3>I am here to allot my assets.</h3>
-                  {/* <button onClick={()=>redirectToDashboard("benefactor")}>Dashboard</button>: */}
-                  <button onClick={handleSubscribe}>Sign in</button>
-                  <p>Already subscribed? <u onClick={handleRenewal}>Renew here.</u></p>
+                  <button onClick={handleSubscribe}>Subscribe</button>
+                  {/* <p>Already subscribed? <u onClick={handleRenewal}>Renew here.</u></p> */}
+                  <p>Already subscribed? <u onClick={handleSubscribe}>Go to dashboard</u></p>
               </div>
               <div className="beneficiary">
                   <h2>I am a beneficiary.</h2>
                   <img src="../images/beneficiary-1.png"/>
                   <h3>I am here to claim my assets.</h3>
-                  <button onClick={handleOpenPopUp}>Dashboard</button>
-                  <p>Already registered? <u onClick={handleOpenPopUp}>Login here.</u></p>
+                  <button onClick={handleOpenPopUp}>Sign In</button>
+                  {/* <p>Already registered? <u onClick={handleOpenPopUp}>Login here.</u></p> */}
+                  <p>Already signed up? <u onClick={handleOpenPopUp}>Go to dashboard</u></p>
               </div>
                 {showPopup && 
                   <div className="popup">
@@ -257,7 +288,7 @@ const MainContent: React.FC<MainContentProps> = ({handleInstallClick}) => {
                 <a className="card" target="_blank" rel="noopener noreferrer">
                   <img className="icon" src="/images/subscribe.png" alt="subscribe image" />
                   <div className="card-text">
-                    <h2 className="card-text-color">Register and subscribe</h2>
+                    <h2 className="card-text-color">Subscribe</h2>
                     <p>Subscribe to our service and become a benefactor!</p>
                   </div>
                 </a>
@@ -272,7 +303,7 @@ const MainContent: React.FC<MainContentProps> = ({handleInstallClick}) => {
                   <img className="icon" src="/images/add-beneficiary.png" alt="add beneficiary image"/>
                   <div className="card-text">
                     <h2 className="card-text-color">Assign your beneficiaries</h2>
-                    <p>Distribute your secret keys and assign your beneficiaries files dedicated just for them.</p>
+                    <p>Generate your keys and assign your beneficiaries files dedicated just for them.</p>
                   </div>
                 </a>
                 <a className="card" target="_blank" rel="noopener noreferrer">
@@ -283,6 +314,10 @@ const MainContent: React.FC<MainContentProps> = ({handleInstallClick}) => {
                     </div>
                 </a>
               </div>
+            </div>
+
+            <div>
+
             </div>
     
             <div className="video-container">
