@@ -1,6 +1,6 @@
 // code written by the group
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import "./styles/Dashboard.css";
 import { ConnectWallet, MediaRenderer, Web3Button, useAddress, useContract, useContractRead, useStorageUpload } from '@thirdweb-dev/react';
@@ -15,6 +15,12 @@ const BenefactorDashboard: React.FC = () => {
 
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
+
+  const [countdown, setCountdown] = useState("");
+  const [countdownStarted, setCountdownStarted] = useState(false);
+  const [countdownEnded, setCountdownEnded] = useState(false);
+
+  const [remainingTime,setRemainingTime] = useState(0);
 
   const [loading, setLoading] = useState(false);
 
@@ -97,6 +103,166 @@ const BenefactorDashboard: React.FC = () => {
     }
   }
 
+  const getCountdownStatus = async () => {
+    setLoading(true);
+    try{
+      if (await dmsContract.checkAliveStatus(walletAddress)){
+        const remainingCountdown = await dmsContract.getRemainingCountdownTime(walletAddress);
+          setCountdownStarted(true);
+          setCountdownEnded(false);
+          setCountdown(formatCountdown(remainingCountdown));
+      }
+    }
+    catch(error){
+      console.log(`error in checking alive status: ${error}`);
+    }
+    finally{
+      setLoading(false);
+    }
+    
+  }
+
+  const formatCountdown = (remainingTimeInSeconds: number): string => {
+    const days = Math.floor(remainingTimeInSeconds / (60 * 60 * 24));
+    const hours = Math.floor((remainingTimeInSeconds % (60 * 60 * 24)) / (60 * 60));
+    const minutes = Math.floor((remainingTimeInSeconds % (60 * 60)) / 60);
+    const seconds = remainingTimeInSeconds % 60;
+    let formattedCountdown = '';
+    if (days > 0) {
+      formattedCountdown += `${days} day${days !== 1 ? 's' : ''} `;
+    }
+    if (hours > 0) {
+      formattedCountdown += `${hours} hour${hours !== 1 ? 's' : ''} `;
+    }
+    if (minutes > 0) {
+      formattedCountdown += `${minutes} min${minutes !== 1 ? 's' : ''} `;
+    }
+    if (seconds > 0) {
+      formattedCountdown += `${seconds} sec${seconds !== 1 ? 's' : ''}`;
+    }
+    return formattedCountdown.trim();
+  }
+  
+
+  // useEffect(() => {
+
+  //   const getData = async () => {
+  //     setLoading(true);
+  //     try {
+  //       const tx = await dmsContract.getData(walletAddress);
+  //       const receipt = await tx.wait(); // Wait for the transaction to be confirmed
+  //       const event = receipt.events.find(event => event.event === "BeneficiariesData"); // Assuming your contract emits an event with the return values
+  //       if (event) {
+  //         const { switchStatus, beneficiaries, remainingTime } = event.args; // Access the return values from the event
+  //         console.log('Switch status:', switchStatus);
+  //         console.log('Beneficiaries:', beneficiaries);
+  //         console.log('Remaining time:', remainingTime);
+  //         // Handle the data as needed
+  //         const remainingCountdown = remainingTime;
+  //         if (countdownStarted && !countdownEnded) {
+  //           const updateCountdown = async () => {
+  //             try {
+  //               console.log(remainingCountdown);
+  //               if (remainingCountdown <= 0) {
+  //                 setCountdown("");
+  //                 setCountdownEnded(true);
+  //               } else {
+  //                 const formattedCountdown = formatCountdown(remainingCountdown);
+  //                 setCountdown(formattedCountdown);
+  //               }
+  //             } catch (error) {
+  //               console.error("Error updating countdown:", error);
+  //             }
+  //           };
+  //           updateCountdown(); //update to display countdown initially
+  //           const interval = setInterval(updateCountdown, 1000); //update countdown every second
+  //           //clean up the interval when the component unmounts or the countdown ends
+  //           return () => {
+  //             clearInterval(interval);
+  //             if (countdownEnded) {
+  //               setCountdownStarted(false);
+  //             }
+  //           };
+  //         } else {
+  //           console.error('Event not found in transaction receipt');
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error('Error fetching data:', error);
+  //     }
+  //     finally{
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   if (walletAddress) {
+  //     getData(); // Call getData function when wallet address is available
+  //   }
+
+  // }, [countdownStarted, countdownEnded, dmsContract, walletAddress]);
+  
+
+  useEffect(() => {
+    const getData = async () => {
+      setLoading(true);
+      try {
+        const tx = await dmsContract.getData(walletAddress);
+        const receipt = await tx.wait(); // Wait for the transaction to be confirmed
+        console.log("Receipt:", receipt);
+        console.log("Events in receipt:", receipt.events);
+        const event = receipt.events.find(event => event.event === "BeneficiariesData"); // Assuming your contract emits an event with the return values
+        console.log("Event:", event);
+        if (event) {
+          const { switchStatus, beneficiaries, remainingTime } = event.args; // Access the return values from the event
+          console.log('Switch status:', switchStatus);
+          console.log('Beneficiaries:', beneficiaries);
+          console.log('Remaining time:', remainingTime);
+          setRemainingTime(remainingTime);
+          setCountdownStarted(true);
+          setCountdownEnded(false);
+          setCountdown(formatCountdown(remainingTime));
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    if (walletAddress) {
+      getData(); // Call getData function when wallet address is available
+    }
+  }, []);
+
+  useEffect(() => {
+    if (countdownStarted && !countdownEnded) {
+      const interval = setInterval(() => {
+        setRemainingTime(prevTime => {
+          if (prevTime <= 0) {
+            setCountdownEnded(true);
+            return 0;
+          } else {
+            return prevTime - 1;
+          }
+        });
+      }, 1000);
+  
+      return () => {
+        clearInterval(interval);
+      };
+    }
+  }, [countdownStarted, countdownEnded]);
+  
+  useEffect(() => {
+    if (countdownStarted && !countdownEnded) {
+      const formattedCountdown = formatCountdown(remainingTime);
+      setCountdown(formattedCountdown);
+    }
+  }, [remainingTime]);
+  
+
+    
+
   return (
     <main>
       {loading && <Loader lockScroll={true}/>}
@@ -106,10 +272,10 @@ const BenefactorDashboard: React.FC = () => {
             <div className='title-container'>
               <h1>Dashboard</h1>
               <div className='right-content'>
-                <h2>COUNTDOWN</h2>
+                <h2>{countdown}</h2>
                 <button onClick={() => handleDisableSwitch()}>Disable switch</button>
               </div>
-            </div>
+            </div> 
           } pageContent={
             <div>
                 <>

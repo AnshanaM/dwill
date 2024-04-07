@@ -328,7 +328,7 @@ contract BenefactorsDeadManSwitch {
         } else {
             remainingTime = getRemainingCountdownTime(_benefactor);
         }
-        // emit BeneficiariesData(switchStatus, beneficiaries, remainingTime);
+        emit BeneficiariesData(switchStatus, beneficiaries, remainingTime);
         return (switchStatus, beneficiaries, remainingTime);
     }
 }

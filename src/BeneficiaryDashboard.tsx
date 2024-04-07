@@ -1,6 +1,6 @@
 // code written by the group
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import "./styles/Dashboard.css";
 import { useAddress} from '@thirdweb-dev/react';
@@ -15,6 +15,10 @@ import Loader from './components/Loader';
 const BeneficiaryDashboard: React.FC = () => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
+
+  const [countdown, setCountdown] = useState("");
+  const [countdownStarted, setCountdownStarted] = useState(false);
+  const [countdownEnded, setCountdownEnded] = useState(false);
 
   const [loading, setLoading] = useState(false);
 
@@ -52,23 +56,79 @@ const BeneficiaryDashboard: React.FC = () => {
 
   const handleEnableSwitch = async (_benefactor: string) => {
     setLoading(true);
-    try{
+    try {
       console.log(_benefactor);
-      if (dmsContract.checkAliveStatus(_benefactor)){
-        await dmsContract.enableSwitch(_benefactor,{from: signer.getAddress()}); 
-        alert("Successfully enabled your benefactor's dead mans switch.");
-      }
-      else{
+      await dmsContract.enableSwitch(_benefactor);
+      if (dmsContract.checkAliveStatus(_benefactor)) {
+        const remainingCountdown = await dmsContract.getRemainingCountdownTime(_benefactor);
+        setCountdownStarted(true);
+        setCountdownEnded(false);
+        setCountdown(formatCountdown(remainingCountdown));
+        alert("Successfully enabled your benefactor's dead man's switch.");
+      } else {
         alert("Benefactor does not exist.");
       }
-    }
-    catch (error){
-      alert("An error occured when enabling your benefactor's switch.");
-    }
-    finally{
+    } catch (error) {
+      alert("An error occurred when enabling your benefactor's switch.");
+    }finally{
       setLoading(false);
     }
   }
+
+  const formatCountdown = (remainingTimeInSeconds: number): string => {
+    const days = Math.floor(remainingTimeInSeconds / (60 * 60 * 24));
+    const hours = Math.floor((remainingTimeInSeconds % (60 * 60 * 24)) / (60 * 60));
+    const minutes = Math.floor((remainingTimeInSeconds % (60 * 60)) / 60);
+    const seconds = remainingTimeInSeconds % 60;
+    let formattedCountdown = '';
+    if (days > 0) {
+      formattedCountdown += `${days} day${days !== 1 ? 's' : ''} `;
+    }
+    if (hours > 0) {
+      formattedCountdown += `${hours} hour${hours !== 1 ? 's' : ''} `;
+    }
+    if (minutes > 0) {
+      formattedCountdown += `${minutes} min${minutes !== 1 ? 's' : ''} `;
+    }
+    if (seconds > 0) {
+      formattedCountdown += `${seconds} sec${seconds !== 1 ? 's' : ''}`;
+    }
+    return formattedCountdown.trim();
+  }
+  
+
+  useEffect(() => {
+    if (countdownStarted && !countdownEnded) {
+      const updateCountdown = async () => {
+        try {
+          const remainingCountdown = await dmsContract.getRemainingCountdownTime(benefactorAddress);
+          if (remainingCountdown <= 0) {
+            setCountdown("");
+            setCountdownEnded(true);
+          } else {
+            const formattedCountdown = formatCountdown(remainingCountdown);
+            setCountdown(formattedCountdown);
+          }
+        } catch (error) {
+          console.error("Error updating countdown:", error);
+        }
+      };
+  
+      updateCountdown(); //update to display countdown initially
+      const interval = setInterval(updateCountdown, 1000); //update countdown every second
+  
+      //clean up the interval when the component unmounts or the countdown ends
+      return () => {
+        clearInterval(interval);
+        if (countdownEnded) {
+          setCountdownStarted(false);
+        }
+      };
+    }
+  }, [countdownStarted, countdownEnded, dmsContract, benefactorAddress]);
+  
+
+
 
   const generateSecretKey = async () => {
     setLoading(true);
@@ -122,7 +182,7 @@ const BeneficiaryDashboard: React.FC = () => {
             <div className='title-container'>
               <h1>Dashboard</h1>
               <div className='right-content'>
-                <h2>COUNTDOWN</h2>
+                <h2>{countdown}</h2>
                   <div className='beneficiary-right'>
                     <input 
                       type="text" 
@@ -130,12 +190,15 @@ const BeneficiaryDashboard: React.FC = () => {
                       onChange={(e) => handleAddressChange(e)} 
                       placeholder="Enter benefactor address" 
                     />
-                    <button 
-                      onClick={() => handleEnableSwitch(benefactorAddress.toString())} 
-                      disabled={!benefactorAddress}
-                    >
-                      Enable switch
-                    </button>
+
+                    {!countdownStarted && !countdownEnded &&
+                      <button 
+                        onClick={() => handleEnableSwitch(benefactorAddress.toString())} 
+                        disabled={!benefactorAddress}
+                      >
+                        Enable switch
+                      </button>
+                    }
                   </div>
               </div>
             </div>
