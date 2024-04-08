@@ -11,6 +11,8 @@ import { ethers } from 'ethers';
 import { PINATA_API_KEY, PINATA_SECRET_KEY } from './constants'; 
 import axios from 'axios';
 import JSZip from 'jszip';
+import ipfsClient from 'ipfs-http-client';
+import fileType from 'file-type';
 
 const Dashboard: React.FC = () => {
   const location = useLocation();
@@ -30,6 +32,22 @@ const Dashboard: React.FC = () => {
   const [ipfsCid, setIpfsCid] = useState('');
   const [downloadUrl, setDownloadUrl] = useState('');
   console.log(imageUrl);
+
+  // Function to get file extension
+  const getFileExtension = (fileName: string): string => {
+    return fileName.split('.').pop() || '';
+  };
+
+  // Function to render file icons based on file type
+  const renderFileIcon = (fileName: string) => {
+    const extension = getFileExtension(fileName).toLowerCase();
+    return (
+      <div>
+        {/* <p>File Name: {fileName}</p> */}
+        {/* <p>Extension: {extension}</p> */}
+        {/* <img src={`/icons/${extension}.png`} alt={`${extension} icon`} /> */}
+      </div>
+  )};
 
   const navigate = useNavigate();
   function redirectToHomePage(): void {
@@ -144,27 +162,6 @@ const Dashboard: React.FC = () => {
       });
   };
   
-  // const handleDownloadFiles = () => {
-  //   // Assuming you have the IPFS CIDs stored in the state variable `ipfsCid`
-  //   if (ipfsCid && ipfsCid.length > 0) {
-  //     // Iterate over each IPFS CID and download the corresponding file
-  //     ipfsCid.forEach(cid => {
-  //       // Generate the download URL for the file
-
-  //       const downloadUrl = `https://gateway.pinata.cloud/ipfs/${cid}`;
-
-  //       // Trigger file download
-  //       const link = document.createElement('a');
-  //       link.href = downloadUrl;
-  //       link.target = '_blank';
-  //       link.rel = 'noopener noreferrer';
-  //       link.click();
-  //     });
-  //   } else {
-  //     console.error('IPFS CIDs are empty');
-  //   }
-  // };
-
   const handleDownloadFiles = () => {
     // Assuming you have the IPFS CIDs stored in the state variable `ipfsCid`
     if (ipfsCid && ipfsCid.length > 0) {
@@ -288,6 +285,8 @@ const handleDownloadZip = async () => {
                     >
                       Enable switch
                     </button>
+                    <div>
+              </div>
                   </div>
                 }
               </div>
@@ -337,18 +336,18 @@ const handleDownloadZip = async () => {
                 <>
                   <div>
                     <h3>when countdown is over and benefactor is assumed dead, enable the download button</h3>
-                    {/* <button onClick={handleRetrieveIpfsCid}>Retrieve IPFS CID</button> */}
-                    {imageUrl && (
-                      <div className="image-container">
-                        <img src={imageUrl} alt="IPFS Image"
-                        />
-                      </div>
-                    )}
-                    {/* <embed src={downloadUrl}></embed> */}
-                    <embed src={"https://gateway.pinata.cloud/ipfs/QmeAyYSCxiZDFH6SoLBx44GKvMdoq5a33KNXvCMaDiMCkf"}/>
-                    <button onClick={handleDownloadZip}>Download Zip File</button>
-                    <button onClick={handleDownloadFiles}>Download File</button>
-                    {ipfsCid && <p>IPFS CID: {ipfsCid}</p>}
+                    <div>
+                    {ipfsCid.map((cid, index) => (
+                    <div key={index}>
+                    {renderFileIcon(cid)} {/* Render file icon */}
+                    <p>{cid}</p>
+                    </div>
+                    ))}
+                    </div>
+                    <img src="public/images/folder.png" alt="Download Zip File" onClick={handleDownloadZip} style={{ cursor: 'pointer', maxWidth: '300px', maxHeight: '300px' }} />
+                    <p></p>
+                    <img src="public/images/files.png" alt="Download File" onClick={handleDownloadFiles} style={{ cursor: 'pointer', maxWidth: '300px', maxHeight: '300px'}} />
+                    {/* {ipfsCid && <p>IPFS CID: {ipfsCid}</p>} */}
                     {downloadUrl && (
                    <p>
                     <a href={downloadUrl} target="_blank" rel="noopener noreferrer">Download Link
