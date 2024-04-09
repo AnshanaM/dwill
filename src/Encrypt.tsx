@@ -115,12 +115,6 @@ const Encrypt: React.FC = () => {
         const privateKey = parseInt(benefactorPrivateKey, 16);
         console.log(`Private key: ${privateKey}`);
 
-        // generate public key from private key
-        const benefactorPublicKey = generatePublicKey(privateKey);
-        // store benefacotrs public key in the contract
-        await dmsContract.addBenefactorPublicKey(walletAddress,beneficiaryAddress,benefactorPublicKey.toString());
-        console.log(`Benefactor public key: ${benefactorPublicKey}`);
-
         // get beneficiary's public key from smart contract
         const beneficiaryPublicKey = await dmsContract.getBeneficiaryPublicKey(walletAddress,beneficiaryAddress);
         console.log(`Beneficiary public key: ${beneficiaryPublicKey}`);
@@ -146,6 +140,20 @@ const Encrypt: React.FC = () => {
       
   };
 
+  // const generateBPublicKey = async () => {
+  //   console.log(`Beneficiary address: ${beneficiaryAddress}`);
+  //   console.log(`Benefactor private key: ${benefactorPrivateKey}`);
+  //   // get benefactors private key
+  //   const privateKey = parseInt(benefactorPrivateKey, 16);
+  //   console.log(`Private key: ${privateKey}`);
+  //   // generate public key from private key
+  //   const benefactorPublicKey = generatePublicKey(privateKey);
+  //   // store benefacotrs public key in the contract
+  //   await dmsContract.addBenefactorPublicKey(walletAddress,beneficiaryAddress,benefactorPublicKey.toString());
+  //   console.log(`Benefactor public key: ${benefactorPublicKey}`);
+  //   return benefactorPublicKey;
+  // }
+
   return (
     <main>
       {loading && <Loader lockScroll={true}/>}
@@ -166,8 +174,10 @@ const Encrypt: React.FC = () => {
                     onChange={handleBenefactorPrivateKeyChange}
                 />
 
+                <button onClick={generateBPublicKey}>Generate Public Key</button>
+
                 {/* only render this button if the beneficiary has already generated their keys!! */}
-                <button onClick={generateSecretKeys}><b>Generate Keys</b></button>
+                <button onClick={generateSecretKeys}><b>Generate Secret Key</b></button>
 
                 <br />
 

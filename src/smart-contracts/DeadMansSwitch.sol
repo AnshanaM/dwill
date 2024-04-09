@@ -12,7 +12,6 @@ contract BenefactorsDeadManSwitch {
     struct Beneficiary {
         bool exists;
         string[] ipfsCIDs; // array to store IPFS CIDs
-        string benefactorPublicKey;
         string beneficiaryPublicKey;
     }
     struct BenefactorInfo {
@@ -22,10 +21,11 @@ contract BenefactorsDeadManSwitch {
         uint256 lastBenefactorResponseTime;
         bool isSwitchedOff;
         bool isAlive;
+        string benefactorPublicKey;
     }
 
-    uint256 private prime = 0;
-    uint256 private generator = 0;
+    // uint256 private prime = 0;
+    // uint256 private generator = 0;
 
     mapping(address => BenefactorInfo) private benefactors; 
 
@@ -43,9 +43,10 @@ contract BenefactorsDeadManSwitch {
     event BenefactorIsDead(address indexed benefactor, string deadStatus);
     event IpfsCIDAdded(address indexed benefactor, address indexed beneficiary, string ipfsCID);
     event IpfsCIDRemoved(address indexed benefactor, address indexed beneficiary, string ipfsCID);
-    event BenefactorKeyAdded(address indexed benefactor, address indexed beneficiary, string key);
+    event BenefactorKeyAdded(address indexed benefactor, string key);
     event BeneficiaryKeyAdded(address indexed benefactor, address indexed beneficiary, string key);
-    event BeneficiariesData(bool switchStatus, address[] beneficiaries, uint256 remainingTime);
+    event BenefactorsData(bool switchStatus, address[] beneficiaries, uint256 remainingTime, bool isAlive, string publicKey);
+    event BeneficiariesData(bool switchStatus, uint256 remainingTime, bool isAlive, string publicKey);
 
     /**
      * @dev Modifier to check if the caller is the benefactor.
@@ -67,6 +68,7 @@ contract BenefactorsDeadManSwitch {
         benefactors[msg.sender].isSwitchedOff = true;
         benefactors[msg.sender].isAlive = true;
         benefactors[msg.sender].lastBenefactorResponseTime = 0;
+        benefactors[msg.sender].benefactorPublicKey = "";
     }
 
 
@@ -89,10 +91,9 @@ contract BenefactorsDeadManSwitch {
     /**
     * @dev adds the benefactor public key to the specified benefactor-beneficiary pair
     */
-    function addBenefactorPublicKey(address _benefactor, address _beneficiary, string memory _key) public {
-        require(isBeneficiary(_benefactor,_beneficiary), "Beneficiary/Benefactor not found");
-        benefactors[_benefactor].beneficiaries[_beneficiary].benefactorPublicKey = _key;
-        emit BenefactorKeyAdded(_benefactor,_beneficiary, _key);
+    function addBenefactorPublicKey(address _benefactor, string memory _key) public {
+        benefactors[_benefactor].benefactorPublicKey = _key;
+        emit BenefactorKeyAdded(_benefactor, _key);
     }
     /**
     * @dev adds the beneficiary public key to the specified benefactor-beneficiary pair
@@ -106,9 +107,9 @@ contract BenefactorsDeadManSwitch {
     /**
     * @dev returns the benefactor public key from the specified benefactor-beneficiary pair
     */
-    function getBenefactorPublicKey(address _benefactor, address _beneficiary) public view returns(string memory) {
-        if (isBeneficiary(_benefactor, _beneficiary)) {
-            return benefactors[_benefactor].beneficiaries[_beneficiary].benefactorPublicKey;
+    function getBenefactorPublicKey(address _benefactor) public view returns(string memory) {
+        if (isBeneficiary(_benefactor, msg.sender)) {
+            return benefactors[_benefactor].benefactorPublicKey;
         } else {
             return "";
         }
@@ -150,30 +151,35 @@ contract BenefactorsDeadManSwitch {
     }
 
     /**
-     * @dev Adds a new beneficiary to the list. Only callable by the benefactor.
-     * @param _beneficiary The address of the new beneficiary.
-     */
-    function addBeneficiary(address _beneficiary) external onlyBenefactor {
-        require(!isBeneficiary(msg.sender,_beneficiary), "Beneficiary already exists");
-        benefactors[msg.sender].beneficiaries[_beneficiary] = Beneficiary(true, new string[](0),"","");
-        emit BeneficiaryAdded(msg.sender,_beneficiary);
+    * @dev Adds new beneficiaries to the list. Only callable by the benefactor.
+    * @param _beneficiaries The addresses of the new beneficiaries.
+    */
+    function addBeneficiaries(address[] calldata _beneficiaries) external onlyBenefactor {
+        for (uint256 i = 0; i < _beneficiaries.length; i++) {
+            address beneficiary = _beneficiaries[i];
+            require(!isBeneficiary(msg.sender, beneficiary), "Beneficiary already exists");
+            benefactors[msg.sender].beneficiaries[beneficiary] = Beneficiary(true, new string[](0), "");
+            emit BeneficiaryAdded(msg.sender, beneficiary);
+        }
     }
 
-    /**
-     * @dev Adds an IPFS CID to the specified beneficiary. Only callable by the benefactor.
-     * @param _beneficiary The address of the beneficiary.
-     * @param _ipfsCID The IPFS CID to add.
-     */
-    function addIpfsCID(address _beneficiary, string memory _ipfsCID) external onlyBenefactor {
+    function addIpfsCIDs(address _beneficiary, string[] memory _ipfsCIDs) external onlyBenefactor {
         require(isBeneficiary(msg.sender,_beneficiary), "Beneficiary not found");
         string[] storage ipfsCIDs = benefactors[msg.sender].beneficiaries[_beneficiary].ipfsCIDs;
-        //check if cid already exists
-        for (uint256 i = 0; i < ipfsCIDs.length; i++) {
-            require(keccak256(abi.encodePacked(ipfsCIDs[i])) != keccak256(abi.encodePacked(_ipfsCID)), "CID already assigned to this beneficiary");
+        for (uint256 i = 0; i < _ipfsCIDs.length; i++) {
+            // Check if CID already exists
+            bool cidExists = false;
+            for (uint256 j = 0; j < ipfsCIDs.length; j++) {
+                if (keccak256(abi.encodePacked(ipfsCIDs[j])) == keccak256(abi.encodePacked(_ipfsCIDs[i]))) {
+                    cidExists = true;
+                    break;
+                }
+            }
+            require(!cidExists, "CID already assigned to this beneficiary");
+            // If CID doesn't exist, append it to the list
+            ipfsCIDs.push(_ipfsCIDs[i]);
+            emit IpfsCIDAdded(msg.sender,_beneficiary, _ipfsCIDs[i]);
         }
-        //if CID doesn't exist, append it to the list
-        benefactors[msg.sender].beneficiaries[_beneficiary].ipfsCIDs.push(_ipfsCID);
-        emit IpfsCIDAdded(msg.sender,_beneficiary, _ipfsCID);
     }
 
     /**
@@ -292,27 +298,27 @@ contract BenefactorsDeadManSwitch {
         return benefactors[_benefactor].beneficiaries[_beneficiary].ipfsCIDs;
     }
 
-    /**
-     * @dev Setter function to set both prime and generator values
-     * @param _prime The prime number used in the Diffie-Hellman algorithm.
-     * @param _generator The generator used in the Diffie-Hellman algorithm.
-     */
-    function setPrimeAndGenerator(uint256 _prime, uint256 _generator) public {
-        prime = _prime;
-        generator = _generator;
-    }
+    // /**
+    //  * @dev Setter function to set both prime and generator values
+    //  * @param _prime The prime number used in the Diffie-Hellman algorithm.
+    //  * @param _generator The generator used in the Diffie-Hellman algorithm.
+    //  */
+    // function setPrimeAndGenerator(uint256 _prime, uint256 _generator) public {
+    //     prime = _prime;
+    //     generator = _generator;
+    // }
+
+    // /**
+    //  * @dev Getter function to get both prime and generator values
+    // */
+    // function getPrimeAndGenerator() public view returns (uint256, uint256) {
+    //     return (prime, generator);
+    // }
 
     /**
-     * @dev Getter function to get both prime and generator values
-    */
-    function getPrimeAndGenerator() public view returns (uint256, uint256) {
-        return (prime, generator);
-    }
-
-    /**
-     * @dev Returns current status of benefactor.
+     * @dev Returns current data of benefactor.
      */
-    function getData(address _benefactor) public returns (bool switchStatus, address[] memory beneficiaries, uint256 remainingTime) {
+    function getBenefactorData(address _benefactor) public returns (bool switchStatus, address[] memory beneficiaries, uint256 remainingTime, bool isAlive, string memory publicKey) {
         require(benefactors[_benefactor].exists, "Benefactor does not exist");
         switchStatus = !benefactors[_benefactor].isSwitchedOff;
         beneficiaries = new address[](getBeneficiariesCount(_benefactor));
@@ -328,7 +334,28 @@ contract BenefactorsDeadManSwitch {
         } else {
             remainingTime = getRemainingCountdownTime(_benefactor);
         }
-        emit BeneficiariesData(switchStatus, beneficiaries, remainingTime);
-        return (switchStatus, beneficiaries, remainingTime);
+        isAlive = benefactors[_benefactor].isAlive;
+        publicKey = benefactors[_benefactor].benefactorPublicKey;
+
+        emit BenefactorsData(switchStatus, beneficiaries, remainingTime, isAlive, publicKey);
+        return (switchStatus, beneficiaries, remainingTime, isAlive, publicKey);
+    }
+
+    /**
+     * @dev Returns current status of benefactor to beneficiary.
+     */
+    function getBeneficiaryData(address _benefactor, address _beneficiary) public returns (bool switchStatus, uint256 remainingTime, bool isAlive, string memory publicKey) {
+        require(benefactors[_benefactor].exists, "Benefactor does not exist");
+        switchStatus = !benefactors[_benefactor].isSwitchedOff;
+        if (benefactors[_benefactor].isSwitchedOff) {
+            remainingTime = 0;
+        } else {
+            remainingTime = getRemainingCountdownTime(_benefactor);
+        }
+        isAlive = benefactors[_benefactor].isAlive;
+        publicKey = benefactors[_benefactor].beneficiaries[_beneficiary].beneficiaryPublicKey;
+
+        emit BeneficiariesData(switchStatus, remainingTime, isAlive, publicKey);
+        return (switchStatus, remainingTime, isAlive, publicKey);
     }
 }

@@ -9,23 +9,16 @@ import PageTemplate from './components/PageTemplate';
 import dmsABI from './smart-contracts/DeadMansSwitchABI.json';
 import { ethers } from 'ethers';
 import Loader from './components/Loader';
-import { useDiffieHellman } from './DiffieHellmanContext';
+
 
 const BenefactorDashboard: React.FC = () => {
 
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
 
-  const { computeSecret, generatePublicKey } = useDiffieHellman();
-
   const [countdown, setCountdown] = useState("Benefactor is alive.");
   const [countdownStarted, setCountdownStarted] = useState(false);
   const [countdownEnded, setCountdownEnded] = useState(false);
-
-  const [benefactorPrivateKey, setBenefactorPrivateKey] = useState<string>('');
-  const [benefactorPublicKey, setBenefactorPublicKey] = useState<string>('');
-
-  const [triggerSwitch,setTriggerSwitch] = useState(false);
 
   const [remainingTime,setRemainingTime] = useState(0);
   const [isAlive,setAliveStatus] = useState(true);
@@ -50,10 +43,6 @@ const BenefactorDashboard: React.FC = () => {
     redirectToHomePage();
   }
 
-  const handleBenefactorPrivateKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setBenefactorPrivateKey(e.target.value);
-  };
-
   const handleAdd=()=>{
       //checks if the prev is not blank
       if (beneficiaries.length === 0 || beneficiaries[beneficiaries.length - 1].beneficiaryAddress.trim() !== '') {
@@ -73,6 +62,33 @@ const BenefactorDashboard: React.FC = () => {
     deleteBeneficiary.splice(i,1);
     setBeneficiary(deleteBeneficiary);
   };
+
+  // const handleAssign = (beneficiaryList: { beneficiaryAddress: string; }[]) => {
+  //   setLoading(true);
+  //   const uniqueAddresses = new Set<string>();
+  //   beneficiaryList.forEach(beneficiary => {
+  //     const trimmedAddress = beneficiary.beneficiaryAddress.trim();
+  //     if (trimmedAddress !== '' && !uniqueAddresses.has(trimmedAddress)) {
+  //       uniqueAddresses.add(trimmedAddress);
+  //     }
+  //   });
+  //   const uniqueBeneficiaries = Array.from(uniqueAddresses).map(address => ({ beneficiaryAddress: address }));
+  //   console.log(uniqueBeneficiaries);
+  //   uniqueBeneficiaries.forEach(async beneficiary => {
+  //     try {
+  //       await dmsContract.addBeneficiary(beneficiary.beneficiaryAddress, { from: walletAddress });
+  //         console.log(`Added beneficiary: ${beneficiary.beneficiaryAddress}`);    
+  //         //benefactor notify beneficiary to generate their keys
+  //         //beneficiary must go to their dashboard and click generate keys button
+  //     } catch (error) {
+  //       alert("Beneficiary already exists or some other error");
+  //         console.error(`Error adding beneficiary ${beneficiary.beneficiaryAddress}:`, error);
+  //     }
+  //     finally{
+  //       setLoading(false);
+  //     }
+  //   });
+  // };
 
     const handleAssign = async (beneficiaryList) => {
       setLoading(true);
@@ -97,26 +113,12 @@ const BenefactorDashboard: React.FC = () => {
       }
     };
 
-    const generateBPublicKey = async () => {
-      console.log(`Benefactor private key: ${benefactorPrivateKey}`);
-      // get benefactors private key
-      const privateKey = parseInt(benefactorPrivateKey, 16);
-      console.log(`Private key: ${privateKey}`);
-      // generate public key from private key
-      const benefactorPublicKey = generatePublicKey(privateKey).toString();
-      setBenefactorPublicKey(benefactorPublicKey);
-      // store benefacotrs public key in the contract
-      await dmsContract.addBenefactorPublicKey(walletAddress,benefactorPublicKey);
-      console.log(`Benefactor public key: ${benefactorPublicKey}`);
-      return benefactorPublicKey;
-    }
 
   const handleDisableSwitch = () => {
     setLoading(true);
     try{
       dmsContract.respondToSwitch({from: signer.getAddress()}); 
       alert("Succesfully responded to your switch.");
-      setTriggerSwitch(true);
     }
     catch(error){
       alert("An error occured when responding to your switch.");
@@ -147,6 +149,77 @@ const BenefactorDashboard: React.FC = () => {
     return formattedCountdown.trim();
   }  
 
+  // useEffect(() => {
+  //   if (!isAlive){
+  //     navigate("/");
+  //     alert("Benefactor is dead");
+  //   }
+  //   else{
+  //     setCountdown("Benefactor is alive")
+  //   }
+  // },[]);
+
+  // useEffect(() => {
+  //   const getData = async () => {
+  //     setLoading(true);
+  //     try {
+  //       const tx = await dmsContract.getBenefactorData(walletAddress);
+  //       const receipt = await tx.wait(); // Wait for the transaction to be confirmed
+  //       console.log("Receipt:", receipt);
+  //       console.log("Events in receipt:", receipt.events);
+  //       const event = receipt.events.find(event => event.event === "BenefactorsData"); // Assuming your contract emits an event with the return values
+  //       console.log("Event:", event);
+  //       if (event) {
+  //         const { switchStatus, beneficiaries, remainingTime, isAlive} = event.args; // Access the return values from the event
+  //         console.log('Switch status:', switchStatus);
+  //         console.log('Beneficiaries:', beneficiaries);
+  //         console.log('Remaining time:', remainingTime);
+  //         console.log('Is alive?', isAlive);
+  //         setAliveStatus(isAlive);
+  //         setRemainingTime(remainingTime);
+  //         setCountdownStarted(true);
+  //         setCountdownEnded(false);
+  //         (isAlive) ? setCountdown("Benefactor is alive") : setCountdown(formatCountdown(remainingTime));
+  //       } 
+  //     } catch (error) {
+  //       console.error('Error fetching data:', error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+  
+  //   if (walletAddress) {
+  //     getData(); // Call getData function when wallet address is available
+  //   }
+  // }, []);
+
+  // useEffect(() => {
+  //   if (countdownStarted && !countdownEnded) {
+  //     const interval = setInterval(() => {
+  //       setRemainingTime(prevTime => {
+  //         if (prevTime <= 0) {
+  //           setCountdownEnded(true);
+  //           return 0;
+  //         } else {
+  //           return prevTime - 1;
+  //         }
+  //       });
+  //     }, 1000);
+  
+  //     return () => {
+  //       clearInterval(interval);
+  //     };
+  //   }
+  // }, [countdownStarted, countdownEnded]);
+  
+  // useEffect(() => {
+  //   if (countdownStarted && !countdownEnded) {
+  //     const formattedCountdown = formatCountdown(remainingTime);
+  //     setCountdown(formattedCountdown);
+  //   }
+  // }, [remainingTime]);
+
+
   useEffect(() => {
     if (!isAlive) {
       navigate("/");
@@ -155,6 +228,7 @@ const BenefactorDashboard: React.FC = () => {
   },[isAlive]);
   
   useEffect(() => {
+
     const getData = async () => {
       setLoading(true);
       try {
@@ -162,12 +236,9 @@ const BenefactorDashboard: React.FC = () => {
         const receipt = await tx.wait();
         const event = receipt.events.find(event => event.event === "BenefactorsData");
         if (event) {
-          const { switchStatus, beneficiaries, remainingTime, isAlive, publicKey } = event.args;
-          setCountdown(!isAlive ? "Benefactor is dead." : switchStatus ? formatCountdown(remainingTime) : "Benefactor is alive.");
-          switchStatus ? setCountdownStarted(true): setCountdownStarted(false);
-          setRemainingTime(remainingTime);
-          setAliveStatus(isAlive);
-          setBenefactorPublicKey(publicKey);
+          const { switchStatus, beneficiaries, remainingTime, isAlive} = event.args;
+          // setCountdown(isAlive ? "Benefactor is alive." : formatCountdown(remainingTime));
+          setCountdown(!isAlive  ? "Benefactor is dead." : switchStatus ? formatCountdown(remainingTime) : "Benefactor is alive.");
         } else {
           setCountdown("Data not found.");
         }
@@ -178,13 +249,11 @@ const BenefactorDashboard: React.FC = () => {
         setLoading(false);
       }
     };
-    if(triggerSwitch) {
-      getData();
-    }
+
     if (walletAddress) {
       getData();
     }
-  }, []); // Run this effect only once when the component mounts
+  }, []);
   
   useEffect(() => {
     if (countdownStarted && !countdownEnded) {
@@ -210,11 +279,11 @@ const BenefactorDashboard: React.FC = () => {
       const formattedCountdown = formatCountdown(remainingTime);
       setCountdown(formattedCountdown);
     }
-    if (triggerSwitch && !countdownStarted && countdownEnded){
-      setCountdown("Benefactor is alive.");
-    }
-  }, [remainingTime, triggerSwitch, countdownStarted, countdownEnded]);
+  }, [remainingTime]);
   
+  
+
+    
 
   return (
     <main>
@@ -230,53 +299,38 @@ const BenefactorDashboard: React.FC = () => {
               </div>
             </div> 
           } pageContent={
-            <div className='content'>
-                  {
-                    benefactorPublicKey == '' ? 
-                    <div className='privateKey'>
-                      <input
-                        type="text"
-                        placeholder="Enter your private key "
-                        value={benefactorPrivateKey}
-                        onChange={handleBenefactorPrivateKeyChange}
-                        className='input-priv-key'
-                      />
-                      <button onClick={generateBPublicKey}>Generate Public Key</button>
-                    </div>
-                    :
-                    <></>
-                  }
-
+            <div>
+                <>
                   <div>
                     <h2>Display files here </h2>
                   </div>
 
-                  <h2>Assign beneficiaries:</h2>
-
-                  <div className='assignment-container'>
-                  <div className='buttons'>
-                    <button className='assign-button' onClick={handleAdd}>Add</button>
-                    <button className='assign-button' onClick={() => handleAssign(beneficiaries)}>Assign All</button>
+                  <div>
+                    <h3>when atleast 1 file is selected, enable the encrypt button</h3>
+                    <button>Encrypt</button>
                   </div>
-                  <div className='assignment'>
-                    {/* Your assignment grid */}
-                    {beneficiaries.map((val, i) => (
-                      <div key={i}>
-                        <div className="input-container">
-                          <img src={"/images/beneficiary.png"} className='assign-img' />
-                          <div className='input-data'>
-                            <input className="assign-input" name="beneficiaryAddress" value={val.beneficiaryAddress} onChange={(e) => handleChange(e, i)} />
-                            <button onClick={() => handleRemove(i)} className='assign-remove'><b>&times;</b></button>
-                          </div>
-                        </div>
+
+                  
+                    <div>
+                      <button onClick={() => handleDisableSwitch()}>Disable switch</button>
+                    </div>
+
+                  <br/>
+                  <div>
+                    <button onClick={handleAdd}>Add beneficiary</button>
+                    {
+                      beneficiaries.map((val,i)=>
+                      <div>
+                        <input name="beneficiaryAddress" value={val.beneficiaryAddress} onChange={(e)=>handleChange(e,i)}/>
+                        <button onClick={()=>handleRemove(i)}><b>&times;</b></button>
                       </div>
-                    ))}
+                      )
+                    }
+                    <button onClick={() => handleAssign(beneficiaries)}>Assign</button>
                   </div>
-                </div>
+                </>
 
-
-            </div>
-            
+          </div>
           }
           user={"benefactor"}
           address={walletAddress} />

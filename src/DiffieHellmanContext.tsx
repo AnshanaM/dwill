@@ -31,24 +31,19 @@ const dmsContract = new ethers.Contract(constants.DEAD_MANS_SWITCH_CONTRACT, dms
 export const DiffieHellmanProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [diffieHellman, setDiffieHellman] = useState<DiffieHellmanType | null>(null);
 
-  const initializeDiffieHellman = async () => {
-    // Get prime and generator from the contract or use default values
-    const [contractPrime, contractGenerator] = await dmsContract.getPrimeAndGenerator();
-    // Initialize with default values if not set in the contract
-    const prime = contractPrime.toString() !== '0' ? Number(contractPrime) : 23;
-    const generator = contractGenerator.toString() !== '0' ? Number(contractGenerator) : 5;
-    if (contractPrime.toString() == '0'){
-      // if the prime/generator is 0, not yet set, then set it in the contract
-      await dmsContract.setPrimeAndGenerator(23,5);
-    }
-    // Set the Diffie-Hellman context
-    setDiffieHellman({
-      prime,
-      generator,
-    });
-  };
+  useEffect(() => {
+    const initializeDiffieHellman = async () => {
+      const prime = 23;
+      const generator = 5;
+      // Set the Diffie-Hellman context
+      setDiffieHellman({
+        prime,
+        generator,
+      });
+    };
 
-  initializeDiffieHellman();
+    initializeDiffieHellman();
+  }, []);
 
   const computeSecret = (publicKey: number, privateKey: number): number | null => {
     console.log(`Public key: ${publicKey}`)

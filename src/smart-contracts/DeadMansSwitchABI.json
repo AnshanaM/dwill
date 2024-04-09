@@ -57,12 +57,6 @@
         "internalType": "address"
       },
       {
-        "type": "address",
-        "name": "beneficiary",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
         "type": "string",
         "name": "key",
         "indexed": false,
@@ -74,7 +68,7 @@
   },
   {
     "type": "event",
-    "name": "BeneficiariesData",
+    "name": "BenefactorsData",
     "inputs": [
       {
         "type": "bool",
@@ -93,6 +87,50 @@
         "name": "remainingTime",
         "indexed": false,
         "internalType": "uint256"
+      },
+      {
+        "type": "bool",
+        "name": "isAlive",
+        "indexed": false,
+        "internalType": "bool"
+      },
+      {
+        "type": "string",
+        "name": "publicKey",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "BeneficiariesData",
+    "inputs": [
+      {
+        "type": "bool",
+        "name": "switchStatus",
+        "indexed": false,
+        "internalType": "bool"
+      },
+      {
+        "type": "uint256",
+        "name": "remainingTime",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "type": "bool",
+        "name": "isAlive",
+        "indexed": false,
+        "internalType": "bool"
+      },
+      {
+        "type": "string",
+        "name": "publicKey",
+        "indexed": false,
+        "internalType": "string"
       }
     ],
     "outputs": [],
@@ -356,11 +394,6 @@
         "internalType": "address"
       },
       {
-        "type": "address",
-        "name": "_beneficiary",
-        "internalType": "address"
-      },
-      {
         "type": "string",
         "name": "_key",
         "internalType": "string"
@@ -371,12 +404,12 @@
   },
   {
     "type": "function",
-    "name": "addBeneficiary",
+    "name": "addBeneficiaries",
     "inputs": [
       {
-        "type": "address",
-        "name": "_beneficiary",
-        "internalType": "address"
+        "type": "address[]",
+        "name": "_beneficiaries",
+        "internalType": "address[]"
       }
     ],
     "outputs": [],
@@ -407,7 +440,7 @@
   },
   {
     "type": "function",
-    "name": "addIpfsCID",
+    "name": "addIpfsCIDs",
     "inputs": [
       {
         "type": "address",
@@ -415,9 +448,9 @@
         "internalType": "address"
       },
       {
-        "type": "string",
-        "name": "_ipfsCID",
-        "internalType": "string"
+        "type": "string[]",
+        "name": "_ipfsCIDs",
+        "internalType": "string[]"
       }
     ],
     "outputs": [],
@@ -457,7 +490,65 @@
   },
   {
     "type": "function",
+    "name": "getBenefactorData",
+    "inputs": [
+      {
+        "type": "address",
+        "name": "_benefactor",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "bool",
+        "name": "switchStatus",
+        "internalType": "bool"
+      },
+      {
+        "type": "address[]",
+        "name": "beneficiaries",
+        "internalType": "address[]"
+      },
+      {
+        "type": "uint256",
+        "name": "remainingTime",
+        "internalType": "uint256"
+      },
+      {
+        "type": "bool",
+        "name": "isAlive",
+        "internalType": "bool"
+      },
+      {
+        "type": "string",
+        "name": "publicKey",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "getBenefactorPublicKey",
+    "inputs": [
+      {
+        "type": "address",
+        "name": "_benefactor",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "string",
+        "name": "",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getBeneficiaryData",
     "inputs": [
       {
         "type": "address",
@@ -472,12 +563,27 @@
     ],
     "outputs": [
       {
+        "type": "bool",
+        "name": "switchStatus",
+        "internalType": "bool"
+      },
+      {
+        "type": "uint256",
+        "name": "remainingTime",
+        "internalType": "uint256"
+      },
+      {
+        "type": "bool",
+        "name": "isAlive",
+        "internalType": "bool"
+      },
+      {
         "type": "string",
-        "name": "",
+        "name": "publicKey",
         "internalType": "string"
       }
     ],
-    "stateMutability": "view"
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -523,53 +629,6 @@
         "type": "string[]",
         "name": "",
         "internalType": "string[]"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getData",
-    "inputs": [
-      {
-        "type": "address",
-        "name": "_benefactor",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "type": "bool",
-        "name": "switchStatus",
-        "internalType": "bool"
-      },
-      {
-        "type": "address[]",
-        "name": "beneficiaries",
-        "internalType": "address[]"
-      },
-      {
-        "type": "uint256",
-        "name": "remainingTime",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "getPrimeAndGenerator",
-    "inputs": [],
-    "outputs": [
-      {
-        "type": "uint256",
-        "name": "",
-        "internalType": "uint256"
-      },
-      {
-        "type": "uint256",
-        "name": "",
-        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -691,24 +750,6 @@
     "type": "function",
     "name": "setBenefactor",
     "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "setPrimeAndGenerator",
-    "inputs": [
-      {
-        "type": "uint256",
-        "name": "_prime",
-        "internalType": "uint256"
-      },
-      {
-        "type": "uint256",
-        "name": "_generator",
-        "internalType": "uint256"
-      }
-    ],
     "outputs": [],
     "stateMutability": "nonpayable"
   }

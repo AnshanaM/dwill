@@ -14,11 +14,16 @@ import Loader from './components/Loader';
 
 const BeneficiaryDashboard: React.FC = () => {
   const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
+  const benefactorAddress = (location.state as any)?.benefactorAddress;
 
-  const [countdown, setCountdown] = useState("");
+  const [countdown, setCountdown] = useState("Benefactor is alive.");
   const [countdownStarted, setCountdownStarted] = useState(false);
   const [countdownEnded, setCountdownEnded] = useState(false);
+
+  const [remainingTime,setRemainingTime] = useState(0);
+  const [isAlive,setAliveStatus] = useState(true);
+  const [publicKey,setBeneficiaryPublicKey] = useState("");
+
 
   const [loading, setLoading] = useState(false);
 
@@ -29,8 +34,6 @@ const BeneficiaryDashboard: React.FC = () => {
   const signer = provider.getSigner();
 
   const dmsContract = new ethers.Contract(constants.DEAD_MANS_SWITCH_CONTRACT, dmsABI, signer);
-
-  const [benefactorAddress, setBenefactor] = useState('');
   const [beneficiaryPrivateKey, setBeneficiaryPrivateKey] = useState('');
 
 //   const { diffieHellman } = useDiffieHellman();
@@ -45,10 +48,6 @@ const BeneficiaryDashboard: React.FC = () => {
     redirectToHomePage();
   }
 
-
-  const handleAddressChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setBenefactor(event.target.value);
-  };
 
   const handleKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setBeneficiaryPrivateKey(event.target.value);
@@ -72,6 +71,7 @@ const BeneficiaryDashboard: React.FC = () => {
       alert("An error occurred when enabling your benefactor's switch.");
     }finally{
       setLoading(false);
+      window.location.reload();
     }
   }
 
@@ -96,36 +96,137 @@ const BeneficiaryDashboard: React.FC = () => {
     return formattedCountdown.trim();
   }
   
+  // useEffect(() => {
+  //   if (!isAlive && remainingTime == 0){
+  //     setCountdown("Benefactor is dead.");
+  //     alert("Benefactor is dead");
+  //   }
+  // },[isAlive]);
+
+  // useEffect(() => {
+  //   const getData = async () => {
+  //     setLoading(true);
+  //     try {
+  //       const tx = await dmsContract.getBeneficiaryData(benefactorAddress);
+  //       const receipt = await tx.wait(); // Wait for the transaction to be confirmed
+  //       console.log("Receipt:", receipt);
+  //       console.log("Events in receipt:", receipt.events);
+  //       const event = receipt.events.find(event => event.event === "BeneficiariesData"); // Assuming your contract emits an event with the return values
+  //       console.log("Event:", event);
+  //       if (event) {
+  //         const { switchStatus, remainingTime, isAlive } = event.args; // Access the return values from the event
+  //         console.log('Switch status:', switchStatus);
+  //         console.log('Remaining time:', remainingTime);
+  //         console.log('IsAlive:',isAlive);
+  //         setIsAlive(isAlive);
+  //         setRemainingTime(remainingTime);
+  //         setCountdownStarted(true);
+  //         setCountdownEnded(false);
+  //         setCountdown(formatCountdown(remainingTime));
+  //       } 
+  //     } catch (error) {
+  //       console.error('Error fetching data:', error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+  
+  //   if (walletAddress) {
+  //     getData(); // Call getData function when wallet address is available
+  //   }
+  // }, []);
+
+  // useEffect(() => {
+  //   if (countdownStarted && !countdownEnded) {
+  //     const interval = setInterval(() => {
+  //       setRemainingTime(prevTime => {
+  //         if (prevTime <= 0) {
+  //           setCountdownEnded(true);
+  //           return 0;
+  //         } else {
+  //           return prevTime - 1;
+  //         }
+  //       });
+  //     }, 1000);
+  
+  //     return () => {
+  //       clearInterval(interval);
+  //     };
+  //   }
+  // }, [countdownStarted, countdownEnded]);
+  
+  // useEffect(() => {
+  //   if (countdownStarted && !countdownEnded) {
+  //     const formattedCountdown = formatCountdown(remainingTime);
+  //     setCountdown(formattedCountdown);
+  //   }
+  // }, [remainingTime]);
+  
 
   useEffect(() => {
-    if (countdownStarted && !countdownEnded) {
-      const updateCountdown = async () => {
-        try {
-          const remainingCountdown = await dmsContract.getRemainingCountdownTime(benefactorAddress);
-          if (remainingCountdown <= 0) {
-            setCountdown("");
-            setCountdownEnded(true);
-          } else {
-            const formattedCountdown = formatCountdown(remainingCountdown);
-            setCountdown(formattedCountdown);
-          }
-        } catch (error) {
-          console.error("Error updating countdown:", error);
+    if (!isAlive) {
+      navigate("/");
+      alert("Benefactor is dead");
+    }
+  },[isAlive]);
+  
+  useEffect(() => {
+    const getData = async () => {
+      setLoading(true);
+      try {
+        const tx = await dmsContract.getBeneficiaryData(benefactorAddress,walletAddress);
+        const receipt = await tx.wait();
+        const event = receipt.events.find(event => event.event === "BeneficiariesData");
+        if (event) {
+          const { switchStatus, remainingTime, isAlive, publicKey} = event.args;
+          // setCountdown(isAlive  ? "Benefactor is alive." : formatCountdown(remainingTime));
+          setCountdown(!isAlive  ? "Benefactor is dead." : switchStatus ? formatCountdown(remainingTime) : "Benefactor is alive.");
+          switchStatus ? setCountdownStarted(true): setCountdownStarted(false);
+          setRemainingTime(remainingTime);
+          setAliveStatus(isAlive);
+          setBeneficiaryPublicKey(publicKey);
+        } else {
+          setCountdown("Data not found.");
         }
-      };
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setCountdown("Error fetching data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (walletAddress) {
+      getData();
+    }
+  }, []);
   
-      updateCountdown(); //update to display countdown initially
-      const interval = setInterval(updateCountdown, 1000); //update countdown every second
+  useEffect(() => {
+    if (countdownStarted && !countdownEnded) {
+      const interval = setInterval(() => {
+        setRemainingTime(prevTime => {
+          if (prevTime <= 0) {
+            setCountdownEnded(true);
+            return 0;
+          } else {
+            return prevTime - 1;
+          }
+        });
+      }, 1000);
   
-      //clean up the interval when the component unmounts or the countdown ends
       return () => {
         clearInterval(interval);
-        if (countdownEnded) {
-          setCountdownStarted(false);
-        }
       };
     }
-  }, [countdownStarted, countdownEnded, dmsContract, benefactorAddress]);
+  }, [countdownStarted, countdownEnded]);
+  
+  useEffect(() => {
+    if (countdownStarted && !countdownEnded) {
+      const formattedCountdown = formatCountdown(remainingTime);
+      setCountdown(formattedCountdown);
+    }
+  }, [remainingTime]);
+  
   
 
 
@@ -159,9 +260,10 @@ const BeneficiaryDashboard: React.FC = () => {
       // generate the public key using the beneficiary entered private key
       const privateKey = parseInt(beneficiaryPrivateKey, 16);
       console.log(`Private key: ${privateKey}`);
-      const beneficiaryPublicKey = generatePublicKey(privateKey);
+      const beneficiaryPublicKey = generatePublicKey(privateKey).toString();
+      setBeneficiaryPublicKey(beneficiaryPublicKey);
       // store beneficiary public key in contract
-      await dmsContract.addBeneficiaryPublicKey(benefactorAddress,walletAddress,beneficiaryPublicKey.toString());
+      await dmsContract.addBeneficiaryPublicKey(benefactorAddress,walletAddress,beneficiaryPublicKey);
       console.log(`Beneficiary public key: ${beneficiaryPublicKey}`)
       return beneficiaryPublicKey;
     }
@@ -184,13 +286,6 @@ const BeneficiaryDashboard: React.FC = () => {
               <div className='right-content'>
                 <h2>{countdown}</h2>
                   <div className='beneficiary-right'>
-                    <input 
-                      type="text" 
-                      value={benefactorAddress} 
-                      onChange={(e) => handleAddressChange(e)} 
-                      placeholder="Enter benefactor address" 
-                    />
-
                     {!countdownStarted && !countdownEnded &&
                       <button 
                         onClick={() => handleEnableSwitch(benefactorAddress.toString())} 
@@ -209,24 +304,27 @@ const BeneficiaryDashboard: React.FC = () => {
                     <button>Download</button>
                   </div>
 
-                  <div>
-                    <input 
-                      type="text" 
-                      value={benefactorAddress} 
-                      onChange={(e) => handleAddressChange(e)} 
-                      placeholder="Enter benefactor address" 
-                    />
-                    <input 
-                      type="text" 
-                      value={beneficiaryPrivateKey} 
-                      onChange={(e) => handleKeyChange(e)} 
-                      placeholder="Enter your private key" 
-                    />
-                    {/* check if public key in contract is "", if so then render the following, otherwise dont render it at all */}
-                    <button onClick={generateBPublicKey}>Generate Public Key</button>
-                    {/* only render the following if the benefactor died already */}
-                    <button onClick={generateSecretKey}>Generate Secret Key</button>
-                  </div>
+                  
+
+                    {publicKey=="" ? 
+                    <div>
+                        <input 
+                          type="text" 
+                          value={beneficiaryPrivateKey} 
+                          onChange={(e) => handleKeyChange(e)} 
+                          placeholder="Your private key..." 
+                        />
+                        <button onClick={generateBPublicKey}>Generate Public Key</button>
+                      </div>
+                    : <></>}
+
+                    
+                    {!isAlive && 
+                    // only render the following if the benefactor died already
+                      <button onClick={generateSecretKey}>Generate Secret Key</button>
+                    }
+                    
+                  
 
                 </>
           }

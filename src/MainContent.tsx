@@ -46,18 +46,28 @@ const MainContent: React.FC<MainContentProps> = ({handleInstallClick}) => {
       }
     };
 
-    const redirectToDashboard = (userType: string) => {
-      if (address!=null){
-        if (userType=="benefactor"){
-          navigate("/benefactorDashboard");
+    const redirectToDashboard = async (userType: string, benefactorAddress: string) => {
+      setLoading(true);
+      try{
+        if (address!=null){
+          if (userType=="benefactor"){
+          const alive = await dmsContract.checkAliveStatus(benefactorAddress);
+            navigate("/benefactorDashboard");
+          }
+          else{
+            navigate("/beneficiaryDashboard", { state: { benefactorAddress } });
+          }
         }
         else{
-          navigate("/beneficiaryDashboard");
-        }
+          navigate("/");
+        }        
+      } catch(e){
+        console.log(`error switching to dashboard: ${e}`);
       }
-      else{
-        navigate("/");
+      finally{
+        setLoading(false);
       }
+
     }
 
     const handleOpenPopUp = () => {
@@ -85,11 +95,11 @@ const MainContent: React.FC<MainContentProps> = ({handleInstallClick}) => {
                         handleRenewal();
                     }
                     else{
-                    redirectToDashboard("benefactor");
+                    redirectToDashboard("benefactor",address);
                     }
                 } else if (status === "no need to renew, subscription is valid") {
                     alert("Your subscription is valid. Redirecting to dashboard.");
-                    redirectToDashboard("benefactor");
+                    redirectToDashboard("benefactor",address);
                 } 
             });
             //call the checkSubscriptionStatus function
@@ -139,7 +149,7 @@ const MainContent: React.FC<MainContentProps> = ({handleInstallClick}) => {
               renew();
             } else if (status === "no need to renew, subscription is valid") {
               alert("Your subscription is valid. Redirecting to dashboard.");
-              redirectToDashboard("benefactor");
+              redirectToDashboard("benefactor",address);
             }
           });
           //call the checkSubscriptionStatus function
@@ -178,7 +188,7 @@ const MainContent: React.FC<MainContentProps> = ({handleInstallClick}) => {
         console.log(isBeneficiary);
         isBeneficiary 
         ?
-        redirectToDashboard("beneficiary") 
+        redirectToDashboard("beneficiary",benefactorAddress) 
         : 
         alert("You are not a beneficiary of the specified benefactor or the benefactor does not exist.");
         handleClosePopUp();
@@ -292,18 +302,18 @@ const MainContent: React.FC<MainContentProps> = ({handleInstallClick}) => {
                     <p>Subscribe to our service and become a benefactor!</p>
                   </div>
                 </a>
-                <div className="card">
-                  <img className="icon" src="/images/upload-files.png" alt="upload file image"/>
-                  <div className="card-text">
-                    <h2 className="card-text-color">Upload your files</h2>
-                    <p>Encrypt and upload your files to the IPFS network.</p>
-                  </div>
-                </div>
                 <a className="card" target="_blank" rel="noopener noreferrer">
                   <img className="icon" src="/images/add-beneficiary.png" alt="add beneficiary image"/>
                   <div className="card-text">
                     <h2 className="card-text-color">Assign your beneficiaries</h2>
                     <p>Generate your keys and assign your beneficiaries files dedicated just for them.</p>
+                  </div>
+                </a>
+                <a className="card" target="_blank" rel="noopener noreferrer">
+                  <img className="icon" src="/images/upload-files.png" alt="upload file image"/>
+                  <div className="card-text">
+                    <h2 className="card-text-color">Upload your files</h2>
+                    <p>Encrypt and upload your files to the IPFS network.</p>
                   </div>
                 </a>
                 <a className="card" target="_blank" rel="noopener noreferrer">
