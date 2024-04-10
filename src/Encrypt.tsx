@@ -61,91 +61,63 @@ const Encrypt: React.FC = () => {
 
   const algorithm = 'aes-128-ctr';
 
-  const deriveIV = (buffer: crypto.BinaryLike) => {
-    const hash = crypto.createHash('sha256');
-    hash.update(buffer);
-    return hash.digest().slice(0, 16);
+  const deriveIV = () => {
+    const encoder = new TextEncoder();
+    return encoder.encode("7509e5bda0c762d2");
 }
 
-  // // //encrypt function
-  // const encrypt = (buffer: crypto.BinaryLike) => {
-  //     //create an initialization vector
-  //     const initVector = deriveIV(buffer);
-  //     console.log(`init vector for encryption: ${initVector}`);
-  //     const key = encryptionKey.slice(0,16);
-  //     console.log("16 bytes key: ",key);
-  //     //create new cipher using algo, key and initVector
-  //     const cipher = crypto.createCipheriv(algorithm,key,initVector);
-  //     //create new encrypted buffer
-  //     const result = Buffer.concat([initVector,cipher.update(buffer),cipher.final()]);
-  //     return result;
-  // }
-
   const encrypt = (buffer: crypto.BinaryLike) => {
-    const initVector = deriveIV(buffer);
-    console.log(`init vector for encryption: ${initVector.toString("hex")}`);
+    const initVector = deriveIV();
+    console.log(`init vector for encryption: ${initVector.toString()}`);
     const key = encryptionKey.slice(0, 16);
     console.log("16 bytes key: ", key);
     const cipher = crypto.createCipheriv(algorithm, key, initVector);
     const encryptedData = Buffer.concat([cipher.update(buffer), cipher.final()]);
-    // Return IV concatenated with encrypted data
-    return Buffer.concat([initVector, encryptedData]);
+    return encryptedData;
 }
 
 const decrypt = (buffer: Buffer) => {
-    // Extract IV from the beginning of the buffer
-    const initVector = buffer.slice(0, 16);
-    const key = encryptionKey.slice(0, 16);
-    const encryptedData = buffer.slice(16); // Skip the IV
-
-    const decipher = crypto.createDecipheriv(algorithm, key, initVector);
-    const decryptedData = Buffer.concat([decipher.update(encryptedData), decipher.final()]);
-    return decryptedData;
+  const initVector = deriveIV();
+  console.log(`init vector for encryption: ${initVector.toString()}`);
+  const key = encryptionKey.slice(0, 16);
+  const decipher = crypto.createDecipheriv(algorithm, key, initVector);
+  const decryptedData = Buffer.concat([decipher.update(buffer), decipher.final()]);
+  return decryptedData;
 }
 
-
-  const handleDownload = () => {
-    if (encryptionKey && file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (reader.result) {
-          const fileContent = reader.result.toString();
-          //encrypt file content with provided key
-          // const encryptedFile = CryptoJS.AES.encrypt(fileContent, encryptionKey).toString();
-
-          const encryptedFile = encrypt(fileContent).toString();
-
-          // create a temporary link for downloading the encrypted file
-          const downloadLink = document.createElement('a');
-          downloadLink.href = `data:application/octet-stream,${encodeURIComponent(encryptedFile)}`;
-          downloadLink.download = 'encrypted_file';
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          document.body.removeChild(downloadLink);
-        }
-      };
-      reader.readAsText(file);
-    }
-  };
+const handleEncryptedDownload = () => {
+  if (encryptionKey && file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (reader.result) {
+        const fileContent = new Uint8Array(reader.result as ArrayBuffer);
+        const encryptedFile = encrypt(fileContent).toString('base64');
+        const downloadLink = document.createElement('a');
+        downloadLink.href = `data:application/octet-stream;base64,${encryptedFile}`;
+        downloadLink.download = 'encrypted_file';
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+};
 
   const generateSecretKeys = async () => {
       setLoading(true);
       try{
         console.log(`Beneficiary address: ${beneficiaryAddress}`);
         console.log(`Benefactor private key: ${benefactorPrivateKey}`);
-
         // get benefactors private key
         const privateKey = parseInt(benefactorPrivateKey, 16);
         console.log(`Private key: ${privateKey}`);
-
         // get beneficiary's public key from smart contract
         const beneficiaryPublicKey = await dmsContract.getBeneficiaryPublicKey(walletAddress,beneficiaryAddress);
         console.log(`Beneficiary public key: ${beneficiaryPublicKey}`);
-
         // generate the secret key using beneficiarys public key and benefactors private key
         const secretKey = computeSecret(parseInt(beneficiaryPublicKey), privateKey);
         console.log(`Secret key: ${secretKey}`);
-
         // ensure secretKey is not null before setting encryption key state variable
         if (secretKey !== null) {
             // set the encryption key state variable as this secret key
@@ -159,23 +131,36 @@ const decrypt = (buffer: Buffer) => {
       }
       finally{
         setLoading(false);
-      }
-      
+      } 
   };
 
-  // const generateBPublicKey = async () => {
-  //   console.log(`Beneficiary address: ${beneficiaryAddress}`);
-  //   console.log(`Benefactor private key: ${benefactorPrivateKey}`);
-  //   // get benefactors private key
-  //   const privateKey = parseInt(benefactorPrivateKey, 16);
-  //   console.log(`Private key: ${privateKey}`);
-  //   // generate public key from private key
-  //   const benefactorPublicKey = generatePublicKey(privateKey);
-  //   // store benefacotrs public key in the contract
-  //   await dmsContract.addBenefactorPublicKey(walletAddress,beneficiaryAddress,benefactorPublicKey.toString());
-  //   console.log(`Benefactor public key: ${benefactorPublicKey}`);
-  //   return benefactorPublicKey;
-  // }
+
+  const handleDecryptionDownload = () => {
+    if (encryptionKey && file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (reader.result) {
+          if (typeof reader.result === 'string') {
+            const fileContent = Buffer.from(reader.result, 'base64');
+            const decryptedFile = decrypt(fileContent);
+            const fileType = file.type;
+            const blob = new Blob([decryptedFile], { type: fileType });
+            const downloadLink = document.createElement('a');
+            downloadLink.href = URL.createObjectURL(blob);
+            downloadLink.download = 'decrypted_file';
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+          } else {
+            console.error('Invalid type for reader result.');
+          }
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  
 
   return (
     <main>
@@ -202,18 +187,24 @@ const decrypt = (buffer: Buffer) => {
 
                 <br />
 
+                {/* <h2>Encrypt files here</h2>
                 <input
                     type="text"
                     placeholder="Enter encryption key"
                     value={encryptionKey}
                     onChange={handleEncryptionKeyChange}
-                />
+                /> */}
                 <br />
                 <input type="file" onChange={handleFileUpload} />
                 <br />
-                <button onClick={handleDownload} disabled={!encryptionKey || !file}>
+                <button onClick={handleEncryptedDownload} disabled={!encryptionKey || !file}>
                     Download Encrypted File
                 </button>
+                {/* <h2>Decrypt files here</h2>
+                <br />
+                <input type="file" onChange={handleFileUpload} />
+                <br />
+                <button onClick={handleDecryptionDownload}>Download Decrypted File</button> */}
             </div>
 
           } address={walletAddress} user='benefactor' />

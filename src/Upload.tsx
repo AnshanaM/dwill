@@ -10,12 +10,15 @@ import UploadABI from './smart-contracts/UploadABI.json';
 import dmsABI from './smart-contracts/DeadMansSwitchABI.json';
 import crypto from 'crypto';
 import Loader from './components/Loader';
+import { useDiffieHellman } from './DiffieHellmanContext';
 
 const Upload: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState([]);
   const [fileNames, setFileNames] = useState([]);
+
+  const { computeSecret, generatePublicKey } = useDiffieHellman();
 
   const walletAddress = useAddress();
 
@@ -30,6 +33,7 @@ const Upload: React.FC = () => {
   const contract = new ethers.Contract(constants.UPLOAD_CONTRACT, UploadABI, signer);
 
   const [beneficiaryAddressInput, setBeneficiaryAddressInput] = useState("");
+  const [benefactorPrivateKey, handleBenefactorPrivateKeyChange] = useState("");
 
   const [secretKey, setSecretKey] = useState("");
 
@@ -38,6 +42,7 @@ const Upload: React.FC = () => {
     if (files.length > 0) {
       setLoading(true);
       try {
+        generateSecretKeys();
         const formDataArray = files.map(file => {
           const formData = new FormData();
           formData.append("file", file);
@@ -106,13 +111,48 @@ const Upload: React.FC = () => {
 
   const decryptHashes = (encryptedHashes, secretKey) => {
     const decryptedHashes = encryptedHashes.map(encryptedHash => {
-      const decipher = crypto.createDecipheriv('aes-128-cbc', Buffer.from(secretKey, 'utf8'), Buffer.alloc(16));
-      let decrypted = decipher.update(encryptedHash, 'hex', 'utf8');
-      decrypted += decipher.final('utf8');
-      return decrypted;
+        const decipher = crypto.createDecipheriv('aes-128-cbc', Buffer.from(secretKey, 'utf8'), Buffer.alloc(16));
+        let decrypted = decipher.update(encryptedHash, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+        return decrypted;
     });
-    console.log(`decrypted: ${decryptedHashes}`);
-  };
+    const prefixedHashes = decryptedHashes.map(hash => "https://gateway.pinata.cloud/ipfs/" + hash);
+    console.log(`decrypted: ${prefixedHashes}`);
+};
+
+
+  const generateSecretKeys = async () => {
+    setLoading(true);
+    try{
+      console.log(`Beneficiary address: ${beneficiaryAddressInput}`);
+      console.log(`Benefactor private key: ${benefactorPrivateKey}`);
+      // get benefactors private key
+      const privateKey = parseInt(benefactorPrivateKey, 16);
+      console.log(`Private key: ${privateKey}`);
+      // get beneficiary's public key from smart contract
+      const beneficiaryPublicKey = await dmsContract.getBeneficiaryPublicKey(walletAddress,beneficiaryAddressInput);
+      console.log(`Beneficiary public key: ${beneficiaryPublicKey}`);
+      // generate the secret key using beneficiarys public key and benefactors private key
+      const secret = computeSecret(parseInt(beneficiaryPublicKey), privateKey);
+      console.log(`Secret key: ${secret}`);
+      // ensure secretKey is not null before setting encryption key state variable
+      if (secret !== null) {
+          // set the encryption key state variable as this secret key
+          setSecretKey(secret.toString().slice(0,16));
+          console.log(`secret key: ${secret}`);
+
+      } else {
+          console.error("Failed to compute secret key.");
+      }
+    }
+    catch(e){
+      console.log(`error: ${e}`);
+    }
+    finally{
+      setLoading(false);
+    } 
+};
+
   
 
   return (
@@ -142,16 +182,22 @@ const Upload: React.FC = () => {
                 <h3>Enter beneficiary address to assign to:</h3>
                 <input
                   type="text"
+                  placeholder="Enter your beneficiary address"
                   value={beneficiaryAddressInput}
                   onChange={(e) => setBeneficiaryAddressInput(e.target.value)}
                 />
-                <h3>Enter secret key to encrypt hash:</h3>
+                {/* <h3>Enter secret key to encrypt hash:</h3>
                 <input
                   type="text"
                   value={secretKey}
                   onChange={(e) => setSecretKey(e.target.value)}
+                /> */}
+                <input
+                    type="text"
+                    placeholder="Enter your private key "
+                    value={benefactorPrivateKey}
+                    onChange={(e) => handleBenefactorPrivateKeyChange(e.target.value)}
                 />
-
                 <button type="submit" className="newBtn" disabled={files.length === 0}>
                   Upload File(s)
                 </button>
