@@ -98,6 +98,8 @@ const BenefactorDashboard: React.FC = () => {
     };
 
     const generateBPublicKey = async () => {
+      setLoading(true);
+      try{
       console.log(`Benefactor private key: ${benefactorPrivateKey}`);
       // get benefactors private key
       const privateKey = parseInt(benefactorPrivateKey, 16);
@@ -108,6 +110,12 @@ const BenefactorDashboard: React.FC = () => {
       // store benefacotrs public key in the contract
       await dmsContract.addBenefactorPublicKey(walletAddress,benefactorPublicKey);
       console.log(`Benefactor public key: ${benefactorPublicKey}`);
+      }catch(e){
+        console.log(`error generating your public key: ${e}`);
+      }
+      finally{
+        setLoading(false);
+      }
       return benefactorPublicKey;
     }
 
