@@ -48,13 +48,139 @@
     border-color: #d9d9d9;
   }
 
-.image-container {
-    width: 100%;
-    display: flex;
+button {
+    background-color: #706ddb;
+    position: relative;
+    color: #d9d9d9;
+    border-radius: 12px;
+    border: none;
+    padding: 0.85rem;
+    width: 150px;
     justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: large;
+    text-align: center;
   }
   
-.image-container img {
-    max-width: 100%;
-    height: auto;
+button:hover {
+    background-color: #504d9a;
   }
+
+  .assignment-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .assignment {
+    position: relative;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    width: 75%; /* Set the width to 100% to span the screen width */
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); /* Adjusted grid-template-columns */
+    /* border: 1px solid white; */
+    gap: 5px;
+    margin-bottom: 10px;
+  }
+  
+  
+  /* Additional CSS rules for grid items */
+  .assignment > * {
+    width: max-content;
+    padding: 5px;
+  }
+  
+  /* Adjust the grid columns based on viewport width */
+  @media screen and (max-width: 1200px) {
+    .assignment {
+      grid-template-columns: repeat(auto-fill, minmax(170px, calc(75vw / 3)));
+    }
+  }
+  
+  @media screen and (max-width: 768px) {
+    .assignment {
+      grid-template-columns: repeat(auto-fill, minmax(170px, calc(75vw / 2)));
+    }
+  }
+  
+  @media screen and (max-width: 480px) {
+    .assignment {
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    }
+  }
+  
+  
+
+  .assign-img {
+    height: 75px;
+    width: 75px;
+  }
+  
+  
+  .input-container {
+    display: flex;
+    flex-direction: column;
+    max-width: 150px;
+    max-height: min-content;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .assign-remove{
+    width: 40px;
+    padding: 5px;
+    height: 30px;
+    border-radius: 5px;
+  }
+
+  .input-data{
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    align-items: center;
+    height: 30px;
+    gap: 5px;
+  }
+  
+  .assign-input {
+    width: 100px;
+    padding: 5px;
+    border: none;
+    background-color: #d9d9d9;
+    border-radius: 5px;
+  }
+
+  .assign-button{
+    border-radius: 10px;
+    width: auto;
+  }
+
+  .buttons{
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+  }
+  
+
+.input-priv-key {
+    width: 300px;
+    padding: 5px;
+    border: none;
+    background-color: #d9d9d9;
+    border-radius: 5px;
+  }
+
+.content{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: left
+}
+
+  

@@ -11,8 +11,6 @@ import { ethers } from 'ethers';
 import { PINATA_API_KEY, PINATA_SECRET_KEY } from './constants'; 
 import axios from 'axios';
 import JSZip from 'jszip';
-import ipfsClient from 'ipfs-http-client';
-import fileType from 'file-type';
 
 const Dashboard: React.FC = () => {
   const location = useLocation();

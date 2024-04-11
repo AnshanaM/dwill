@@ -140,6 +140,7 @@ div .wallet div .icon {
   background-color: #21212c;
   border-radius: 15px;
   padding: 20px;
+  height: 100vh;
 }
 
 .wallet {

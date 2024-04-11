@@ -48,6 +48,96 @@
   },
   {
     "type": "event",
+    "name": "BenefactorKeyAdded",
+    "inputs": [
+      {
+        "type": "address",
+        "name": "benefactor",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "type": "string",
+        "name": "key",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "BenefactorsData",
+    "inputs": [
+      {
+        "type": "bool",
+        "name": "switchStatus",
+        "indexed": false,
+        "internalType": "bool"
+      },
+      {
+        "type": "address[]",
+        "name": "beneficiaries",
+        "indexed": false,
+        "internalType": "address[]"
+      },
+      {
+        "type": "uint256",
+        "name": "remainingTime",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "type": "bool",
+        "name": "isAlive",
+        "indexed": false,
+        "internalType": "bool"
+      },
+      {
+        "type": "string",
+        "name": "publicKey",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "BeneficiariesData",
+    "inputs": [
+      {
+        "type": "bool",
+        "name": "switchStatus",
+        "indexed": false,
+        "internalType": "bool"
+      },
+      {
+        "type": "uint256",
+        "name": "remainingTime",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "type": "bool",
+        "name": "isAlive",
+        "indexed": false,
+        "internalType": "bool"
+      },
+      {
+        "type": "string",
+        "name": "publicKey",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "BeneficiaryAdded",
     "inputs": [
       {
@@ -61,6 +151,32 @@
         "name": "beneficiary",
         "indexed": true,
         "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "BeneficiaryKeyAdded",
+    "inputs": [
+      {
+        "type": "address",
+        "name": "benefactor",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "type": "address",
+        "name": "beneficiary",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "type": "string",
+        "name": "key",
+        "indexed": false,
+        "internalType": "string"
       }
     ],
     "outputs": [],
@@ -270,12 +386,17 @@
   },
   {
     "type": "function",
-    "name": "addBeneficiary",
+    "name": "addBenefactorPublicKey",
     "inputs": [
       {
         "type": "address",
-        "name": "_beneficiary",
+        "name": "_benefactor",
         "internalType": "address"
+      },
+      {
+        "type": "string",
+        "name": "_key",
+        "internalType": "string"
       }
     ],
     "outputs": [],
@@ -283,8 +404,26 @@
   },
   {
     "type": "function",
-    "name": "addIpfsCID",
+    "name": "addBeneficiaries",
     "inputs": [
+      {
+        "type": "address[]",
+        "name": "_beneficiaries",
+        "internalType": "address[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "addBeneficiaryPublicKey",
+    "inputs": [
+      {
+        "type": "address",
+        "name": "_benefactor",
+        "internalType": "address"
+      },
       {
         "type": "address",
         "name": "_beneficiary",
@@ -292,8 +431,26 @@
       },
       {
         "type": "string",
-        "name": "_ipfsCID",
+        "name": "_key",
         "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "addIpfsCIDs",
+    "inputs": [
+      {
+        "type": "address",
+        "name": "_beneficiary",
+        "internalType": "address"
+      },
+      {
+        "type": "string[]",
+        "name": "_ipfsCIDs",
+        "internalType": "string[]"
       }
     ],
     "outputs": [],
@@ -330,6 +487,127 @@
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "getBenefactorData",
+    "inputs": [
+      {
+        "type": "address",
+        "name": "_benefactor",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "bool",
+        "name": "switchStatus",
+        "internalType": "bool"
+      },
+      {
+        "type": "address[]",
+        "name": "beneficiaries",
+        "internalType": "address[]"
+      },
+      {
+        "type": "uint256",
+        "name": "remainingTime",
+        "internalType": "uint256"
+      },
+      {
+        "type": "bool",
+        "name": "isAlive",
+        "internalType": "bool"
+      },
+      {
+        "type": "string",
+        "name": "publicKey",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "getBenefactorPublicKey",
+    "inputs": [
+      {
+        "type": "address",
+        "name": "_benefactor",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "string",
+        "name": "",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getBeneficiaryData",
+    "inputs": [
+      {
+        "type": "address",
+        "name": "_benefactor",
+        "internalType": "address"
+      },
+      {
+        "type": "address",
+        "name": "_beneficiary",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "bool",
+        "name": "switchStatus",
+        "internalType": "bool"
+      },
+      {
+        "type": "uint256",
+        "name": "remainingTime",
+        "internalType": "uint256"
+      },
+      {
+        "type": "bool",
+        "name": "isAlive",
+        "internalType": "bool"
+      },
+      {
+        "type": "string",
+        "name": "publicKey",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "getBeneficiaryPublicKey",
+    "inputs": [
+      {
+        "type": "address",
+        "name": "_benefactor",
+        "internalType": "address"
+      },
+      {
+        "type": "address",
+        "name": "_beneficiary",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "string",
+        "name": "",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
