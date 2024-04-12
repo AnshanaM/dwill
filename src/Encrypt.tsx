@@ -76,15 +76,6 @@ const Encrypt: React.FC = () => {
     return encryptedData;
 }
 
-const decrypt = (buffer: Buffer) => {
-  const initVector = deriveIV();
-  console.log(`init vector for encryption: ${initVector.toString()}`);
-  const key = encryptionKey.slice(0, 16);
-  const decipher = crypto.createDecipheriv(algorithm, key, initVector);
-  const decryptedData = Buffer.concat([decipher.update(buffer), decipher.final()]);
-  return decryptedData;
-}
-
 const handleEncryptedDownload = () => {
   if (encryptionKey && file) {
     const reader = new FileReader();
@@ -123,7 +114,7 @@ const handleEncryptedDownload = () => {
             // set the encryption key state variable as this secret key
             setEncryptionKey(secretKey.toString());
         } else {
-            console.error("Failed to compute secret key.");
+            alert("Failed to compute secret key. Ensure your beneficiary has generated their public key.");
         }
       }
       catch(e){
@@ -132,32 +123,6 @@ const handleEncryptedDownload = () => {
       finally{
         setLoading(false);
       } 
-  };
-
-
-  const handleDecryptionDownload = () => {
-    if (encryptionKey && file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (reader.result) {
-          if (typeof reader.result === 'string') {
-            const fileContent = Buffer.from(reader.result, 'base64');
-            const decryptedFile = decrypt(fileContent);
-            const fileType = file.type;
-            const blob = new Blob([decryptedFile], { type: fileType });
-            const downloadLink = document.createElement('a');
-            downloadLink.href = URL.createObjectURL(blob);
-            downloadLink.download = 'decrypted_file';
-            document.body.appendChild(downloadLink);
-            downloadLink.click();
-            document.body.removeChild(downloadLink);
-          } else {
-            console.error('Invalid type for reader result.');
-          }
-        }
-      };
-      reader.readAsDataURL(file);
-    }
   };
   
   

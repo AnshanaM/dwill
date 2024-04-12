@@ -10,6 +10,7 @@ import dmsABI from './smart-contracts/DeadMansSwitchABI.json';
 import { ethers } from 'ethers';
 import { useDiffieHellman} from './DiffieHellmanContext';
 import Loader from './components/Loader';
+import crypto from 'crypto';
 
 
 const BeneficiaryDashboard: React.FC = () => {
@@ -36,7 +37,8 @@ const BeneficiaryDashboard: React.FC = () => {
   const dmsContract = new ethers.Contract(constants.DEAD_MANS_SWITCH_CONTRACT, dmsABI, signer);
   const [beneficiaryPrivateKey, setBeneficiaryPrivateKey] = useState('');
 
-//   const { diffieHellman } = useDiffieHellman();
+  const [secretKey, setSecretKey] = useState("");
+
 
 
   const navigate = useNavigate();
@@ -96,73 +98,6 @@ const BeneficiaryDashboard: React.FC = () => {
     return formattedCountdown.trim();
   }
   
-  // useEffect(() => {
-  //   if (!isAlive && remainingTime == 0){
-  //     setCountdown("Benefactor is dead.");
-  //     alert("Benefactor is dead");
-  //   }
-  // },[isAlive]);
-
-  // useEffect(() => {
-  //   const getData = async () => {
-  //     setLoading(true);
-  //     try {
-  //       const tx = await dmsContract.getBeneficiaryData(benefactorAddress);
-  //       const receipt = await tx.wait(); // Wait for the transaction to be confirmed
-  //       console.log("Receipt:", receipt);
-  //       console.log("Events in receipt:", receipt.events);
-  //       const event = receipt.events.find(event => event.event === "BeneficiariesData"); // Assuming your contract emits an event with the return values
-  //       console.log("Event:", event);
-  //       if (event) {
-  //         const { switchStatus, remainingTime, isAlive } = event.args; // Access the return values from the event
-  //         console.log('Switch status:', switchStatus);
-  //         console.log('Remaining time:', remainingTime);
-  //         console.log('IsAlive:',isAlive);
-  //         setIsAlive(isAlive);
-  //         setRemainingTime(remainingTime);
-  //         setCountdownStarted(true);
-  //         setCountdownEnded(false);
-  //         setCountdown(formatCountdown(remainingTime));
-  //       } 
-  //     } catch (error) {
-  //       console.error('Error fetching data:', error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  
-  //   if (walletAddress) {
-  //     getData(); // Call getData function when wallet address is available
-  //   }
-  // }, []);
-
-  // useEffect(() => {
-  //   if (countdownStarted && !countdownEnded) {
-  //     const interval = setInterval(() => {
-  //       setRemainingTime(prevTime => {
-  //         if (prevTime <= 0) {
-  //           setCountdownEnded(true);
-  //           return 0;
-  //         } else {
-  //           return prevTime - 1;
-  //         }
-  //       });
-  //     }, 1000);
-  
-  //     return () => {
-  //       clearInterval(interval);
-  //     };
-  //   }
-  // }, [countdownStarted, countdownEnded]);
-  
-  // useEffect(() => {
-  //   if (countdownStarted && !countdownEnded) {
-  //     const formattedCountdown = formatCountdown(remainingTime);
-  //     setCountdown(formattedCountdown);
-  //   }
-  // }, [remainingTime]);
-  
-
   useEffect(() => {
     if (!isAlive) {
       navigate("/");
@@ -235,22 +170,23 @@ const BeneficiaryDashboard: React.FC = () => {
     setLoading(true);
     try{
     // get benefactor public key from contract
-      const benefactorPublicKey = await dmsContract.getBenefactorPublicKey(benefactorAddress,walletAddress);
+      const benefactorPublicKey = await dmsContract.getBenefactorPublicKey(benefactorAddress,{from: walletAddress});
       console.log(`Benefactor public key: ${benefactorPublicKey}`)
       // generate the secret key using beneficiarys public key and benefactors private key
       console.log(`Beneficiary private key: ${beneficiaryPrivateKey}`)
       const privateKey = parseInt(beneficiaryPrivateKey, 16);
       console.log(`Private key: ${privateKey}`);
-      const secretKey = computeSecret(parseInt(benefactorPublicKey), privateKey);
-      console.log(`Secret key: ${secretKey}`);
-      // beneficiary notify benefactor that keys are already generated
-    }
+      const secret = computeSecret(parseInt(benefactorPublicKey), privateKey);
+      setSecretKey(secret.toString().slice(0,16));
+      console.log(`Secret key: ${secret}`);
+      }
     catch(error){
       console.log(`error in generating secret key: ${error}`);
     }
     finally{
       setLoading(false);
     }
+    return secretKey;
   }
 
   const generateBPublicKey = async () => {
@@ -274,6 +210,59 @@ const BeneficiaryDashboard: React.FC = () => {
       setLoading(false);
     }
   }
+
+  const generateDecryptionKey = async () => {
+    setLoading(true);
+    try{
+      console.log(`Benefactor address: ${benefactorAddress}`);
+      console.log(`Beneficiary private key: ${beneficiaryPrivateKey}`);
+      // get beneficiary private key
+      const privateKey = parseInt(beneficiaryPrivateKey, 16);
+      console.log(`Private key: ${privateKey}`);
+      // get benefactor's public key from smart contract
+      const benefactorPublicKey = await dmsContract.getBenefactorPublicKey(benefactorAddress, {from: walletAddress});
+      console.log(`Benefactor public key: ${benefactorPublicKey}`);
+      // generate the secret key using benefactors public key and beneficiary private key
+      const secret = computeSecret(parseInt(benefactorPublicKey), privateKey);
+      console.log(`Secret key: ${secret}`);
+      // ensure secretKey is not null before setting encryption key state variable
+      if (secret !== null) {
+          // set the encryption key state variable as this secret key
+          setSecretKey(secret.toString());
+          <h2>Decrypt your assets with this decryption key: {secretKey}</h2>
+      } else {
+          alert("Failed to compute secret key. Ensure your benefactor has assigned your assets first.");
+      }
+    }
+    catch(e){
+      console.log(`error: ${e}`);
+    }
+    finally{
+      setLoading(false);
+    } 
+};
+  
+
+  const decryptHashes = async () => {
+    try {
+      //can only get the ids when the benefactor dies
+      const encryptedHashes = dmsContract.getCIDs(benefactorAddress,walletAddress,{from: walletAddress});
+        const secret = await generateSecretKey(); // Corrected variable name
+        const decryptedHashes = encryptedHashes.map(encryptedHash => {
+            const decipher = crypto.createDecipheriv('aes-128-cbc', Buffer.from(secret, 'utf8'), Buffer.alloc(16));
+            let decrypted = decipher.update(encryptedHash, 'hex', 'utf8');
+            decrypted += decipher.final('utf8');
+            return decrypted;
+        });
+        const prefixedHashes = decryptedHashes.map(hash => "https://gateway.pinata.cloud/ipfs/" + hash);
+        console.log(`Decrypted hashes: ${prefixedHashes}`);
+    } catch (error) {
+        console.error('Error decrypting hashes:', error);
+    }
+};
+
+
+
 
   return (
     <main>
@@ -301,7 +290,6 @@ const BeneficiaryDashboard: React.FC = () => {
                 <>
                   <div>
                     <h3>when countdown is over and benefactor is assumed dead, enable the download button</h3>
-                    <button>Download</button>
                   </div>
 
                   
@@ -320,8 +308,18 @@ const BeneficiaryDashboard: React.FC = () => {
 
                     
                     {!isAlive && 
+                    <div>
+                    <input 
+                      type="text" 
+                      value={beneficiaryPrivateKey} 
+                      onChange={(e) => handleKeyChange(e)} 
+                      placeholder="Your private key..." 
+                    />
                     // only render the following if the benefactor died already
-                      <button onClick={generateSecretKey}>Generate Secret Key</button>
+                    //use the following hashes with adyans file display
+                      <button onClick={() => decryptHashes()}>Get My Assets</button> 
+                      <button onClick={() => generateDecryptionKey()}>Get Decryption Key</button>
+                    </div>
                     }
                     
                   
@@ -337,4 +335,4 @@ const BeneficiaryDashboard: React.FC = () => {
 };
 
 export default BeneficiaryDashboard;
-                
+ 

@@ -78,7 +78,7 @@ const Upload: React.FC = () => {
         
         const encryptedHashes = encryptHashes(imgHashes,secretKey);
         console.log(`Encrypted hashes: ${encryptedHashes}`);
-        decryptHashes(encryptedHashes,secretKey);
+        // decryptHashes(encryptedHashes,secretKey);
         await dmsContract.addIpfsCIDs(beneficiaryAddressInput, encryptedHashes, { from: walletAddress });
   
         alert("Successfully uploaded data.");
@@ -109,16 +109,16 @@ const Upload: React.FC = () => {
     e.preventDefault();
   };
 
-  const decryptHashes = (encryptedHashes, secretKey) => {
-    const decryptedHashes = encryptedHashes.map(encryptedHash => {
-        const decipher = crypto.createDecipheriv('aes-128-cbc', Buffer.from(secretKey, 'utf8'), Buffer.alloc(16));
-        let decrypted = decipher.update(encryptedHash, 'hex', 'utf8');
-        decrypted += decipher.final('utf8');
-        return decrypted;
-    });
-    const prefixedHashes = decryptedHashes.map(hash => "https://gateway.pinata.cloud/ipfs/" + hash);
-    console.log(`decrypted: ${prefixedHashes}`);
-};
+//   const decryptHashes = (encryptedHashes, secretKey) => {
+//     const decryptedHashes = encryptedHashes.map(encryptedHash => {
+//         const decipher = crypto.createDecipheriv('aes-128-cbc', Buffer.from(secretKey, 'utf8'), Buffer.alloc(16));
+//         let decrypted = decipher.update(encryptedHash, 'hex', 'utf8');
+//         decrypted += decipher.final('utf8');
+//         return decrypted;
+//     });
+//     const prefixedHashes = decryptedHashes.map(hash => "https://gateway.pinata.cloud/ipfs/" + hash);
+//     console.log(`decrypted: ${prefixedHashes}`);
+// };
 
 
   const generateSecretKeys = async () => {

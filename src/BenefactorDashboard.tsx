@@ -267,7 +267,6 @@ const BenefactorDashboard: React.FC = () => {
                     <button className='assign-button' onClick={() => handleAssign(beneficiaries)}>Assign All</button>
                   </div>
                   <div className='assignment'>
-                    {/* Your assignment grid */}
                     {beneficiaries.map((val, i) => (
                       <div key={i}>
                         <div className="input-container">

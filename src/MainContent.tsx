@@ -198,7 +198,7 @@ const MainContent: React.FC<MainContentProps> = ({handleInstallClick}) => {
           console.log(`An error occured: ${error}`);
         }
         finally{
-          setLoading(true);
+          setLoading(false);
         }
     };
 
