@@ -289,7 +289,7 @@ const BeneficiaryDashboard: React.FC = () => {
           } pageContent={
                 <>
                   <div>
-                    <h3>when countdown is over and benefactor is assumed dead, enable the download button</h3>
+                    {/* <h3>when countdown is over and benefactor is assumed dead, enable the download button</h3> */}
                   </div>
 
                   
@@ -301,6 +301,7 @@ const BeneficiaryDashboard: React.FC = () => {
                           value={beneficiaryPrivateKey} 
                           onChange={(e) => handleKeyChange(e)} 
                           placeholder="Your private key..." 
+                          className='input-priv-key'
                         />
                         <button onClick={generateBPublicKey}>Generate Public Key</button>
                       </div>
@@ -314,6 +315,7 @@ const BeneficiaryDashboard: React.FC = () => {
                       value={beneficiaryPrivateKey} 
                       onChange={(e) => handleKeyChange(e)} 
                       placeholder="Your private key..." 
+                      className='input-priv-key'
                     />
                     // only render the following if the benefactor died already
                     //use the following hashes with adyans file display

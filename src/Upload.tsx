@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import "./styles/UploadPage.css";
 import { ConnectWallet, MediaRenderer, ThirdwebProvider, Web3Button, useAddress, useContract, useContractRead, useSigner, useStorageUpload } from '@thirdweb-dev/react';
@@ -48,7 +48,7 @@ const Upload: React.FC = () => {
           formData.append("file", file);
           return formData;
         });
-  
+
         const uploadPromises = formDataArray.map(formData => {
           return axios({
             method: "post",
@@ -61,10 +61,10 @@ const Upload: React.FC = () => {
             },
           });
         });
-  
+
         const resFiles = await Promise.all(uploadPromises);
         const imgHashes = resFiles.map(resFile => resFile.data.IpfsHash);
-  
+
         const encryptHashes = (imgHashes, secretKey) => {
           const encryptedHashes = imgHashes.map(hash => {
             const cipher = crypto.createCipheriv('aes-128-cbc', Buffer.from(secretKey, 'utf8'), Buffer.alloc(16));
@@ -74,20 +74,20 @@ const Upload: React.FC = () => {
           });
           return encryptedHashes;
         };
-        
-        
-        const encryptedHashes = encryptHashes(imgHashes,secretKey);
+
+
+        const encryptedHashes = encryptHashes(imgHashes, secretKey);
         console.log(`Encrypted hashes: ${encryptedHashes}`);
         // decryptHashes(encryptedHashes,secretKey);
         await dmsContract.addIpfsCIDs(beneficiaryAddressInput, encryptedHashes, { from: walletAddress });
-  
+
         alert("Successfully uploaded data.");
-  
+
         let dataArray = await contract.display(walletAddress);
         console.log(dataArray);
         setFiles([]);
         setFileNames([]);
-  
+
       } catch (e) {
         alert("Unable to upload image to Pinata");
         console.log(e);
@@ -97,63 +97,66 @@ const Upload: React.FC = () => {
       }
     }
   };
-  
-
-  const retrieveFiles = (e) => {
-    const fileList = e.target.files;
-    const fileArray = Array.from(fileList);
-    setFiles(fileArray);
-
-    const fileNameArray = fileArray.map(file => file.name);
-    setFileNames(fileNameArray);
-    e.preventDefault();
-  };
-
-//   const decryptHashes = (encryptedHashes, secretKey) => {
-//     const decryptedHashes = encryptedHashes.map(encryptedHash => {
-//         const decipher = crypto.createDecipheriv('aes-128-cbc', Buffer.from(secretKey, 'utf8'), Buffer.alloc(16));
-//         let decrypted = decipher.update(encryptedHash, 'hex', 'utf8');
-//         decrypted += decipher.final('utf8');
-//         return decrypted;
-//     });
-//     const prefixedHashes = decryptedHashes.map(hash => "https://gateway.pinata.cloud/ipfs/" + hash);
-//     console.log(`decrypted: ${prefixedHashes}`);
-// };
-
 
   const generateSecretKeys = async () => {
     setLoading(true);
-    try{
+    try {
       console.log(`Beneficiary address: ${beneficiaryAddressInput}`);
       console.log(`Benefactor private key: ${benefactorPrivateKey}`);
       // get benefactors private key
       const privateKey = parseInt(benefactorPrivateKey, 16);
       console.log(`Private key: ${privateKey}`);
       // get beneficiary's public key from smart contract
-      const beneficiaryPublicKey = await dmsContract.getBeneficiaryPublicKey(walletAddress,beneficiaryAddressInput);
+      const beneficiaryPublicKey = await dmsContract.getBeneficiaryPublicKey(walletAddress, beneficiaryAddressInput);
       console.log(`Beneficiary public key: ${beneficiaryPublicKey}`);
       // generate the secret key using beneficiarys public key and benefactors private key
       const secret = computeSecret(parseInt(beneficiaryPublicKey), privateKey);
       console.log(`Secret key: ${secret}`);
       // ensure secretKey is not null before setting encryption key state variable
       if (secret !== null) {
-          // set the encryption key state variable as this secret key
-          setSecretKey(secret.toString().slice(0,16));
-          console.log(`secret key: ${secret}`);
+        // set the encryption key state variable as this secret key
+        setSecretKey(secret.toString().slice(0, 16));
+        console.log(`secret key: ${secret}`);
 
       } else {
-          console.error("Failed to compute secret key.");
+        console.error("Failed to compute secret key.");
       }
     }
-    catch(e){
+    catch (e) {
       console.log(`error: ${e}`);
     }
-    finally{
+    finally {
       setLoading(false);
-    } 
-};
+    }
+  };
 
-  
+  const fileInputRef = useRef(null);
+  const handleFileChange = (event) => {
+    const fileList = event.target.files;
+    const fileArray = Array.from(fileList);
+    setFiles(fileArray);
+
+    const fileNameArray = fileArray.map(file => file.name);
+    setFileNames(fileNameArray);
+  };
+
+  const handleDrop = (event) => {
+    event.preventDefault();
+    const fileList = event.dataTransfer.files;
+    const fileArray = Array.from(fileList);
+    setFiles(fileArray);
+
+    const fileNameArray = fileArray.map(file => file.name);
+    setFileNames(fileNameArray);
+  };
+
+  const handleDragOver = (event) => {
+    event.preventDefault();
+  };
+
+  const handleBrowseClick = () => {
+    fileInputRef.current.click();
+  };
 
   return (
     <main>
@@ -165,39 +168,67 @@ const Upload: React.FC = () => {
             <div>
               <form onSubmit={handleSubmit}>
 
-                <label htmlFor="file-upload">
-                  Choose File(s)
-                </label>
-
-                <input
-                  type="file"
-                  id="file-upload"
-                  name="data"
-                  onChange={retrieveFiles}
-                  className="invisible"
-                  multiple
-                />
-                <p className="text-white">Files: {fileNames.join(', ')}</p>
+                <div className='inner_container'>
+                  <div
+                    className="text__container"
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                  >
+                    <img src="images/upload.png"></img>
+                    <h2>Drag and Drop File Here</h2>
+                    <input
+                      type="file"
+                      onChange={handleFileChange}
+                      ref={fileInputRef}
+                      style={{ display: 'none' }}
+                      multiple
+                    />
+                    <span
+                      style={{
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                      }}
+                      onClick={handleBrowseClick}
+                    >
+                      <i>...or click <b>here</b> to browse</i>
+                    </span>
+                    {files.length > 0 && (
+                      <div>
+                        <h3>Selected Files:</h3>
+                        <ul>
+                          {fileNames.map((fileName, index) => (
+                            <div className='uploaded_file__container'>
+                              <div className='image'>
+                                <img src='../images/file.png'></img>
+                              </div>
+                              <div className='fileName'>
+                                {fileName}
+                              </div>
+                            </div>
+                          ))}
+                        </ul>
+                        <button onClick={() => setFiles([])}>Clear Files</button>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
                 <h3>Enter beneficiary address to assign to:</h3>
                 <input
                   type="text"
                   placeholder="Enter your beneficiary address"
                   value={beneficiaryAddressInput}
+                  className='input-priv-key'
                   onChange={(e) => setBeneficiaryAddressInput(e.target.value)}
                 />
-                {/* <h3>Enter secret key to encrypt hash:</h3>
+                <br></br>
                 <input
-                  type="text"
-                  value={secretKey}
-                  onChange={(e) => setSecretKey(e.target.value)}
-                /> */}
-                <input
-                    type="text"
-                    placeholder="Enter your private key "
-                    value={benefactorPrivateKey}
-                    onChange={(e) => handleBenefactorPrivateKeyChange(e.target.value)}
-                />
+                  type="password"
+                  placeholder="Enter your private key "
+                  value={benefactorPrivateKey}
+                  className='input-priv-key'
+                  onChange={(e) => handleBenefactorPrivateKeyChange(e.target.value)}
+                /><br></br>
                 <button type="submit" className="newBtn" disabled={files.length === 0}>
                   Upload File(s)
                 </button>

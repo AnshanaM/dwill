@@ -1,10 +1,10 @@
 // code written by the group
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import "./styles/UploadPage.css";
 import PageTemplate from './components/PageTemplate';
-import { useAddress} from '@thirdweb-dev/react';
+import { useAddress } from '@thirdweb-dev/react';
 import crypto from 'crypto';
 import * as constants from "./constants";
 import { createDiffieHellman, DiffieHellman } from 'crypto';
@@ -64,7 +64,7 @@ const Encrypt: React.FC = () => {
   const deriveIV = () => {
     const encoder = new TextEncoder();
     return encoder.encode("7509e5bda0c762d2");
-}
+  }
 
   const encrypt = (buffer: crypto.BinaryLike) => {
     const initVector = deriveIV();
@@ -74,98 +74,159 @@ const Encrypt: React.FC = () => {
     const cipher = crypto.createCipheriv(algorithm, key, initVector);
     const encryptedData = Buffer.concat([cipher.update(buffer), cipher.final()]);
     return encryptedData;
-}
-
-const handleEncryptedDownload = () => {
-  if (encryptionKey && file) {
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (reader.result) {
-        const fileContent = new Uint8Array(reader.result as ArrayBuffer);
-        const encryptedFile = encrypt(fileContent).toString('base64');
-        const downloadLink = document.createElement('a');
-        downloadLink.href = `data:application/octet-stream;base64,${encryptedFile}`;
-        downloadLink.download = 'encrypted_file';
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-      }
-    };
-    reader.readAsArrayBuffer(file);
   }
-};
+
+  const handleEncryptedDownload = () => {
+    if (encryptionKey && file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (reader.result) {
+          const fileContent = new Uint8Array(reader.result as ArrayBuffer);
+          const encryptedFile = encrypt(fileContent).toString('base64');
+          const downloadLink = document.createElement('a');
+          downloadLink.href = `data:application/octet-stream;base64,${encryptedFile}`;
+          downloadLink.download = 'encrypted_file';
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+  };
 
   const generateSecretKeys = async () => {
-      setLoading(true);
-      try{
-        console.log(`Beneficiary address: ${beneficiaryAddress}`);
-        console.log(`Benefactor private key: ${benefactorPrivateKey}`);
-        // get benefactors private key
-        const privateKey = parseInt(benefactorPrivateKey, 16);
-        console.log(`Private key: ${privateKey}`);
-        // get beneficiary's public key from smart contract
-        const beneficiaryPublicKey = await dmsContract.getBeneficiaryPublicKey(walletAddress,beneficiaryAddress);
-        console.log(`Beneficiary public key: ${beneficiaryPublicKey}`);
-        // generate the secret key using beneficiarys public key and benefactors private key
-        const secretKey = computeSecret(parseInt(beneficiaryPublicKey), privateKey);
-        console.log(`Secret key: ${secretKey}`);
-        // ensure secretKey is not null before setting encryption key state variable
-        if (secretKey !== null) {
-            // set the encryption key state variable as this secret key
-            setEncryptionKey(secretKey.toString());
-        } else {
-            alert("Failed to compute secret key. Ensure your beneficiary has generated their public key.");
-        }
+    setLoading(true);
+    try {
+      console.log(`Beneficiary address: ${beneficiaryAddress}`);
+      console.log(`Benefactor private key: ${benefactorPrivateKey}`);
+      // get benefactors private key
+      const privateKey = parseInt(benefactorPrivateKey, 16);
+      console.log(`Private key: ${privateKey}`);
+      // get beneficiary's public key from smart contract
+      const beneficiaryPublicKey = await dmsContract.getBeneficiaryPublicKey(walletAddress, beneficiaryAddress);
+      console.log(`Beneficiary public key: ${beneficiaryPublicKey}`);
+      // generate the secret key using beneficiarys public key and benefactors private key
+      const secretKey = computeSecret(parseInt(beneficiaryPublicKey), privateKey);
+      console.log(`Secret key: ${secretKey}`);
+      // ensure secretKey is not null before setting encryption key state variable
+      if (secretKey !== null) {
+        // set the encryption key state variable as this secret key
+        setEncryptionKey(secretKey.toString());
+      } else {
+        alert("Failed to compute secret key. Ensure your beneficiary has generated their public key.");
       }
-      catch(e){
-        console.log(`error: ${e}`);
-      }
-      finally{
-        setLoading(false);
-      } 
+    }
+    catch (e) {
+      console.log(`error: ${e}`);
+    }
+    finally {
+      setLoading(false);
+    }
   };
-  
-  
+
+  const fileInputRef = useRef(null);
+
+  const handleDrop = (event) => {
+    event.preventDefault();
+    const droppedFile = event.dataTransfer.files[0];
+    setFile(droppedFile);
+  };
+
+  const handleDragOver = (event) => {
+    event.preventDefault();
+  };
 
   return (
     <main>
-      {loading && <Loader lockScroll={true}/>}
+      {loading && <Loader lockScroll={true} />}
       <div>
         {walletAddress &&
-          <PageTemplate pageTitle={<h1>Encrypt Files</h1>} pageContent={            
+          <PageTemplate pageTitle={<h1>Encrypt Files</h1>} pageContent={
             <div>
-                <input
-                    type="text"
-                    placeholder="Enter Beneficiary Address "
-                    value={beneficiaryAddress}
-                    onChange={handleBeneficiaryAddressChange}
-                />
-                <input
-                    type="text"
-                    placeholder="Enter your private key "
-                    value={benefactorPrivateKey}
-                    onChange={handleBenefactorPrivateKeyChange}
-                />
+              <input
+                type="text"
+                placeholder="Enter Beneficiary Address "
+                className='input-priv-key'
+                style={{ marginRight: "10px" }}
+                value={beneficiaryAddress}
+                onChange={handleBeneficiaryAddressChange}
+              />
+              <input
+                type="password"
+                placeholder="Enter your private key "
+                className='input-priv-key'
+                value={benefactorPrivateKey}
+                onChange={handleBenefactorPrivateKeyChange}
+              />
 
-                {/* only render this button if the beneficiary has already generated their keys!! */}
-                <button onClick={generateSecretKeys}><b>Generate Secret Key</b></button>
+              {/* only render this button if the beneficiary has already generated their keys!! */}
+              <button onClick={generateSecretKeys}><b>Generate Secret Key</b></button>
 
-                <br />
+              <br />
 
-                {/* <h2>Encrypt files here</h2>
+              {/* <h2>Encrypt files here</h2>
                 <input
                     type="text"
                     placeholder="Enter encryption key"
                     value={encryptionKey}
                     onChange={handleEncryptionKeyChange}
                 /> */}
-                <br />
-                <input type="file" onChange={handleFileUpload} />
-                <br />
-                <button onClick={handleEncryptedDownload} disabled={!encryptionKey || !file}>
-                    Download Encrypted File
-                </button>
-                {/* <h2>Decrypt files here</h2>
+              <br />
+
+              <div className="inner_container">
+                <div
+                  className="text__container"
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                >
+                  <img src="images/upload.png" alt="Upload Icon" />
+                  <h2>Drag and Drop File Here</h2>
+                  <input
+                    type="file"
+                    onChange={handleFileUpload}
+                    style={{ display: 'none' }}
+                    ref={fileInputRef}
+                  />
+                  <div
+                    style={{
+                      cursor: 'pointer',
+                      textDecoration: 'underline',
+                    }}
+                    onClick={() => fileInputRef.current.click()}
+                  >
+                    <i>...or click <b>here</b> to browse</i>
+                  </div>
+                  {file && <div>
+                    <h3>Selected Files:</h3>
+                    <div className='uploaded_file__container'>
+                      <div className='image'>
+                        <img src='../images/file.png'></img>
+                      </div>
+                      <div className='fileName'>
+                        {file.name}
+                      </div>
+                    </div>
+                  </div>}
+                </div>
+
+
+              </div>
+
+              {/* <input type="file" onChange={handleFileUpload} /> */}
+              <br />
+              <button
+                onClick={handleEncryptedDownload}
+                disabled={!encryptionKey || !file}
+                style={{
+                  backgroundColor: !encryptionKey || !file ? 'grey' : '#8d7fc0',
+                  // Add any other styles you need
+                }}
+              >
+                Download Encrypted File
+              </button>
+
+              {/* <h2>Decrypt files here</h2>
                 <br />
                 <input type="file" onChange={handleFileUpload} />
                 <br />
