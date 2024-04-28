@@ -10,6 +10,7 @@ import dmsABI from './smart-contracts/DeadMansSwitchABI.json';
 import { ethers } from 'ethers';
 import Loader from './components/Loader';
 import { useDiffieHellman } from './DiffieHellmanContext';
+import axios from 'axios';
 
 const BenefactorDashboard: React.FC = () => {
 
