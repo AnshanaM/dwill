@@ -112,7 +112,7 @@ const Encrypt: React.FC = () => {
       // ensure secretKey is not null before setting encryption key state variable
       if (secretKey !== null) {
         // set the encryption key state variable as this secret key
-        setEncryptionKey(secretKey.toString());
+        setEncryptionKey(secretKey.toString().slice(16));
       } else {
         alert("Failed to compute secret key. Ensure your beneficiary has generated their public key.");
       }

@@ -99,6 +99,12 @@
         "name": "publicKey",
         "indexed": false,
         "internalType": "string"
+      },
+      {
+        "type": "string[]",
+        "name": "allIpfsCIDs",
+        "indexed": false,
+        "internalType": "string[]"
       }
     ],
     "outputs": [],
@@ -523,6 +529,11 @@
         "type": "string",
         "name": "publicKey",
         "internalType": "string"
+      },
+      {
+        "type": "string[]",
+        "name": "allIpfsCIDs",
+        "internalType": "string[]"
       }
     ],
     "stateMutability": "nonpayable"

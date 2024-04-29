@@ -45,7 +45,7 @@ contract BenefactorsDeadManSwitch {
     event IpfsCIDRemoved(address indexed benefactor, address indexed beneficiary, string ipfsCID);
     event BenefactorKeyAdded(address indexed benefactor, string key);
     event BeneficiaryKeyAdded(address indexed benefactor, address indexed beneficiary, string key);
-    event BenefactorsData(bool switchStatus, address[] beneficiaries, uint256 remainingTime, bool isAlive, string publicKey);
+    event BenefactorsData(bool switchStatus, address[] beneficiaries, uint256 remainingTime, bool isAlive, string publicKey, string[] allIpfsCIDs);
     event BeneficiariesData(bool switchStatus, uint256 remainingTime, bool isAlive, string publicKey);
 
     /**
@@ -298,35 +298,65 @@ contract BenefactorsDeadManSwitch {
         return benefactors[_benefactor].beneficiaries[_beneficiary].ipfsCIDs;
     }
 
-    // /**
-    //  * @dev Setter function to set both prime and generator values
-    //  * @param _prime The prime number used in the Diffie-Hellman algorithm.
-    //  * @param _generator The generator used in the Diffie-Hellman algorithm.
-    //  */
-    // function setPrimeAndGenerator(uint256 _prime, uint256 _generator) public {
-    //     prime = _prime;
-    //     generator = _generator;
-    // }
+    // function getBenefactorData(address _benefactor) public returns (bool switchStatus, address[] memory beneficiaries, uint256 remainingTime, bool isAlive, string memory publicKey) {
+    //     require(benefactors[_benefactor].exists, "Benefactor does not exist");
+    //     switchStatus = !benefactors[_benefactor].isSwitchedOff;
+    //     beneficiaries = new address[](getBeneficiariesCount(_benefactor));
+    //     uint256 index = 0;
+    //     for (uint256 i = 0; i < beneficiaries.length; i++) {
+    //         if (benefactors[_benefactor].beneficiaries[beneficiaryKeys[_benefactor][i]].exists) {
+    //             beneficiaries[index] = beneficiaryKeys[_benefactor][i];
+    //             index++;
+    //         }
+    //     }
+    //     if (benefactors[_benefactor].isSwitchedOff) {
+    //         remainingTime = 0;
+    //     } else {
+    //         remainingTime = getRemainingCountdownTime(_benefactor);
+    //     }
+    //     isAlive = benefactors[_benefactor].isAlive;
+    //     publicKey = benefactors[_benefactor].benefactorPublicKey;
 
-    // /**
-    //  * @dev Getter function to get both prime and generator values
-    // */
-    // function getPrimeAndGenerator() public view returns (uint256, uint256) {
-    //     return (prime, generator);
+    //     emit BenefactorsData(switchStatus, beneficiaries, remainingTime, isAlive, publicKey);
+    //     return (switchStatus, beneficiaries, remainingTime, isAlive, publicKey);
     // }
 
     /**
+    * @dev Auxiliary function to return the total count of all IPFS CIDs across all beneficiaries for a benefactor.
+    */
+    function getTotalBeneficiaryCIDsCount(address _benefactor) private view returns (uint256) {
+        uint256 totalCount = 0;
+        uint256 count = getBeneficiariesCount(_benefactor);
+        for (uint256 i = 0; i < count; i++) {
+            address beneficiary = beneficiaryKeys[_benefactor][i];
+            if (benefactors[_benefactor].beneficiaries[beneficiary].exists) {
+                totalCount += benefactors[_benefactor].beneficiaries[beneficiary].ipfsCIDs.length;
+            }
+        }
+        return totalCount;
+    }
+
+    
+    /**
      * @dev Returns current data of benefactor.
      */
-    function getBenefactorData(address _benefactor) public returns (bool switchStatus, address[] memory beneficiaries, uint256 remainingTime, bool isAlive, string memory publicKey) {
+    function getBenefactorData(address _benefactor) public returns (bool switchStatus, address[] memory beneficiaries, uint256 remainingTime, bool isAlive, string memory publicKey, string[] memory allIpfsCIDs) {
         require(benefactors[_benefactor].exists, "Benefactor does not exist");
         switchStatus = !benefactors[_benefactor].isSwitchedOff;
         beneficiaries = new address[](getBeneficiariesCount(_benefactor));
+        uint256 totalCIDsCount = getTotalBeneficiaryCIDsCount(_benefactor);
+        allIpfsCIDs = new string[](totalCIDsCount);
         uint256 index = 0;
-        for (uint256 i = 0; i < beneficiaries.length; i++) {
-            if (benefactors[_benefactor].beneficiaries[beneficiaryKeys[_benefactor][i]].exists) {
-                beneficiaries[index] = beneficiaryKeys[_benefactor][i];
-                index++;
+
+        uint256 count = getBeneficiariesCount(_benefactor);
+        for (uint256 i = 0; i < count; i++) {
+            address beneficiary = beneficiaryKeys[_benefactor][i];
+            if (benefactors[_benefactor].beneficiaries[beneficiary].exists) {
+                string[] memory beneficiaryCIDs = benefactors[_benefactor].beneficiaries[beneficiary].ipfsCIDs;
+                for (uint256 j = 0; j < beneficiaryCIDs.length; j++) {
+                    allIpfsCIDs[index] = beneficiaryCIDs[j];
+                    index++;
+                }
             }
         }
         if (benefactors[_benefactor].isSwitchedOff) {
@@ -337,9 +367,10 @@ contract BenefactorsDeadManSwitch {
         isAlive = benefactors[_benefactor].isAlive;
         publicKey = benefactors[_benefactor].benefactorPublicKey;
 
-        emit BenefactorsData(switchStatus, beneficiaries, remainingTime, isAlive, publicKey);
-        return (switchStatus, beneficiaries, remainingTime, isAlive, publicKey);
+        emit BenefactorsData(switchStatus, beneficiaries, remainingTime, isAlive, publicKey, allIpfsCIDs);
+        return (switchStatus, beneficiaries, remainingTime, isAlive, publicKey, allIpfsCIDs);
     }
+
 
     /**
      * @dev Returns current status of benefactor to beneficiary.

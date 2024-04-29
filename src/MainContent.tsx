@@ -326,11 +326,8 @@ const MainContent: React.FC<MainContentProps> = ({handleInstallClick}) => {
               </div>
             </div>
 
-            <div>
-
-            </div>
     
-            <div className="video-container">
+            {/* <div className="video-container">
               <h1 className="sub-header">What is dWill?</h1>
               <iframe width="100%" height="100%" 
                       src="https://www.youtube.com/embed/olUxebermWw?si=dHH4n5-sucnibDCI" 
@@ -338,7 +335,7 @@ const MainContent: React.FC<MainContentProps> = ({handleInstallClick}) => {
                       frameBorder="0" 
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
                       allowFullScreen></iframe>
-            </div>
+            </div> */}
     
             <div className="footer-container">
               <p>&copy;Nott-a-Copyright</p>

@@ -35,6 +35,10 @@ const BenefactorDashboard: React.FC = () => {
 
   const [beneficiaries, setBeneficiary] = useState([{ beneficiaryAddress: "" }])
 
+  const [ipfsCid, setIpfsCid] = useState([]);
+  const [imageUrl, setImageUrl] = useState('');
+  const [mode, setMode] = useState('view');
+
   const walletAddress = useAddress();
   const provider = new ethers.providers.Web3Provider(window.ethereum);
   const signer = provider.getSigner();
@@ -163,6 +167,47 @@ const BenefactorDashboard: React.FC = () => {
     }
   }, [isAlive]);
 
+  // useEffect(() => {
+  //   const getData = async () => {
+  //     setLoading(true);
+  //     try {
+  //       const tx = await dmsContract.getBenefactorData(walletAddress);
+  //       console.log("tx: ", tx);
+  //       const receipt = await tx.wait();
+  //       console.log("receipt: ", receipt);
+
+  //       const event = receipt.events.find(event => event.event === "BenefactorsData");
+  //       console.log("event: ", event);
+
+
+  //       if (event) {
+  //         const { switchStatus, beneficiaries, remainingTime, isAlive, publicKey, ipfsCIDs } = event.args;
+  //         setCountdown(!isAlive ? "Benefactor is dead." : switchStatus ? formatCountdown(remainingTime) : "Benefactor is alive.");
+  //         switchStatus ? setCountdownStarted(true) : setCountdownStarted(false);
+  //         setRemainingTime(remainingTime);
+  //         setAliveStatus(isAlive);
+  //         setBenefactorPublicKey(publicKey);
+  //         setIpfsCid(ipfsCIDs);
+  //         console.log("CIDS: ",ipfsCid);
+
+  //       } else {
+  //         setCountdown("Data not found.");
+  //       }
+  //     } catch (error) {
+  //       console.error('Error fetching data:', error);
+  //       setCountdown("Error fetching data.");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+  //   if (triggerSwitch) {
+  //     getData();
+  //   }
+  //   if (walletAddress) {
+  //     getData();
+  //   }
+  // }, []); // Run this effect only once when the component mounts
+
   useEffect(() => {
     const getData = async () => {
       setLoading(true);
@@ -177,12 +222,15 @@ const BenefactorDashboard: React.FC = () => {
 
 
         if (event) {
-          const { switchStatus, beneficiaries, remainingTime, isAlive, publicKey } = event.args;
+          const { switchStatus, beneficiaries, remainingTime, isAlive, publicKey, ipfsCIDs } = event.args;
           setCountdown(!isAlive ? "Benefactor is dead." : switchStatus ? formatCountdown(remainingTime) : "Benefactor is alive.");
           switchStatus ? setCountdownStarted(true) : setCountdownStarted(false);
           setRemainingTime(remainingTime);
           setAliveStatus(isAlive);
           setBenefactorPublicKey(publicKey);
+          setIpfsCid(ipfsCIDs);
+          console.log("CIDS: ",ipfsCid);
+
         } else {
           setCountdown("Data not found.");
         }
@@ -200,6 +248,7 @@ const BenefactorDashboard: React.FC = () => {
       getData();
     }
   }, []); // Run this effect only once when the component mounts
+
 
   useEffect(() => {
     if (countdownStarted && !countdownEnded) {
@@ -231,42 +280,38 @@ const BenefactorDashboard: React.FC = () => {
   }, [remainingTime, triggerSwitch, countdownStarted, countdownEnded]);
 
 
-  const [ipfsCid, setIpfsCid] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
-  const [mode, setMode] = useState('view');
-
   const toggleMode = () => {
     setMode(mode === 'view' ? 'select' : 'view');
   };
 
   const handleRetrieveIpfsCid = () => {
     // Make an API call to retrieve the IPFS CIDs or hashes
-    axios
-      .get('https://api.pinata.cloud/data/pinList?status=pinned', {
-        headers: {
-          pinata_api_key: constants.PINATA_API_KEY,
-          pinata_secret_api_key: constants.PINATA_SECRET_KEY,
-        },
-      })
-      .then(response => {
-        const fileCids = response.data.rows.map(row => row.ipfs_pin_hash);
-        setIpfsCid(fileCids);
-        if (fileCids.length > 0) {
-          const cid = fileCids[0]; // Assuming the first CID corresponds to the image
-          const imageUrl = `https://gateway.pinata.cloud/ipfs/${cid}`;
-          setImageUrl(imageUrl);
-        }
-      })
-      .catch(error => {
-        console.error('Error retrieving IPFS CIDs:', error);
-      });
+    // axios
+    //   .get('https://api.pinata.cloud/data/pinList?status=pinned', {
+    //     headers: {
+    //       pinata_api_key: constants.PINATA_API_KEY,
+    //       pinata_secret_api_key: constants.PINATA_SECRET_KEY,
+    //     },
+    //   })
+    //   .then(response => {
+    //     const fileCids = response.data.rows.map(row => row.ipfs_pin_hash);
+    //     setIpfsCid(fileCids);
+    //     if (fileCids.length > 0) {
+    //       const cid = fileCids[0]; // Assuming the first CID corresponds to the image
+    //       const imageUrl = `https://gateway.pinata.cloud/ipfs/${cid}`;
+    //       setImageUrl(imageUrl);
+    //     }
+    //   })
+    //   .catch(error => {
+    //     console.error('Error retrieving IPFS CIDs:', error);
+    //   });
   };
 
 
-  useEffect(() => {
-    // Retrieve the IPFS CIDs when the component mounts
-    handleRetrieveIpfsCid();
-  }, []);
+  // useEffect(() => {
+  //   // Retrieve the IPFS CIDs when the component mounts
+  //   handleRetrieveIpfsCid();
+  // }, []);
 
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]); // State variable to store selected files
 
@@ -313,7 +358,7 @@ const BenefactorDashboard: React.FC = () => {
 
               <div className="dash__header">
                 <div className="dash__title">
-                  <h2>Files</h2>
+                  <h2>Your Files</h2>
                 </div>
                 <div>
                   {/* {mode === 'view' ? <></> : <><button className="newBtn" onClick={createZipFile}>Download Files</button></>} */}
@@ -323,7 +368,7 @@ const BenefactorDashboard: React.FC = () => {
                 </div>
               </div>
               <div className="files__display__container">
-                {ipfsCid.length !== 0 ? (
+                {ipfsCid && ipfsCid.length !== 0 ? (
                   ipfsCid.map((cid, index) => (
                     <a href={`https://gateway.pinata.cloud/ipfs/${cid}`} className="files__display__box" key={index} target="_blank" rel="noopener noreferrer">
                       <div className="file__icon" >

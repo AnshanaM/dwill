@@ -64,7 +64,8 @@ const Upload: React.FC = () => {
 
         const resFiles = await Promise.all(uploadPromises);
         const imgHashes = resFiles.map(resFile => resFile.data.IpfsHash);
-
+        console.log(`secret key ${secretKey}`);
+        const key = Buffer.from(secretKey.padEnd(16, ' '), 'utf8').slice(0, 16);
         const encryptHashes = (imgHashes, secretKey) => {
           const encryptedHashes = imgHashes.map(hash => {
             const cipher = crypto.createCipheriv('aes-128-cbc', Buffer.from(secretKey, 'utf8'), Buffer.alloc(16));
