@@ -159,9 +159,11 @@ contract BenefactorsDeadManSwitch {
             address beneficiary = _beneficiaries[i];
             require(!isBeneficiary(msg.sender, beneficiary), "Beneficiary already exists");
             benefactors[msg.sender].beneficiaries[beneficiary] = Beneficiary(true, new string[](0), "");
+            beneficiaryKeys[msg.sender].push(beneficiary); // Add beneficiary to the beneficiaryKeys mapping
             emit BeneficiaryAdded(msg.sender, beneficiary);
         }
     }
+
 
     function addIpfsCIDs(address _beneficiary, string[] memory _ipfsCIDs) external onlyBenefactor {
         require(isBeneficiary(msg.sender,_beneficiary), "Beneficiary not found");

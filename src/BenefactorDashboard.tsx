@@ -35,7 +35,7 @@ const BenefactorDashboard: React.FC = () => {
 
   const [beneficiaries, setBeneficiary] = useState([{ beneficiaryAddress: "" }])
 
-  const [ipfsCid, setIpfsCid] = useState([]);
+  const [ipfsCid, setIpfsCid] = useState<string[]>([]);
   const [imageUrl, setImageUrl] = useState('');
   const [mode, setMode] = useState('view');
 
@@ -167,80 +167,43 @@ const BenefactorDashboard: React.FC = () => {
     }
   }, [isAlive]);
 
-  // useEffect(() => {
-  //   const getData = async () => {
-  //     setLoading(true);
-  //     try {
-  //       const tx = await dmsContract.getBenefactorData(walletAddress);
-  //       console.log("tx: ", tx);
-  //       const receipt = await tx.wait();
-  //       console.log("receipt: ", receipt);
 
-  //       const event = receipt.events.find(event => event.event === "BenefactorsData");
-  //       console.log("event: ", event);
+  const getData = async () => {
+    setLoading(true);
+    try {
+      const tx = await dmsContract.getBenefactorData(walletAddress);
+      console.log("tx: ", tx);
+      const receipt = await tx.wait();
+      console.log("receipt: ", receipt);
 
-
-  //       if (event) {
-  //         const { switchStatus, beneficiaries, remainingTime, isAlive, publicKey, ipfsCIDs } = event.args;
-  //         setCountdown(!isAlive ? "Benefactor is dead." : switchStatus ? formatCountdown(remainingTime) : "Benefactor is alive.");
-  //         switchStatus ? setCountdownStarted(true) : setCountdownStarted(false);
-  //         setRemainingTime(remainingTime);
-  //         setAliveStatus(isAlive);
-  //         setBenefactorPublicKey(publicKey);
-  //         setIpfsCid(ipfsCIDs);
-  //         console.log("CIDS: ",ipfsCid);
-
-  //       } else {
-  //         setCountdown("Data not found.");
-  //       }
-  //     } catch (error) {
-  //       console.error('Error fetching data:', error);
-  //       setCountdown("Error fetching data.");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  //   if (triggerSwitch) {
-  //     getData();
-  //   }
-  //   if (walletAddress) {
-  //     getData();
-  //   }
-  // }, []); // Run this effect only once when the component mounts
-
-  useEffect(() => {
-    const getData = async () => {
-      setLoading(true);
-      try {
-        const tx = await dmsContract.getBenefactorData(walletAddress);
-        console.log("tx: ", tx);
-        const receipt = await tx.wait();
-        console.log("receipt: ", receipt);
-
-        const event = receipt.events.find(event => event.event === "BenefactorsData");
-        console.log("event: ", event);
+      const event = receipt.events.find(event => event.event === "BenefactorsData");
+      console.log("event: ", event);
 
 
-        if (event) {
-          const { switchStatus, beneficiaries, remainingTime, isAlive, publicKey, ipfsCIDs } = event.args;
-          setCountdown(!isAlive ? "Benefactor is dead." : switchStatus ? formatCountdown(remainingTime) : "Benefactor is alive.");
-          switchStatus ? setCountdownStarted(true) : setCountdownStarted(false);
-          setRemainingTime(remainingTime);
-          setAliveStatus(isAlive);
-          setBenefactorPublicKey(publicKey);
-          setIpfsCid(ipfsCIDs);
-          console.log("CIDS: ",ipfsCid);
+      if (event) {
+        const { switchStatus, beneficiaries, remainingTime, isAlive, publicKey, ipfsCIDs } = event.args;
+        console.log(event.args.allIpfsCIDs);
+        const allIpfsCIDsArray = event.args.allIpfsCIDs;
+        setIpfsCid(allIpfsCIDsArray);
+        setCountdown(!isAlive ? "Benefactor is dead." : switchStatus ? formatCountdown(remainingTime) : "Benefactor is alive.");
+        switchStatus ? setCountdownStarted(true) : setCountdownStarted(false);
+        setRemainingTime(remainingTime);
+        setAliveStatus(isAlive);
+        setBenefactorPublicKey(publicKey);
 
-        } else {
-          setCountdown("Data not found.");
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        setCountdown("Error fetching data.");
-      } finally {
-        setLoading(false);
+      } else {
+        setCountdown("Data not found.");
       }
-    };
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      setCountdown("Error fetching data.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  
+  useEffect(() => {
     if (triggerSwitch) {
       getData();
     }
@@ -284,34 +247,6 @@ const BenefactorDashboard: React.FC = () => {
     setMode(mode === 'view' ? 'select' : 'view');
   };
 
-  const handleRetrieveIpfsCid = () => {
-    // Make an API call to retrieve the IPFS CIDs or hashes
-    // axios
-    //   .get('https://api.pinata.cloud/data/pinList?status=pinned', {
-    //     headers: {
-    //       pinata_api_key: constants.PINATA_API_KEY,
-    //       pinata_secret_api_key: constants.PINATA_SECRET_KEY,
-    //     },
-    //   })
-    //   .then(response => {
-    //     const fileCids = response.data.rows.map(row => row.ipfs_pin_hash);
-    //     setIpfsCid(fileCids);
-    //     if (fileCids.length > 0) {
-    //       const cid = fileCids[0]; // Assuming the first CID corresponds to the image
-    //       const imageUrl = `https://gateway.pinata.cloud/ipfs/${cid}`;
-    //       setImageUrl(imageUrl);
-    //     }
-    //   })
-    //   .catch(error => {
-    //     console.error('Error retrieving IPFS CIDs:', error);
-    //   });
-  };
-
-
-  // useEffect(() => {
-  //   // Retrieve the IPFS CIDs when the component mounts
-  //   handleRetrieveIpfsCid();
-  // }, []);
 
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]); // State variable to store selected files
 
