@@ -1,4 +1,9 @@
+# dWill
+## _Your will at your fingertips_
+
 ## Getting Started
+
+Ensure to have a Metamask wallet with accounts connected the Polygon Amoy Testnet with a minimum of 2 MATIC.
 
 Install dependancies using: 
 
