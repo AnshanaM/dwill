@@ -17,7 +17,6 @@ Run the following in the smart-contracts directory to deploy a smart contract:
 ```bash
 npx thirdweb deploy
 ```
-!REMEMBER TO UPDATE THE constants.ts FILE WITH THE CONTRACT ADDRESS!
 
 ## Constants and environment variables
 
