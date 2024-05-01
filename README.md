@@ -27,13 +27,6 @@ npx thirdweb deploy
 
 Check the `constants.ts` file for API keys, client IDs, secret keys and smart contract addresses.
 
-### Deploy to IPFS (Optional)
-
-Deploy a copy of your application to IPFS using the following command:
-
-```bash
-yarn deploy
-```
 
 ## Learn More
 
