@@ -3,6 +3,8 @@
 
 ## Getting Started
 
+The encryption branch is the main branch, so download project files from there.
+
 Ensure to have a Metamask wallet with accounts connected the Polygon Amoy Testnet with a minimum of 2 MATIC.
 
 Install dependancies using: 
