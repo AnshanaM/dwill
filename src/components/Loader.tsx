@@ -1,3 +1,4 @@
+//  code adapted from https://codepen.io/bojankrsmanovic/full/dpzeZm
 import React, { useEffect } from 'react';
 import '../styles/loader.css';
 

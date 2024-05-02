@@ -1,9 +1,11 @@
+//code written by group
+
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { ethers } from 'ethers';
 import dmsABI from './smart-contracts/DeadMansSwitchABI.json';
 import * as constants from "./constants";
 
-// Define the type for Diffie-Hellman object
+
 interface DiffieHellmanType {
   prime: number;
   generator: number;

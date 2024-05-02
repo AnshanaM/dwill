@@ -3,11 +3,11 @@
 pragma solidity ^0.8.0;
 
 /**
- * @title BenefactorsDeadManSwitch
+ * @title DeadManSwitch
  * @dev Smart contract for managing a benefactor's dead man's switch with assigned beneficiaries.
  */
 
-contract BenefactorsDeadManSwitch {
+contract DeadManSwitch {
 
     struct Beneficiary {
         bool exists;
@@ -24,12 +24,10 @@ contract BenefactorsDeadManSwitch {
         string benefactorPublicKey;
     }
 
-    // uint256 private prime = 0;
-    // uint256 private generator = 0;
 
     mapping(address => BenefactorInfo) private benefactors; 
 
-    // Auxiliary mapping to store keys of beneficiaries
+    //auxiliary mapping to store keys of beneficiaries
     mapping(address => address[]) private beneficiaryKeys;
 
     event DeadMansSwitchEnabled(address indexed benefactor, address indexed beneficiary, uint256 countdownDuration);
@@ -165,6 +163,12 @@ contract BenefactorsDeadManSwitch {
     }
 
 
+    /**
+     * @dev Add an IPFS CID array to the specified beneficiary. Only callable by benefactor.
+     * @param _beneficiary The address of the beneficiary.
+     * @param _ipfsCIDs Array of IPFS CIDs to add.
+     */
+
     function addIpfsCIDs(address _beneficiary, string[] memory _ipfsCIDs) external onlyBenefactor {
         require(isBeneficiary(msg.sender,_beneficiary), "Beneficiary not found");
         string[] storage ipfsCIDs = benefactors[msg.sender].beneficiaries[_beneficiary].ipfsCIDs;
@@ -252,9 +256,6 @@ contract BenefactorsDeadManSwitch {
                 }
              }   
         }
-        // else{
-        //     benefactors[_benefactor].isAlive = false;
-        // }
         return benefactors[_benefactor].isAlive;
     }
 
@@ -300,28 +301,6 @@ contract BenefactorsDeadManSwitch {
         return benefactors[_benefactor].beneficiaries[_beneficiary].ipfsCIDs;
     }
 
-    // function getBenefactorData(address _benefactor) public returns (bool switchStatus, address[] memory beneficiaries, uint256 remainingTime, bool isAlive, string memory publicKey) {
-    //     require(benefactors[_benefactor].exists, "Benefactor does not exist");
-    //     switchStatus = !benefactors[_benefactor].isSwitchedOff;
-    //     beneficiaries = new address[](getBeneficiariesCount(_benefactor));
-    //     uint256 index = 0;
-    //     for (uint256 i = 0; i < beneficiaries.length; i++) {
-    //         if (benefactors[_benefactor].beneficiaries[beneficiaryKeys[_benefactor][i]].exists) {
-    //             beneficiaries[index] = beneficiaryKeys[_benefactor][i];
-    //             index++;
-    //         }
-    //     }
-    //     if (benefactors[_benefactor].isSwitchedOff) {
-    //         remainingTime = 0;
-    //     } else {
-    //         remainingTime = getRemainingCountdownTime(_benefactor);
-    //     }
-    //     isAlive = benefactors[_benefactor].isAlive;
-    //     publicKey = benefactors[_benefactor].benefactorPublicKey;
-
-    //     emit BenefactorsData(switchStatus, beneficiaries, remainingTime, isAlive, publicKey);
-    //     return (switchStatus, beneficiaries, remainingTime, isAlive, publicKey);
-    // }
 
     /**
     * @dev Auxiliary function to return the total count of all IPFS CIDs across all beneficiaries for a benefactor.

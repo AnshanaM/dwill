@@ -38,7 +38,9 @@ const BeneficiaryDashboard: React.FC = () => {
   const [beneficiaryPrivateKey, setBeneficiaryPrivateKey] = useState('');
 
   const [secretKey, setSecretKey] = useState("");
-
+  const [mode, setMode] = useState('view');
+  const [selectedFiles, setSelectedFiles] = useState<string[]>([]); // State variable to store selected files
+  const [ipfsCid, setIpfsCid] = useState<string[]>([]);
 
 
   const navigate = useNavigate();
@@ -50,6 +52,20 @@ const BeneficiaryDashboard: React.FC = () => {
     redirectToHomePage();
   }
 
+  const toggleMode = () => {
+    setMode(mode === 'view' ? 'select' : 'view');
+  };
+
+
+  // Function to handle file selection
+  const handleFileSelection = (cid: string) => {
+    // Check if the file is already selected
+    if (!selectedFiles.includes(cid)) {
+      setSelectedFiles([...selectedFiles, cid]); // Add the file to the selected files
+    } else {
+      setSelectedFiles(selectedFiles.filter(file => file !== cid)); // Deselect the file
+    }
+  };
 
   const handleKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setBeneficiaryPrivateKey(event.target.value);
@@ -97,40 +113,39 @@ const BeneficiaryDashboard: React.FC = () => {
     }
     return formattedCountdown.trim();
   }
+
+  const getData = async () => {
+    setLoading(true);
+    try {
+      const tx = await dmsContract.getBeneficiaryData(benefactorAddress,walletAddress);
+      const receipt = await tx.wait();
+      const event = receipt.events.find(event => event.event === "BeneficiariesData");
+      if (event) {
+        const { switchStatus, remainingTime, isAlive, publicKey} = event.args;
+        // setCountdown(isAlive  ? "Benefactor is alive." : formatCountdown(remainingTime));
+        setCountdown(!isAlive  ? "Benefactor is dead." : switchStatus ? formatCountdown(remainingTime) : "Benefactor is alive.");
+        switchStatus ? setCountdownStarted(true): setCountdownStarted(false);
+        setRemainingTime(remainingTime);
+        setAliveStatus(isAlive);
+        setBeneficiaryPublicKey(publicKey);
+      } else {
+        setCountdown("Data not found.");
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      setCountdown("Error fetching data.");
+    } finally {
+      setLoading(false);
+    }
+  };
   
   useEffect(() => {
     if (!isAlive) {
-      navigate("/");
       alert("Benefactor is dead");
     }
   },[isAlive]);
   
   useEffect(() => {
-    const getData = async () => {
-      setLoading(true);
-      try {
-        const tx = await dmsContract.getBeneficiaryData(benefactorAddress,walletAddress);
-        const receipt = await tx.wait();
-        const event = receipt.events.find(event => event.event === "BeneficiariesData");
-        if (event) {
-          const { switchStatus, remainingTime, isAlive, publicKey} = event.args;
-          // setCountdown(isAlive  ? "Benefactor is alive." : formatCountdown(remainingTime));
-          setCountdown(!isAlive  ? "Benefactor is dead." : switchStatus ? formatCountdown(remainingTime) : "Benefactor is alive.");
-          switchStatus ? setCountdownStarted(true): setCountdownStarted(false);
-          setRemainingTime(remainingTime);
-          setAliveStatus(isAlive);
-          setBeneficiaryPublicKey(publicKey);
-        } else {
-          setCountdown("Data not found.");
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        setCountdown("Error fetching data.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (walletAddress) {
       getData();
     }
@@ -161,7 +176,6 @@ const BeneficiaryDashboard: React.FC = () => {
       setCountdown(formattedCountdown);
     }
   }, [remainingTime]);
-  
   
 
 
@@ -247,7 +261,7 @@ const BeneficiaryDashboard: React.FC = () => {
     try {
       //can only get the ids when the benefactor dies
       const encryptedHashes = dmsContract.getCIDs(benefactorAddress,walletAddress,{from: walletAddress});
-        const secret = await generateSecretKey(); // Corrected variable name
+        const secret = await generateSecretKey();
         const decryptedHashes = encryptedHashes.map(encryptedHash => {
             const decipher = crypto.createDecipheriv('aes-128-cbc', Buffer.from(secret, 'utf8'), Buffer.alloc(16));
             let decrypted = decipher.update(encryptedHash, 'hex', 'utf8');
@@ -256,6 +270,8 @@ const BeneficiaryDashboard: React.FC = () => {
         });
         const prefixedHashes = decryptedHashes.map(hash => "https://gateway.pinata.cloud/ipfs/" + hash);
         console.log(`Decrypted hashes: ${prefixedHashes}`);
+        const hashes = decryptedHashes();
+        setIpfsCid(hashes);
     } catch (error) {
         console.error('Error decrypting hashes:', error);
     }
@@ -302,12 +318,6 @@ const BeneficiaryDashboard: React.FC = () => {
                       </div>
                     : <></>}
 
-                  {
-                    isAlive && publicKey!="" ?
-                    <h3>You don't have access to your assets yet.</h3>
-                    :
-                    <></>
-                  }
                     
                     {!isAlive && 
                     <div>
@@ -322,6 +332,45 @@ const BeneficiaryDashboard: React.FC = () => {
                       <button onClick={() => generateDecryptionKey()}>Get Decryption Key</button>
                     </div>
                     }
+
+                  <div className="dash__header">
+                    <div className="dash__title">
+                      <h2>Your Files</h2>
+                    </div>
+                    <div>
+                      {/* {mode === 'view' ? <></> : <><button className="newBtn" onClick={createZipFile}>Download Files</button></>} */}
+                      <button className="newBtn" onClick={toggleMode}>
+                        {mode === 'view' ? 'Switch to Select Mode' : 'Switch to View Mode'}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="files__display__container">
+                    {/* {ipfsCid && ipfsCid.length !== 0 ? ( */}
+                    {!isAlive ? (
+                      ipfsCid.map((cid, index) => (
+                        <a href={`https://gateway.pinata.cloud/ipfs/${cid}`} className="files__display__box" key={index} target="_blank" rel="noopener noreferrer">
+                          <div className="file__icon" >
+                            <img src="../images/file.png"></img>
+                          </div>
+                          <div className='file__name'>
+                            {cid}
+                          </div>
+                          {mode == "view" ?
+                            <div className="chevron__icon">
+                              <img src="../images/chevron.png"></img>
+                            </div>
+                            :
+                            <div className="file__checkbox">
+                              <input type="checkbox"
+                                checked={selectedFiles.includes(cid)}
+                                onChange={() => handleFileSelection(cid)} />
+                            </div>}
+                        </a>
+                      ))
+                    ) : (
+                      <p>You don't have access to your assets yet.</p>
+                    )}
+                  </div>
                     
                   
 

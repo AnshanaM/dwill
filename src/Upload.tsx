@@ -1,3 +1,5 @@
+//code written by group
+
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import "./styles/UploadPage.css";
