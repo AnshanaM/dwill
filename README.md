@@ -21,6 +21,8 @@ Developed using React, thirdweb and Pinata.
 ----
 ## Getting Started
 
+Download the project files from the encryption branch.
+
 Install dependancies using: 
 
 ```bash
