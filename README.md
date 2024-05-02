@@ -71,5 +71,9 @@ To learn more about thirdweb, Vite and React:
 
 You can check out [the thirdweb GitHub organization](https://github.com/thirdweb-dev)
 
-## Thirdweb Discord
-For any questions, suggestions, join our discord at [https://discord.gg/thirdweb](https://discord.gg/thirdweb).
+## Wallet details
+wallet pw: dwill2024
+nasty river globe sample jeans water mask nasty panel boil develop collect
+0x8705459c495E95E0c2c45DD0601B5d2Ec172a87E
+gmail: dwill.twenty24@gmail.com
+pass: ADKSCMAS2024
